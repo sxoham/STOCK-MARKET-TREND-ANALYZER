@@ -1,0 +1,14 @@
+numpy
+pandas
+yfinance
+matplotlib
+seaborn
+scikit-learn
+tensorflow
+joblib
+xgboost
+flask
+lxml
+requests
+beautifulsoup4
+nltk

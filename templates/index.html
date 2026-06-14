@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Market Trend Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="logo">
+        <h1>TrendAnalyzer</h1>
+      </div>
+
+      <div class="portfolio-summary">
+        <h3 onclick="openProfile()" class="portfolio-trigger">
+          <span id="portfolioHeader">Hello, Trader</span> <span id="headerIcon">👋</span>
+        </h3>
+        <div class="balance-card">
+          <div class="label">Balance</div>
+          <div class="value" id="portfolioBalance">$10,000.00</div>
+        </div>
+        <div class="holdings-list" id="holdingsList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div class="stock-list-container">
+        <!-- Search Bar -->
+
+
+        <h3>Watchlist</h3>
+        <ul id="watchlist" class="stock-list">
+          <!-- Populated by JS -->
+        </ul>
+        <h3>Available Stocks</h3>
+        <ul id="stockList" class="stock-list">
+          <!-- Populated by JS -->
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-bar"
+        style="position: relative; display: flex; flex-direction: column; gap: 1rem; align-items: center; min-height: 120px; padding: 10px 0;">
+
+        <!-- Row 1: Search Bar (Centered) -->
+        <div class="stock-search-container" style="position: relative; width: 50%; min-width: 300px; z-index: 10;">
+          <input type="text" id="stockSearchInput" placeholder="Search (e.g. RELIANCE, AAPL)..." class="trade-input"
+            style="width: 100%; padding-right: 30px; text-align: center; border-radius: 20px; background: rgba(255, 255, 255, 0.1); padding-top: 0.6rem; padding-bottom: 0.6rem;">
+          <span class="search-icon"
+            style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);">🔍</span>
+          <ul id="searchResults" class="search-results-dropdown" style="width: 100%; text-align: left;">
+            <!-- Autocomplete results -->
+          </ul>
+        </div>
+
+        <!-- Row 2: Controls (Left: Title, Right: Actions) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+
+          <!-- Left: Stock Title & Status -->
+          <div class="stock-info" style="display: flex; flex-direction: column; gap: 5px; z-index: 5;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h2 id="selectedStockTitle" style="margin: 0; font-size: 1.75rem;">Select a Stock</h2>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button id="addToWatchlistBtn" class="btn-secondary" onclick="toggleWatchlist()"
+                style="display: none; padding: 0.3rem 0.6rem; font-size: 0.8rem;">+ Watchlist</button>
+            </div>
+            <div class="status-wrapper" style="margin-top: 5px;">
+              <div class="status-indicator" id="statusIndicator" style="font-size: 0.8rem;">Ready</div>
+              <button id="refreshBtn" class="btn-secondary btn-icon-circle" onclick="window.refreshData()"
+                style="display: none; width: 24px; height: 24px; font-size: 12px; padding: 0;"
+                title="Refresh Data">↻</button>
+            </div>
+          </div>
+
+          <!-- Right: Actions -->
+          <div class="actions-container" style="z-index: 5;">
+            <div class="top-actions" style="justify-content: flex-end;">
+              <button id="logoutBtn" class="btn-danger btn-sm" onclick="window.logout()">Log Out</button>
+            </div>
+            <div class="tabs">
+              <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+              <button class="tab-btn" onclick="switchTab('backtest')">Backtest</button>
+            </div>
+          </div>
+        </div>
+      </header>
+      <!-- ... (existing content) ... -->
+      <!-- Insert Delete Confirmation Modal before script tag -->
+      <div id="deleteModal" class="modal">
+        <div class="modal-content" style="border: 1px solid var(--danger-color);">
+          <h3 style="color: var(--danger-color);">Delete Account</h3>
+          <div class="modal-body">
+            <p>Are you sure you want to permanently delete your account?</p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">This action cannot be undone. All your portfolio
+              data will be lost.</p>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+            <button class="btn-danger" onclick="confirmDeleteAccount()">Delete Permanently</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="messageModal" class="modal">
+        <div class="modal-content" style="max-width: 350px;">
+          <h3 id="msgModalTitle">Message</h3>
+          <div class="modal-body">
+            <p id="msgModalContent" style="text-align: center; color: var(--text-primary); font-size: 1.1rem;"></p>
+          </div>
+          <div class="modal-actions" style="justify-content: center; margin-top: 1rem;">
+            <button class="btn-primary" onclick="window.closeMessageModal()">OK</button>
+          </div>
+        </div>
+      </div>
+      <div id="dashboardTab" class="tab-content active">
+        <div class="dashboard-grid">
+          <!-- Prediction Card -->
+          <div class="card prediction-card">
+            <div class="card-header">
+              <h3>Prediction (Next Day)</h3>
+              <div class="actions">
+                <button class="btn-trade buy" onclick="openTradeModal('BUY')">Buy</button>
+                <button class="btn-trade sell" onclick="openTradeModal('SELL')">Sell</button>
+              </div>
+            </div>
+            <div class="prediction-content">
+              <div class="prediction-value" id="predictionValue">--</div>
+              <div class="prediction-prob">Confidence: <span id="predictionProb">--</span>%</div>
+            </div>
+          </div>
+
+          <!-- Sentiment Card -->
+          <div class="card sentiment-card">
+            <div class="card-header">
+              <h3>Market Sentiment</h3>
+              <div class="sentiment-badge" id="sentimentBadge">--</div>
+            </div>
+            <div class="sentiment-content">
+              <div class="sentiment-score">Score: <span id="sentimentScore">--</span></div>
+              <ul class="news-list" id="newsList">
+                <!-- Populated by JS -->
+              </ul>
+            </div>
+          </div>
+
+          <!--MACD Card-->
+          <div class="card chart-card">
+            <h3>MACD</h3>
+            <div class="chart-container">
+              <canvas id="macdChart"></canvas>
+            </div>
+          </div>
+
+          <!--RSI Card-->
+          <div class="card chart-card">
+            <h3>RSI</h3>
+            <div class="chart-container">
+              <canvas id="rsiChart"></canvas>
+            </div>
+          </div>
+
+          <!--Stochastic Card-->
+          <div class="card chart-card">
+            <h3>Stochastic Oscillator</h3>
+            <div class="chart-container">
+              <canvas id="stochChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div><br>
+
+      <!-- Price Chart (Interactive) -->
+      <div class="card chart-card full-width">
+        <h3>Price History (Interactive)</h3>
+        <div class="chart-container" id="priceChart">
+          <!-- Plotly Chart -->
+        </div>
+      </div><br>
+
+      <!-- Backtest Tab -->
+      <div id="backtestTab" class="tab-content">
+        <div class="dashboard-grid">
+          <div class="card full-width">
+            <div class="card-header">
+              <h3>Backtest Strategy (Last 1 Year)</h3>
+              <button class="btn-primary" onclick="runBacktest()">Run Backtest</button>
+            </div>
+            <div class="metrics-grid">
+              <div class="metric-item">
+                <div class="label">Total Return</div>
+                <div class="value" id="btTotalReturn">--</div>
+              </div>
+              <div class="metric-item">
+                <div class="label">Market Return</div>
+                <div class="value" id="btMarketReturn">--</div>
+              </div>
+              <div class="metric-item">
+                <div class="label">Win Rate</div>
+                <div class="value" id="btWinRate">--</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card chart-card full-width">
+            <h3>Equity Curve</h3>
+            <div class="chart-container">
+              <canvas id="backtestChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="tradeModal" class="modal">
+    <div class="modal-content">
+      <h3 id="modalTitle">Trade Stock</h3>
+      <div class="modal-body">
+        <p id="modalCurrentPrice">Current Price: $--</p>
+        <p id="modalAvailable" class="modal-available">Available: --</p>
+        <div class="input-group">
+          <label for="modalQty">Quantity</label>
+          <input type="number" id="modalQty" class="trade-input" value="10" min="1" oninput="updateModalTotal()">
+        </div>
+        <p class="modal-total" id="modalTotalCost">Total: $--</p>
+        <p class="modal-total" id="modalBalanceAfter"
+          style="border-top: none; margin-top: 0; font-size: 0.9em; color: var(--text-secondary);">Balance After: $--
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeTradeModal()">Cancel</button>
+        <button id="confirmTradeBtn" class="btn-primary" onclick="confirmTrade()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="profilePanel" class="profile-panel">
+    <div class="panel-header">
+      <h2>Profile</h2>
+      <button class="btn-close" onclick="closeProfile()">×</button>
+    </div>
+    <div class="panel-content">
+      <div class="user-info-section">
+        <div class="input-group" style="margin-bottom: 1rem; width: 100%;">
+          <label for="profileNameInput" style="text-align: left; display: block; margin-bottom: 0.25rem;">Display
+            Name</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="profileNameInput" class="trade-input" style="flex: 1; text-align: left; width: auto;"
+              placeholder="Enter your name">
+            <button class="btn-primary" onclick="window.saveCustomName()" style="padding: 0.5rem 1rem;">Save</button>
+          </div>
+        </div>
+        <div class="avatar-placeholder" id="profileAvatar">👤</div>
+        <p id="profileEmail" class="profile-email">--</p>
+        <div style="display: flex; gap: 1rem; color: var(--text-secondary); font-size: 0.9rem; margin-top: -0.5rem;">
+          <span id="profileAge">--</span>
+          <span id="profileGender">--</span>
+        </div>
+      </div>
+
+      <div class="stats-section">
+        <h3>Statistics</h3>
+        <div class="stat-row">
+          <span>Cash Balance</span>
+          <span id="profileBalance" class="stat-value">--</span>
+        </div>
+        <div class="stat-row">
+          <span>Invested Shares</span>
+          <span id="profileInvested" class="stat-value">--</span>
+        </div>
+        <div class="stat-row">
+          <span>Invested Amount</span>
+          <span id="profileInvestedAmount" class="stat-value">--</span>
+        </div>
+        <div class="stat-row">
+          <span>Total Net Worth</span>
+          <span id="profileNetWorth" class="stat-value highlight">--</span>
+        </div>
+      </div>
+
+      <div class="account-actions">
+        <h3>Account</h3>
+        <button class="btn-primary full-width" onclick="openFeedbackModal()"
+          style="margin-bottom: 0.5rem; background-color: var(--accent-color); border: none;">Send Feedback</button>
+        <button class="btn-danger full-width" onclick="openDeleteModal()">Delete Account</button>
+        <button class="btn-secondary full-width" onclick="window.logout()">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="messageModal" class="modal">
+    <div class="modal-content" style="max-width: 350px;">
+      <h3 id="msgModalTitle">Message</h3>
+      <div class="modal-body">
+        <p id="msgModalContent" style="text-align: center; color: var(--text-primary); font-size: 1.1rem;"></p>
+      </div>
+      <div class="modal-actions" style="justify-content: center; margin-top: 1rem;">
+        <button class="btn-primary" onclick="closeMessageModal()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ageCheckModal" class="modal" style="backdrop-filter: blur(10px); background: rgba(15, 23, 42, 0.95);">
+    <div class="modal-content" style="border: 1px solid var(--accent-color); max-width: 400px;">
+      <h3 style="color: var(--accent-color); margin-bottom: 1.5rem;">Age Verification Required</h3>
+      <div class="modal-body" style="text-align: center;">
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">You must be 18 years or older to access this
+          platform.</p>
+
+        <div class="input-group">
+          <label for="dobInput">Date of Birth</label>
+          <input type="date" id="dobInput" class="trade-input" style="width: 100%; text-align: left;">
+        </div>
+
+        <div class="input-group" style="margin-top: 1rem;">
+          <label for="genderInput">Gender</label>
+          <select id="genderInput" class="trade-input"
+            style="width: 100%; text-align: left; background-color: #1e293b; color: #f8fafc; border: 1px solid var(--border-color);">
+            <option value="" disabled selected style="background-color: #1e293b; color: #94a3b8;">Select your gender
+            </option>
+            <option value="Male" style="background-color: #1e293b; color: #f8fafc;">Male</option>
+            <option value="Female" style="background-color: #1e293b; color: #f8fafc;">Female</option>
+            <option value="Other" style="background-color: #1e293b; color: #f8fafc;">Other</option>
+          </select>
+        </div>
+
+        <p id="ageError" style="color: var(--danger-color); font-size: 0.9rem; margin-top: 1rem; display: none;"></p>
+      </div>
+      <div class="modal-actions" style="justify-content: center; margin-top: 2rem;">
+        <button class="btn-primary full-width" onclick="verifyAge()">Verify Age</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Modal -->
+  <div id="feedbackModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+      <h3>Send Feedback</h3>
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">We value your feedback! Let us know what you
+          think.</p>
+
+        <div class="input-group">
+          <label>Rating</label>
+          <div class="rating-stars" id="feedbackRating">
+            <span data-value="1" onclick="window.setFeedbackRating(1)">★</span>
+            <span data-value="2" onclick="window.setFeedbackRating(2)">★</span>
+            <span data-value="3" onclick="window.setFeedbackRating(3)">★</span>
+            <span data-value="4" onclick="window.setFeedbackRating(4)">★</span>
+            <span data-value="5" onclick="window.setFeedbackRating(5)">★</span>
+          </div>
+          <input type="hidden" id="selectedRating" value="0">
+        </div>
+
+        <div class="input-group" style="margin-top: 1rem;">
+          <label for="feedbackMessage">Message</label>
+          <textarea id="feedbackMessage" rows="4" class="trade-input" style="width: 100%; resize: vertical;"
+            placeholder="Tell us about your experience..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="window.closeFeedbackModal()">Cancel</button>
+        <button class="btn-primary" onclick="window.submitFeedback()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <!-- Inline CSS for search dropdown (or move to style.css) -->
+  <style>
+    .search-results-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      z-index: 1000;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: none;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .search-results-dropdown li {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #334155;
+      color: #cbd5e1;
+    }
+
+    .search-results-dropdown li:last-child {
+      border-bottom: none;
+    }
+
+    .search-results-dropdown li:hover {
+      background: #334155;
+    }
+
+    .search-results-dropdown li small {
+      display: block;
+      font-size: 0.8em;
+      color: #94a3b8;
+    }
+  </style>
+
+  <script type="module" src="{{ url_for('static', filename='script.js') }}?v=18"></script>
+</body>
+
+</html>

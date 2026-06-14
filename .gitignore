@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Databases (local runtime data)
+*.db
+instance/
+
+# Trained model artifacts (regenerate with main.py)
+stock_models_optionB/*.joblib
+stock_models_optionB/*.keras
+stock_models_optionB/*.save
+stock_models_global/*.joblib
+stock_models_global/*.keras
+stock_models_global/*.save
+
+# OS / misc
+.DS_Store
+Thumbs.db
+Untitled
+
+# Logs
+*.log

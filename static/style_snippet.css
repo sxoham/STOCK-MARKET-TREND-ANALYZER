@@ -1,0 +1,29 @@
+/* Trade Input Field */
+.trade-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.5rem;
+  border-radius: 6px;
+  width: 70px;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.trade-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Remove Arrows from Number Input */
+.trade-input::-webkit-outer-spin-button,
+.trade-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.trade-input {
+  -moz-appearance: textfield;
+}
