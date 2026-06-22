@@ -24,12 +24,8 @@ env/
 instance/
 
 # Trained model artifacts (regenerate with main.py)
-stock_models_optionB/*.joblib
-stock_models_optionB/*.keras
-stock_models_optionB/*.save
-stock_models_global/*.joblib
-stock_models_global/*.keras
-stock_models_global/*.save
+stock_models_optionB/
+stock_models_global/
 
 # OS / misc
 .DS_Store
@@ -38,3 +34,5 @@ Untitled
 
 # Logs
 *.log
+scripts/*_log.txt
+
