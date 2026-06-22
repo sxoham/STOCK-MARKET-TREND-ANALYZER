@@ -1,164 +1,220 @@
 import sqlite3
 import pandas as pd
 import yfinance as yf
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import main
-import os
 import datetime
+import os
+import sys
 
-LOG_DB_FILE = 'model_logs.db'
+# Add parent directory to path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import main
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Resolves to the model_logs.db in the parent (root) directory
+LOG_DB_FILE = os.path.abspath(os.path.join(BASE_DIR, "..", "model_logs.db"))
+
+
+def get_next_run_date():
+    today_date = datetime.date.today()
+    weekday = today_date.weekday()
+
+    if weekday == 4:      # Friday
+        days_to_add = 3
+    elif weekday == 5:    # Saturday
+        days_to_add = 2
+    else:
+        days_to_add = 1
+
+    return (
+        today_date + datetime.timedelta(days=days_to_add)
+    ).strftime("%Y-%m-%d")
+
+
+def migrate_database(conn):
+    """Automatically adds missing actual_move and actual_return columns to predictions table."""
+    c = conn.cursor()
+    c.execute("PRAGMA table_info(predictions)")
+    columns = [row[1] for row in c.fetchall()]
+
+    if "actual_move" not in columns:
+        print("Migrating database: Adding actual_move column to predictions table...")
+        c.execute("ALTER TABLE predictions ADD COLUMN actual_move TEXT")
+        conn.commit()
+
+    if "actual_return" not in columns:
+        print("Migrating database: Adding actual_return column to predictions table...")
+        c.execute("ALTER TABLE predictions ADD COLUMN actual_return REAL")
+        conn.commit()
+
 
 def verify_and_update():
     print("Connecting to prediction log database...")
+
     conn = sqlite3.connect(LOG_DB_FILE)
+    # Run DB migration to ensure actual_move and actual_return columns exist
+    migrate_database(conn)
+    
     c = conn.cursor()
-    
-    # 1. Fetch pending predictions (older than today)
-    # We look for predictions made yesterday or before, that don't have a result yet.
+
     today = datetime.date.today().strftime("%Y-%m-%d")
-    
-    # Select columns: id, ticker, date, prediction, start_price
-    # 'date' in DB is the date prediction was made (e.g. 2023-10-27)
-    # The 'prediction' targets the next trading day. 
-    # We can verify if we have data for a date > 'date'.
-    
-    c.execute("SELECT id, ticker, date, prediction, start_price FROM predictions WHERE is_correct IS NULL AND date < ?", (today,))
+
+    # Select all details including predicted_date
+    c.execute("""
+        SELECT id, ticker, date, predicted_date, prediction, start_price
+        FROM predictions
+        WHERE is_correct IS NULL
+        AND date < ?
+    """, (today,))
+
     rows = c.fetchall()
-    
+
     if not rows:
-        # Check if there are any active predictions for today or future
-        # (i.e. we made predictions but can't verify them yet)
-        c.execute("SELECT count(*) FROM predictions WHERE is_correct IS NULL AND date >= ?", (today,))
+        c.execute("""
+            SELECT COUNT(*)
+            FROM predictions
+            WHERE is_correct IS NULL
+            AND date >= ?
+        """, (today,))
+
         pending_future = c.fetchone()[0]
-        
+
         if pending_future > 0:
             print("No pending predictions to verify from previous days.")
             print(f"There are {pending_future} active predictions for today/future.")
-            
-            # Calculate next likely trading day
-            today_date = datetime.date.today()
-            weekday = today_date.weekday() # 0=Mon, 6=Sun
-            
-            if weekday == 4: # Friday
-                days_to_add = 3 # Next Monday
-            elif weekday == 5: # Saturday
-                days_to_add = 2 # Next Monday
-            else:
-                days_to_add = 1 # Tomorrow
-                
-            next_run_date = (today_date + datetime.timedelta(days=days_to_add)).strftime("%Y-%m-%d")
-            
-            print(f"NEXT RUN: Run 'verify_prediction.py' after 16:00 IST on {next_run_date} (or next trading day).")
+            print(
+                f"NEXT RUN: Run verify_prediction.py after 16:00 IST on {get_next_run_date()}."
+            )
         else:
-            print("No pending predictions to verify, and no active predictions found for today.")
-            print("NEXT STEP: Please run 'make_daily_predictions.py' to generate new predictions.")
-            
+            print("No pending predictions to verify.")
+            print("NEXT STEP: Run make_daily_predictions.py.")
+
         conn.close()
         return
 
     print(f"Found {len(rows)} pending predictions to verify.")
-    
-    tickers_to_update = set()
-    
+
+    # Group pending predictions by ticker to batch/cache downloads
+    predictions_by_ticker = {}
     for row in rows:
-        pred_id, ticker, date_made, prediction, start_price = row
-        print(f"\nVerifying prediction for {ticker} made on {date_made}...")
-        
-        # 2. Get Actual Data
-        # We need data from date_made + a few days to find the "Next Close"
-        # Download recent data
-        df = yf.download(ticker, start=date_made, progress=False)
-        
-        if df.empty or len(df) < 2:
-            print(f"Not enough data yet for {ticker}. (Found {len(df)} days from {date_made}, need at least 2 to verify next-day target)")
-            continue
-            
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
-            
-        # Find the row for date_made
-        # Find the row for next trading day
+        pred_id, ticker, date_made, predicted_date, prediction, start_price = row
+        predictions_by_ticker.setdefault(ticker, []).append({
+            "id": pred_id,
+            "date_made": date_made,
+            "predicted_date": predicted_date,
+            "prediction": prediction,
+            "start_price": start_price
+        })
+
+    tickers_to_update = set()
+
+    for ticker, preds in predictions_by_ticker.items():
+        print(f"\nProcessing ticker: {ticker} ({len(preds)} pending predictions)")
+
+        # Determine download date range
+        dates_made = [p["date_made"] for p in preds]
+        predicted_dates = [p["predicted_date"] for p in preds]
+
+        min_date = min(dates_made)
+        # End date: max predicted date + 7 days buffer
+        max_pred_ts = pd.Timestamp(max(predicted_dates))
+        end_date = (max_pred_ts + pd.Timedelta(days=7)).strftime("%Y-%m-%d")
+
         try:
-            # Normalize dates to ensure accurate comparison
-            df.index = pd.to_datetime(df.index).normalize()
-            made_date_ts = pd.Timestamp(date_made).normalize()
-            
-            # We need the first trading day strictly AFTER date_made
-            future_df = df[df.index > made_date_ts]
-            
-            if future_df.empty:
-                print(f"Next day data not available yet for {ticker}.")
+            print(f"Downloading historical data for {ticker} from {min_date} to {end_date}...")
+            df = yf.download(
+                ticker,
+                start=min_date,
+                end=end_date,
+                progress=False,
+                auto_adjust=False
+            )
+
+            if df.empty or len(df) < 2:
+                print(f"Not enough market data downloaded for {ticker}. Skipping predictions.")
                 continue
-            
-            next_close = future_df.iloc[0]["Close"]
-            # 3-Class logic for verification
-            # Matches the lower bound of dynamic threshold (0.5%)
-            pct_change = (next_close - start_price) / start_price
-            
-            if pct_change > 0.005:
-                actual_move = "UP"
-            elif pct_change < -0.005:
-                actual_move = "DOWN"
-            else:
-                actual_move = "HOLD"
-            
-            # Map "NEUTRAL" to "HOLD" if saved differently
-            if prediction == "NEUTRAL": prediction = "HOLD"
-            
-            is_correct = 1 if actual_move == prediction else 0
-            
-            print(f"  Prediction: {prediction} (Start: {start_price:.2f})")
-            print(f"  Actual: {actual_move} (Next Close: {next_close:.2f})")
-            print(f"  Result: {'CORRECT' if is_correct else 'WRONG'}")
-            
-            # 3. Update Database
-            c.execute('''
-                UPDATE predictions 
-                SET actual_price = ?, is_correct = ? 
-                WHERE id = ?
-            ''', (next_close, is_correct, pred_id))
-            conn.commit()
-            
-            # Queue for update
-            tickers_to_update.add(ticker)
-            
-        except KeyError:
-            print(f"  Date {date_made} not found in market data. Market might have been closed.")
-            continue
+
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+
+            df.index = pd.to_datetime(df.index).normalize()
+
+            for p in preds:
+                pred_id = p["id"]
+                date_made = p["date_made"]
+                predicted_date = p["predicted_date"]
+                prediction = p["prediction"]
+                start_price = float(p["start_price"])
+
+                print(f"  Verifying prediction ID {pred_id} made on {date_made} targeting {predicted_date}...")
+
+                predicted_ts = pd.Timestamp(predicted_date).normalize()
+                # Find the first trading day on or after the predicted date
+                future_df = df[df.index >= predicted_ts]
+
+                if future_df.empty:
+                    print(f"    Target trading day data (on/after {predicted_date}) not available yet.")
+                    continue
+
+                next_close = float(future_df.iloc[0]["Close"])
+                pct_change = (next_close - start_price) / start_price
+
+                # 3-class movement
+                if pct_change > 0.005:
+                    actual_move = "UP"
+                elif pct_change < -0.005:
+                    actual_move = "DOWN"
+                else:
+                    actual_move = "HOLD"
+
+                if prediction == "NEUTRAL":
+                    prediction = "HOLD"
+
+                is_correct = 1 if actual_move == prediction else 0
+                actual_return = pct_change * 100
+
+                print(f"    Prediction : {prediction}")
+                print(f"    Actual     : {actual_move}")
+                print(f"    Start Price: {start_price:.2f}")
+                print(f"    Next Close : {next_close:.2f} (on {future_df.index[0].strftime('%Y-%m-%d')})")
+                print(f"    Return     : {actual_return:.2f}%")
+                print(f"    Result     : {'CORRECT' if is_correct else 'WRONG'}")
+
+                c.execute("""
+                    UPDATE predictions
+                    SET actual_price = ?,
+                        actual_move = ?,
+                        actual_return = ?,
+                        is_correct = ?
+                    WHERE id = ?
+                """, (next_close, actual_move, actual_return, is_correct, pred_id))
+
+                tickers_to_update.add(ticker)
+
         except Exception as e:
-            print(f"  Error processing {ticker}: {e}")
+            print(f"Error processing ticker {ticker}: {e}")
             continue
 
+    conn.commit()
     conn.close()
-    
-    # 4. Trigger Retraining (Update Model) once per ticker
+
+    # Retrain updated models
     if tickers_to_update:
-        print(f"\nTraining models for updated tickers: {list(tickers_to_update)}")
+        print("\nRetraining models...")
+
         for ticker in tickers_to_update:
-            print(f"--- Retraining {ticker} ---")
-            # Uses cached features by default now (stable training)
-            main.train_single_model(ticker)
-            
+            try:
+                print(f"--- Retraining {ticker} ---")
+                main.train_single_model(ticker)
+            except Exception as e:
+                print(f"Retraining failed for {ticker}: {e}")
+
     print("\nVerification and update complete.")
-    
+
     if len(tickers_to_update) == 0 and rows:
-        print("\nNo pending predictions could be verified yet (likely waiting for market data).")
-        # Calculate next likely trading day
-        today_date = datetime.date.today()
-        weekday = today_date.weekday() # 0=Mon, 6=Sun
-        
-        if weekday == 4: # Friday
-            days_to_add = 3 # Next Monday
-        elif weekday == 5: # Saturday
-            days_to_add = 2 # Next Monday
-        else:
-            days_to_add = 1 # Tomorrow
-            
-        next_run_date = (today_date + datetime.timedelta(days=days_to_add)).strftime("%Y-%m-%d")
-        
-        print(f"NEXT RUN: Run 'verify_prediction.py' after 16:00 IST on {next_run_date} (or next trading day).")
+        print(
+            f"NEXT RUN: Run verify_prediction.py after 16:00 IST on {get_next_run_date()}."
+        )
+
 
 if __name__ == "__main__":
     verify_and_update()

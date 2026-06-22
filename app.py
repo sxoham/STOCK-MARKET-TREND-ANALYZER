@@ -251,7 +251,7 @@ def get_prediction(ticker):
         df = main.add_technical_indicators(df)
         
         # Format for JSON
-        dates = df.index.strftime('%Y-%m-%d').tolist()
+        dates = pd.DatetimeIndex(df.index).strftime('%Y-%m-%d').tolist()
         history = {
             "dates": dates,
             "open": df["Open"].tolist(),
@@ -336,7 +336,7 @@ def generate_live_prediction(ticker):
     
     # Macro
     try:
-        macro = main.download_macro_data(start=df.index[0], end=df.index[-1])
+        macro = main.download_macro_data(start=pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d'), end=pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d'))
         if not macro.empty:
             df = df.join(macro)
             df.ffill(inplace=True)
@@ -376,8 +376,12 @@ def generate_live_prediction(ticker):
         probs = model(X_input, training=False).numpy()[0]
     best_class = int(np.argmax(probs))
     prob = float(probs[best_class])
-    config = main.load_model_config(ticker)
-    prediction = main.prediction_label(best_class, config)
+    if best_class == 2:
+        prediction = "UP"
+    elif best_class == 0:
+        prediction = "DOWN"
+    else:
+        prediction = "HOLD"
     return prediction, prob
 
 @app.route('/api/backtest/<ticker>')
@@ -395,8 +399,7 @@ def backtest_endpoint(ticker):
         model = load_model(model_path)
         scaler = joblib.load(scaler_path)
         
-        use_meta = request.args.get("meta_filter", "1").lower() in ("1", "true", "yes")
-        result_df = main.backtest_model(ticker, model, scaler, days=365, use_meta_filter=use_meta)
+        result_df = main.backtest_model(ticker, model, scaler, days=365)
         
         if result_df is None or result_df.empty:
             return jsonify({"error": "Not enough data for backtest"}), 400
@@ -425,7 +428,7 @@ def backtest_endpoint(ticker):
                 "win_rate": win_rate
             },
             "chart": {
-                "dates": result_df.index.strftime('%Y-%m-%d').tolist(),
+                "dates": pd.DatetimeIndex(result_df.index).strftime('%Y-%m-%d').tolist(),
                 "strategy": result_df["Cum_Strategy_Return"].tolist(),
                 "market": result_df["Cum_Market_Return"].tolist()
             }

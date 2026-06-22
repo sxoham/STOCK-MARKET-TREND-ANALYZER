@@ -91,7 +91,7 @@ def download_macro_data(start: str, end: str) -> pd.DataFrame:
         print(f"Error downloading macro data: {e}")
         return pd.DataFrame()
 
-def load_sentiment_data(ticker: str = None) -> pd.DataFrame:
+def load_sentiment_data(ticker: str | None = None) -> pd.DataFrame:
     """
     Loads daily sentiment data from the local CSV file.
     
@@ -124,7 +124,7 @@ def load_sentiment_data(ticker: str = None) -> pd.DataFrame:
         print(f"Error loading sentiment for {ticker}: {e}")
         return pd.DataFrame()
 
-def download_stock(ticker: str, start: str = START_DATE, end: str = END_DATE) -> pd.DataFrame:
+def download_stock(ticker: str, start: str = START_DATE, end: str | None = END_DATE) -> pd.DataFrame:
     """
     Downloads stock data from Yahoo Finance and calculates basic Stochastic indicators.
     
@@ -217,7 +217,7 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     high_close = np.abs(df["High"] - df["Close"].shift())
     low_close = np.abs(df["Low"] - df["Close"].shift())
     ranges = pd.concat([high_low, high_close, low_close], axis=1)
-    true_range = np.max(ranges, axis=1)
+    true_range = ranges.max(axis=1)
     df["ATR"] = true_range.rolling(window=14).mean()
     
     # [STATIONARY] Normalized ATR
@@ -247,12 +247,12 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     up_move = df["High"].diff()
     down_move = df["Low"].diff().apply(lambda x: -x)
     
-    pos_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0.0)
-    neg_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0)
+    pos_dm = up_move.where((up_move > down_move) & (up_move > 0), 0.0)
+    neg_dm = down_move.where((down_move > up_move) & (down_move > 0), 0.0)
     
     # Smooth DM
-    pos_dm_s = pd.Series(pos_dm, index=df.index).ewm(alpha=1/14, adjust=False).mean()
-    neg_dm_s = pd.Series(neg_dm, index=df.index).ewm(alpha=1/14, adjust=False).mean()
+    pos_dm_s = pos_dm.ewm(alpha=1/14, adjust=False).mean()
+    neg_dm_s = neg_dm.ewm(alpha=1/14, adjust=False).mean()
     
     pos_di = 100 * (pos_dm_s / (df["ATR"] + 1e-9))
     neg_di = 100 * (neg_dm_s / (df["ATR"] + 1e-9))
@@ -321,7 +321,7 @@ def create_target(df: pd.DataFrame) -> pd.DataFrame:
         high_close = np.abs(df["High"] - df["Close"].shift())
         low_close = np.abs(df["Low"] - df["Close"].shift())
         ranges = pd.concat([high_low, high_close, low_close], axis=1)
-        true_range = np.max(ranges, axis=1)
+        true_range = ranges.max(axis=1)
         df["ATR"] = true_range.rolling(window=14).mean()
         df["ATR"].ffill(inplace=True)
 
@@ -348,7 +348,7 @@ def create_target(df: pd.DataFrame) -> pd.DataFrame:
     df.dropna(inplace=True)
     return df
 
-def create_sequences(features: np.ndarray, target: np.ndarray, window: int = WINDOW) -> tuple:
+def create_sequences(features, target, window: int = WINDOW) -> tuple:
     """
     Creates temporal sequences for LSTM training.
     
@@ -408,14 +408,14 @@ def tree_features(X: np.ndarray) -> np.ndarray:
     mean = X.mean(axis=1)
     return np.hstack([last, mean])
 
-def stacker_features(p_rf: np.ndarray, p_gb: np.ndarray, p_xgb: np.ndarray, p_lstm: np.ndarray) -> np.ndarray:
+def stacker_features(p_rf, p_gb, p_xgb, p_lstm) -> np.ndarray:
     """Features for the learned stacking classifier."""
     p_avg = (p_rf + p_gb + p_xgb + p_lstm) / 4.0
     conf = np.max(p_avg, axis=1, keepdims=True)
     ent = entropy(p_avg, axis=1).reshape(-1, 1)
     return np.column_stack([p_rf, p_gb, p_xgb, p_lstm, conf, ent])
 
-def meta_filter_features(p_prob: np.ndarray, X_last: np.ndarray) -> np.ndarray:
+def meta_filter_features(p_prob, X_last) -> np.ndarray:
     conf = np.max(p_prob, axis=1, keepdims=True)
     ent = entropy(p_prob, axis=1).reshape(-1, 1)
     return np.column_stack((p_prob, conf, ent, X_last))
@@ -486,7 +486,7 @@ def build_lstm_model(input_shape: tuple) -> Model:
     return model
 
 # 4. Main loop: for each stock, prepare data -> train -> evaluate -> save
-def train_single_model(ticker: str, force_rfe: bool = False) -> None:
+def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     """
     End-to-end training pipeline with Meta-Labeling.
     """
@@ -499,10 +499,10 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> None:
     df = add_technical_indicators(df)
     
     # Merge Macro Data
-    macro = download_macro_data(start=df.index[0], end=df.index[-1])
+    macro = download_macro_data(start=pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d'), end=pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d'))
     if not macro.empty:
         df = df.join(macro)
-        df.fillna(method="ffill", inplace=True)
+        df.ffill(inplace=True)
         df.fillna(0, inplace=True)
     
     # Merge Sentiment Data
@@ -534,6 +534,7 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> None:
     # --- FEATURE SELECTION (RFE) on TRAIN Set ---
     feature_save_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_features.joblib")
     selected_features = []
+    selected_indices = []
     
     if os.path.exists(feature_save_path) and not force_rfe:
         try:
@@ -631,7 +632,7 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> None:
     p_xgb = xgb_base.predict_proba(X_meta_tree)
     p_lstm = lstm.predict(X_meta, verbose=0)
     X_st_train = stacker_features(p_rf, p_gb, p_xgb, p_lstm)
-    stacker = LogisticRegression(max_iter=1000, multi_class="multinomial", class_weight="balanced", random_state=SEED)
+    stacker = LogisticRegression(max_iter=1000, class_weight="balanced", random_state=SEED)
     stacker.fit(X_st_train, y_meta)
     joblib.dump(stacker, os.path.join(RESULTS_DIR, f"{ticker_key}_stacker.joblib"))
     y_meta_stacked = stacker.predict(X_st_train)
@@ -719,14 +720,14 @@ def backtest_model(ticker, model, scaler, window=WINDOW, days=365, stop_loss=0.0
         - If Prob <= 0.5 (DOWN) -> Sell/Cash (Exit at Close).
     Returns: DataFrame with signals and returns.
     """
-    df = download_stock(ticker, start=pd.to_datetime(END_DATE) - pd.Timedelta(days=days*2), end=END_DATE)
+    df = download_stock(ticker, start=str((pd.to_datetime(END_DATE) - pd.Timedelta(days=days*2)).date()), end=END_DATE)
     df = add_technical_indicators(df)
     
     # [NEW] Merge Macro Data for Backtest
-    macro = download_macro_data(start=df.index[0], end=df.index[-1])
+    macro = download_macro_data(start=pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d'), end=pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d'))
     if not macro.empty:
         df = df.join(macro)
-        df.fillna(method="ffill", inplace=True)
+        df.ffill(inplace=True)
         df.fillna(0, inplace=True)
     else:
         df["Nifty_Return"] = 0.0
@@ -849,7 +850,7 @@ def backtest_model(ticker, model, scaler, window=WINDOW, days=365, stop_loss=0.0
             daily_strat_ret = trade_ret
         
         strategy_curve.append(capital)
-        market_curve.append(market_curve[-1] * (1 + today_ret))
+        market_curve.append(float(market_curve[-1] * (1 + today_ret)))
         strategy_daily_returns.append(daily_strat_ret)
 
     result_df = pd.DataFrame({

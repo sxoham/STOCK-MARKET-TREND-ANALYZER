@@ -88,7 +88,7 @@ def make_predictions():
             
             # Macro
             try:
-                macro = main.download_macro_data(start=df.index[0], end=df.index[-1])
+                macro = main.download_macro_data(start=pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d'), end=pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d'))
                 if not macro.empty:
                     df = df.join(macro)
                     df.ffill(inplace=True)
