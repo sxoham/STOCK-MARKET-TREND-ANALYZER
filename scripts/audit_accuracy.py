@@ -3,8 +3,9 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import os
 
-CLEAN_FILE = "../daily_sentiment.csv"
-ORIG_FILE = "daily_sentiment.csv.bak"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CLEAN_FILE = os.path.join(BASE_DIR, "..", "daily_sentiment.csv")
+ORIG_FILE = os.path.join(BASE_DIR, "..", "daily_sentiment.csv.bak")
 STOCKS_TO_CHECK = ["RELIANCE.NS", "TCS.NS", "INFY.NS"]
 
 def audit_accuracy():

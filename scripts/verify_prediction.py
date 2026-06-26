@@ -159,9 +159,9 @@ def verify_and_update():
                 pct_change = (next_close - start_price) / start_price
 
                 # 3-class movement
-                if pct_change > 0.005:
+                if pct_change > 0.015:
                     actual_move = "UP"
-                elif pct_change < -0.005:
+                elif pct_change < -0.015:
                     actual_move = "DOWN"
                 else:
                     actual_move = "HOLD"

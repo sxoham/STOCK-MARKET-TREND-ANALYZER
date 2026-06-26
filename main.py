@@ -296,50 +296,17 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
 def create_target(df: pd.DataFrame) -> pd.DataFrame:
     """
     Generates the target variable for a 3-class classification problem (SELL, HOLD, BUY).
-    
-    Logic:
-    - Calculates the 3-day future return.
-    - Determines a dynamic threshold based on daily volatility (ATR/Close).
-    - If Future Return > Threshold -> BUY (2)
-    - If Future Return < -Threshold -> SELL (0)
-    - Otherwise -> HOLD (1)
-    
-    Args:
-        df (pd.DataFrame): DataFrame containing 'Close' and 'ATR'.
-        
-    Returns:
-        pd.DataFrame: DataFrame with a new 'Target' column and 'Next_Return'.
+    1-day future return matches the daily prediction and verification pipeline.
     """
-    # 3-Class Target: 0=SELL, 1=HOLD, 2=BUY
-    # Dynamic Threshold: 0.5 * (ATR / Close) -> 0.5x daily volatility
     df = df.copy()
     
-    # Ensure ATR is present (it should be)
-    if "ATR" not in df.columns:
-        # Fallback if ATR is missing (though add_technical_indicators adds it)
-        high_low = df["High"] - df["Low"]
-        high_close = np.abs(df["High"] - df["Close"].shift())
-        low_close = np.abs(df["Low"] - df["Close"].shift())
-        ranges = pd.concat([high_low, high_close, low_close], axis=1)
-        true_range = ranges.max(axis=1)
-        df["ATR"] = true_range.rolling(window=14).mean()
-        df["ATR"].ffill(inplace=True)
-
-    # Calculate dynamic threshold (percentage)
-    # Volatility % = ATR / Close
-    # We require a move > 0.5 * Volatility to call it a Trend
-    volatility_pct = df["ATR"] / df["Close"]
-    threshold_series = volatility_pct * 0.35
+    # Calculate future return (1-day horizon)
+    df["Next_Return"] = df["Close"].shift(-1) / df["Close"] - 1
     
-    # Clip threshold to reasonable limits (e.g. min 0.3%, max 3%) to avoid craziness
-    threshold_series = threshold_series.clip(lower=0.003, upper=0.03)
-
-    # Calculate future return (3-day horizon)
-    df["Next_Return"] = df["Close"].shift(-3) / df["Close"] - 1
-    
+    # 1.5% threshold matching verify_prediction.py
     conditions = [
-        (df["Next_Return"] < -threshold_series), # SELL
-        (df["Next_Return"] > threshold_series)   # BUY
+        (df["Next_Return"] < -0.015), # SELL (0)
+        (df["Next_Return"] > 0.015)   # BUY (2)
     ]
     choices = [0, 2]
     # Default is 1 (HOLD)
@@ -590,14 +557,38 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     sw = sample_weights_from_counts(y_train)
     
     print("Training Base Models...")
-    rf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=SEED, class_weight="balanced", n_jobs=-1)
+    rf = RandomForestClassifier(
+        n_estimators=150,
+        max_depth=3,
+        min_samples_leaf=30,
+        max_features="sqrt",
+        random_state=SEED,
+        n_jobs=-1
+    )
     rf.fit(X_train_tree, y_train)
     
-    gb = GradientBoostingClassifier(n_estimators=100, learning_rate=0.05, max_depth=3, random_state=SEED)
-    gb.fit(X_train_tree, y_train, sample_weight=sw)
+    gb = GradientBoostingClassifier(
+        n_estimators=60,
+        learning_rate=0.02,
+        max_depth=2,
+        min_samples_leaf=30,
+        random_state=SEED
+    )
+    gb.fit(X_train_tree, y_train)
     
-    xgb_base = XGBClassifier(n_estimators=100, learning_rate=0.05, max_depth=4, random_state=SEED, objective='multi:softprob', num_class=3)
-    xgb_base.fit(X_train_tree, y_train, sample_weight=sw)
+    xgb_base = XGBClassifier(
+        n_estimators=60,
+        learning_rate=0.02,
+        max_depth=2,
+        subsample=0.7,
+        colsample_bytree=0.7,
+        reg_alpha=2.0,
+        reg_lambda=5.0,
+        random_state=SEED,
+        objective='multi:softprob',
+        num_class=3
+    )
+    xgb_base.fit(X_train_tree, y_train)
     
     inputs = Input(shape=(X_train.shape[1], X_train.shape[2]))
     x = Bidirectional(LSTM(64, return_sequences=True))(inputs)
@@ -615,7 +606,7 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
         EarlyStopping(monitor="val_loss", patience=7, restore_best_weights=True),
         ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=3, min_lr=1e-5),
     ]
-    lstm.fit(X_train, y_train, validation_split=0.1, epochs=50, batch_size=32, callbacks=callbacks, verbose=0, class_weight=class_weight)
+    lstm.fit(X_train, y_train, validation_split=0.1, epochs=50, batch_size=32, callbacks=callbacks, verbose=0)
     
     # Save Base Models
     ticker_key = ticker.replace('.', '_')
@@ -624,34 +615,49 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     joblib.dump(xgb_base, os.path.join(RESULTS_DIR, f"{ticker_key}_xgb.joblib"))
     lstm.save(os.path.join(RESULTS_DIR, f"{ticker_key}_best_model.keras"))
     
-    # --- STACKER (Meta Set) ---
-    print("Training stacking classifier...")
-    X_meta_tree = tree_features(X_meta)
-    p_rf = rf.predict_proba(X_meta_tree)
-    p_gb = gb.predict_proba(X_meta_tree)
-    p_xgb = xgb_base.predict_proba(X_meta_tree)
-    p_lstm = lstm.predict(X_meta, verbose=0)
-    X_st_train = stacker_features(p_rf, p_gb, p_xgb, p_lstm)
-    stacker = LogisticRegression(max_iter=1000, class_weight="balanced", random_state=SEED)
-    stacker.fit(X_st_train, y_meta)
-    joblib.dump(stacker, os.path.join(RESULTS_DIR, f"{ticker_key}_stacker.joblib"))
-    y_meta_stacked = stacker.predict(X_st_train)
-    print(f"Meta-set stacked acc: {accuracy_score(y_meta, y_meta_stacked):.4f}")
+    # --- STACKER (Meta Set Split to prevent double-dipping) ---
+    print("Training stacking classifier and meta-model...")
+    mid = len(X_meta) // 2
+    X_meta_stacker = X_meta[:mid]
+    y_meta_stacker = y_meta[:mid]
+    X_meta_filter = X_meta[mid:]
+    y_meta_filter = y_meta[mid:]
     
-    # --- META-MODEL (confidence filter) ---
-    print("Training meta-model (confidence filter)...")
-    p_meta = stacker.predict_proba(X_st_train)
-    y_meta_pred = np.argmax(p_meta, axis=1)
-    X_meta_input = meta_filter_features(p_meta, X_meta[:, -1, :])
-    y_meta_target = (y_meta_pred == y_meta).astype(int)
+    # Generate features for stacker training
+    X_meta_stacker_tree = tree_features(X_meta_stacker)
+    p_rf_stacker = rf.predict_proba(X_meta_stacker_tree)
+    p_gb_stacker = gb.predict_proba(X_meta_stacker_tree)
+    p_xgb_stacker = xgb_base.predict_proba(X_meta_stacker_tree)
+    p_lstm_stacker = lstm.predict(X_meta_stacker, verbose=0)
+    
+    X_st_train = stacker_features(p_rf_stacker, p_gb_stacker, p_xgb_stacker, p_lstm_stacker)
+    stacker = LogisticRegression(max_iter=1000, random_state=SEED)
+    stacker.fit(X_st_train, y_meta_stacker)
+    joblib.dump(stacker, os.path.join(RESULTS_DIR, f"{ticker_key}_stacker.joblib"))
+    y_meta_stacker_pred = stacker.predict(X_st_train)
+    print(f"Meta-set stacker training acc: {accuracy_score(y_meta_stacker, y_meta_stacker_pred):.4f}")
+    
+    # Generate features for meta-model training (completely out-of-sample for the stacker!)
+    X_meta_filter_tree = tree_features(X_meta_filter)
+    p_rf_filter = rf.predict_proba(X_meta_filter_tree)
+    p_gb_filter = gb.predict_proba(X_meta_filter_tree)
+    p_xgb_filter = xgb_base.predict_proba(X_meta_filter_tree)
+    p_lstm_filter = lstm.predict(X_meta_filter, verbose=0)
+    
+    X_st_filter = stacker_features(p_rf_filter, p_gb_filter, p_xgb_filter, p_lstm_filter)
+    p_meta_filter = stacker.predict_proba(X_st_filter)
+    y_meta_filter_pred = np.argmax(p_meta_filter, axis=1)
+    
+    X_meta_input = meta_filter_features(p_meta_filter, X_meta_filter[:, -1, :])
+    y_meta_target = (y_meta_filter_pred == y_meta_filter).astype(int)
     print(f"Meta-target balance (1=correct): {np.mean(y_meta_target):.4f}")
     
     meta_model = XGBClassifier(n_estimators=80, max_depth=4, learning_rate=0.05, eval_metric='logloss', random_state=SEED)
     meta_model.fit(X_meta_input, y_meta_target)
     joblib.dump(meta_model, os.path.join(RESULTS_DIR, f"{ticker_key}_meta.joblib"))
     
-    meta_conf_train = meta_model.predict_proba(X_meta_input)[:, 1]
-    meta_threshold = tune_meta_threshold(meta_conf_train, y_meta, y_meta_pred)
+    meta_conf_val = meta_model.predict_proba(X_meta_input)[:, 1]
+    meta_threshold = tune_meta_threshold(meta_conf_val, y_meta_filter, y_meta_filter_pred)
     joblib.dump(meta_threshold, os.path.join(RESULTS_DIR, f"{ticker_key}_meta_threshold.joblib"))
     print(f"Tuned meta confidence threshold: {meta_threshold:.2f}")
     
@@ -779,7 +785,10 @@ def backtest_model(ticker, model, scaler, window=WINDOW, days=365, stop_loss=0.0
     gb_path = os.path.join(RESULTS_DIR, f"{ticker_key}_gb.joblib")
     xgb_path = os.path.join(RESULTS_DIR, f"{ticker_key}_xgb.joblib")
     stacker_path = os.path.join(RESULTS_DIR, f"{ticker_key}_stacker.joblib")
+    meta_path = os.path.join(RESULTS_DIR, f"{ticker_key}_meta.joblib")
+    threshold_path = os.path.join(RESULTS_DIR, f"{ticker_key}_meta_threshold.joblib")
     
+    use_meta = False
     if os.path.exists(rf_path) and os.path.exists(gb_path) and os.path.exists(xgb_path):
         print(f"Using stacked ensemble for {ticker}...")
         rf = joblib.load(rf_path)
@@ -787,6 +796,13 @@ def backtest_model(ticker, model, scaler, window=WINDOW, days=365, stop_loss=0.0
         xgb = joblib.load(xgb_path)
         stacker = joblib.load(stacker_path) if os.path.exists(stacker_path) else None
         y_probs = predict_ensemble_probs(rf, gb, xgb, model, stacker, X_seq_scaled)
+        
+        if os.path.exists(meta_path) and os.path.exists(threshold_path):
+            meta_model = joblib.load(meta_path)
+            meta_threshold = joblib.load(threshold_path)
+            X_seq_meta = meta_filter_features(y_probs, X_seq_scaled[:, -1, :])
+            meta_confidence = meta_model.predict_proba(X_seq_meta)[:, 1]
+            use_meta = True
     else:
         y_probs = model.predict(X_seq_scaled, verbose=0)
     
@@ -825,7 +841,13 @@ def backtest_model(ticker, model, scaler, window=WINDOW, days=365, stop_loss=0.0
         # probs[i] is [prob_sell, prob_hold, prob_buy]
         best_class = np.argmax(y_probs[i])
         
-        signal = 1 if best_class == 2 else 0
+        # Apply meta-confidence filter if available
+        if use_meta:
+            is_confident = meta_confidence[i] >= meta_threshold
+        else:
+            is_confident = True
+            
+        signal = 1 if (best_class == 2 and is_confident) else 0
         signals_list.append(signal)
         
         daily_strat_ret = 0.0

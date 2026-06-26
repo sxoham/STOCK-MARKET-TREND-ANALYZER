@@ -366,16 +366,36 @@ def generate_live_prediction(ticker):
     gb_path = os.path.join(RESULTS_DIR, f"{ticker_key}_gb.joblib")
     xgb_path = os.path.join(RESULTS_DIR, f"{ticker_key}_xgb.joblib")
     stacker_path = os.path.join(RESULTS_DIR, f"{ticker_key}_stacker.joblib")
+    meta_path = os.path.join(RESULTS_DIR, f"{ticker_key}_meta.joblib")
+    threshold_path = os.path.join(RESULTS_DIR, f"{ticker_key}_meta_threshold.joblib")
+    
     if os.path.exists(rf_path) and os.path.exists(gb_path) and os.path.exists(xgb_path):
         rf = joblib.load(rf_path)
         gb = joblib.load(gb_path)
         xgb = joblib.load(xgb_path)
         stacker = joblib.load(stacker_path) if os.path.exists(stacker_path) else None
         probs = main.predict_ensemble_probs(rf, gb, xgb, model, stacker, X_input)[0]
+        
+        if os.path.exists(meta_path) and os.path.exists(threshold_path):
+            meta_model = joblib.load(meta_path)
+            meta_threshold = joblib.load(threshold_path)
+            X_meta_input = main.meta_filter_features(probs.reshape(1, -1), X_input[:, -1, :])
+            meta_confidence = float(meta_model.predict_proba(X_meta_input)[0, 1])
+            
+            best_class = int(np.argmax(probs))
+            if meta_confidence < meta_threshold:
+                best_class = 1
+                prob = meta_confidence
+            else:
+                prob = float(probs[best_class])
+        else:
+            best_class = int(np.argmax(probs))
+            prob = float(probs[best_class])
     else:
         probs = model(X_input, training=False).numpy()[0]
-    best_class = int(np.argmax(probs))
-    prob = float(probs[best_class])
+        best_class = int(np.argmax(probs))
+        prob = float(probs[best_class])
+        
     if best_class == 2:
         prediction = "UP"
     elif best_class == 0:
