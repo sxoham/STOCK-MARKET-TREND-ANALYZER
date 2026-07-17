@@ -129,7 +129,7 @@ def verify_and_update():
                 auto_adjust=False
             )
 
-            if df.empty or len(df) < 2:
+            if df.empty:
                 print(f"Not enough market data downloaded for {ticker}. Skipping predictions.")
                 continue
 

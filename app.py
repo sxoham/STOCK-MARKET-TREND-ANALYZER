@@ -55,7 +55,7 @@ def resolve_and_validate_ticker(ticker):
     # 1. Try to download a tiny slice of data to check if ticker is directly valid
     try:
         df = yf.download(ticker, period="5d", progress=False)
-        if not df.empty and 'Close' in df.columns:
+        if df is not None and not df.empty and 'Close' in df.columns:
             return ticker
     except:
         pass
@@ -67,7 +67,7 @@ def resolve_and_validate_ticker(ticker):
             best_symbol = search.quotes[0]['symbol']
             # Double check if we can download the resolved symbol
             df = yf.download(best_symbol, period="5d", progress=False)
-            if not df.empty and 'Close' in df.columns:
+            if df is not None and not df.empty and 'Close' in df.columns:
                 return best_symbol
     except:
         pass
@@ -392,7 +392,16 @@ def generate_live_prediction(ticker):
             best_class = int(np.argmax(probs))
             prob = float(probs[best_class])
     else:
-        probs = model(X_input, training=False).numpy()[0]
+        if model is None:
+            return "NEUTRAL", 0.0
+        try:
+            if callable(model):
+                preds = model(X_input, training=False)
+            else:
+                preds = model.predict(X_input, verbose=0)
+            probs = np.asarray(preds)[0]
+        except Exception:
+            probs = np.asarray(model.predict(X_input, verbose=0))[0]
         best_class = int(np.argmax(probs))
         prob = float(probs[best_class])
         

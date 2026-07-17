@@ -1,7 +1,10 @@
 import sqlite3
 import pandas as pd
 
-LOG_DB_FILE = '../model_logs.db'
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_DB_FILE = os.path.abspath(os.path.join(BASE_DIR, "..", "model_logs.db"))
 
 def analyze():
     print("Connecting to prediction log database...")

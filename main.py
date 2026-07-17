@@ -70,19 +70,24 @@ def download_macro_data(start: str, end: str) -> pd.DataFrame:
         gold = yf.download("GC=F", start=start, end=end, progress=False)
         oil = yf.download("CL=F", start=start, end=end, progress=False)
         
-        if isinstance(nifty.columns, pd.MultiIndex): nifty.columns = nifty.columns.get_level_values(0)
-        if isinstance(usd.columns, pd.MultiIndex): usd.columns = usd.columns.get_level_values(0)
-        if isinstance(gold.columns, pd.MultiIndex): gold.columns = gold.columns.get_level_values(0)
-        if isinstance(oil.columns, pd.MultiIndex): oil.columns = oil.columns.get_level_values(0)
+        if nifty is None or nifty.empty:
+            raise ValueError("Failed to download Nifty data")
+        if isinstance(nifty.columns, pd.MultiIndex):
+            nifty.columns = nifty.columns.get_level_values(0)
         
+        def normalize_df(df):
+            if df is None or df.empty:
+                return pd.DataFrame(index=nifty.index, columns=["Close"])
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            return df.reindex(nifty.index, method='ffill')
+
+        usd = normalize_df(usd)
+        gold = normalize_df(gold)
+        oil = normalize_df(oil)
+
         macro = pd.DataFrame(index=nifty.index)
         macro["Nifty_Return"] = nifty["Close"].pct_change()
-        
-        # Reindex others to match Nifty
-        usd = usd.reindex(nifty.index, method='ffill')
-        gold = gold.reindex(nifty.index, method='ffill')
-        oil = oil.reindex(nifty.index, method='ffill')
-
         macro["USD_Change"] = usd["Close"].pct_change()
         macro["Gold_Change"] = gold["Close"].pct_change()
         macro["Oil_Change"] = oil["Close"].pct_change()
@@ -137,6 +142,8 @@ def download_stock(ticker: str, start: str = START_DATE, end: str | None = END_D
         pd.DataFrame: Stock data with basic cleaning applied.
     """
     df = yf.download(ticker, start=start, end=end, progress=False)
+    if df is None or df.empty:
+        return pd.DataFrame()
     # Flatten MultiIndex columns if present (common in recent yfinance)
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
@@ -216,9 +223,8 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     high_low = df["High"] - df["Low"]
     high_close = np.abs(df["High"] - df["Close"].shift())
     low_close = np.abs(df["Low"] - df["Close"].shift())
-    ranges = pd.concat([high_low, high_close, low_close], axis=1)
-    true_range = ranges.max(axis=1)
-    df["ATR"] = true_range.rolling(window=14).mean()
+    true_range = np.maximum(np.maximum(high_low, high_close), low_close)
+    df["ATR"] = pd.Series(true_range, index=df.index).rolling(window=14).mean()
     
     # [STATIONARY] Normalized ATR
     df["ATR_Pct"] = df["ATR"] / df["Close"]
@@ -258,10 +264,10 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     neg_di = 100 * (neg_dm_s / (df["ATR"] + 1e-9))
     
     dx = 100 * np.abs(pos_di - neg_di) / (pos_di + neg_di + 1e-9)
-    df["ADX"] = dx.rolling(window=14).mean()
+    df["ADX"] = pd.Series(dx, index=df.index).rolling(window=14).mean()
 
     # 3. OBV (On-Balance Volume) Slope
-    obv = (np.sign(df["Close"].diff()) * df["Volume"]).fillna(0).cumsum()
+    obv = (df["Close"].diff().apply(np.sign) * df["Volume"]).fillna(0).cumsum()
     df["OBV_Slope"] = obv.diff(5) # 5-day slope of OBV
 
     # 4. MFI (Money Flow Index)
@@ -414,9 +420,7 @@ def predict_ensemble_probs(
     p_gb = gb.predict_proba(X_last)
     p_xgb = xgb_base.predict_proba(X_last)
     p_lstm = lstm.predict(X_seq, verbose=0)
-    X_st = stacker_features(p_rf, p_gb, p_xgb, p_lstm)
-    if stacker is not None:
-        return stacker.predict_proba(X_st)
+    # Always use simple average ensemble as it is more robust to class imbalance
     return (p_rf + p_gb + p_xgb + p_lstm) / 4.0
 
 def build_lstm_model(input_shape: tuple) -> Model:
@@ -559,27 +563,27 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     print("Training Base Models...")
     rf = RandomForestClassifier(
         n_estimators=150,
-        max_depth=3,
-        min_samples_leaf=30,
+        max_depth=6,
+        min_samples_leaf=15,
         max_features="sqrt",
         random_state=SEED,
         n_jobs=-1
     )
-    rf.fit(X_train_tree, y_train)
+    rf.fit(X_train_tree, y_train, sample_weight=sw)
     
     gb = GradientBoostingClassifier(
-        n_estimators=60,
-        learning_rate=0.02,
-        max_depth=2,
-        min_samples_leaf=30,
+        n_estimators=80,
+        learning_rate=0.03,
+        max_depth=4,
+        min_samples_leaf=15,
         random_state=SEED
     )
-    gb.fit(X_train_tree, y_train)
+    gb.fit(X_train_tree, y_train, sample_weight=sw)
     
     xgb_base = XGBClassifier(
-        n_estimators=60,
-        learning_rate=0.02,
-        max_depth=2,
+        n_estimators=80,
+        learning_rate=0.03,
+        max_depth=4,
         subsample=0.7,
         colsample_bytree=0.7,
         reg_alpha=2.0,
@@ -588,7 +592,7 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
         objective='multi:softprob',
         num_class=3
     )
-    xgb_base.fit(X_train_tree, y_train)
+    xgb_base.fit(X_train_tree, y_train, sample_weight=sw)
     
     inputs = Input(shape=(X_train.shape[1], X_train.shape[2]))
     x = Bidirectional(LSTM(64, return_sequences=True))(inputs)
@@ -606,7 +610,7 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
         EarlyStopping(monitor="val_loss", patience=7, restore_best_weights=True),
         ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=3, min_lr=1e-5),
     ]
-    lstm.fit(X_train, y_train, validation_split=0.1, epochs=50, batch_size=32, callbacks=callbacks, verbose=0)
+    lstm.fit(X_train, y_train, validation_split=0.1, epochs=50, batch_size=32, class_weight=class_weight, callbacks=callbacks, verbose="0")
     
     # Save Base Models
     ticker_key = ticker.replace('.', '_')
@@ -615,41 +619,21 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     joblib.dump(xgb_base, os.path.join(RESULTS_DIR, f"{ticker_key}_xgb.joblib"))
     lstm.save(os.path.join(RESULTS_DIR, f"{ticker_key}_best_model.keras"))
     
-    # --- STACKER (Meta Set Split to prevent double-dipping) ---
-    print("Training stacking classifier and meta-model...")
-    mid = len(X_meta) // 2
-    X_meta_stacker = X_meta[:mid]
-    y_meta_stacker = y_meta[:mid]
-    X_meta_filter = X_meta[mid:]
-    y_meta_filter = y_meta[mid:]
+    # --- META-MODEL TRAINING (Full Out-of-Sample Meta Set) ---
+    print("Training meta-model...")
     
-    # Generate features for stacker training
-    X_meta_stacker_tree = tree_features(X_meta_stacker)
-    p_rf_stacker = rf.predict_proba(X_meta_stacker_tree)
-    p_gb_stacker = gb.predict_proba(X_meta_stacker_tree)
-    p_xgb_stacker = xgb_base.predict_proba(X_meta_stacker_tree)
-    p_lstm_stacker = lstm.predict(X_meta_stacker, verbose=0)
+    # Generate features for meta-model training
+    p_rf_meta = rf.predict_proba(tree_features(X_meta))
+    p_gb_meta = gb.predict_proba(tree_features(X_meta))
+    p_xgb_meta = xgb_base.predict_proba(tree_features(X_meta))
+    p_lstm_meta = lstm.predict(X_meta, verbose="0")
     
-    X_st_train = stacker_features(p_rf_stacker, p_gb_stacker, p_xgb_stacker, p_lstm_stacker)
-    stacker = LogisticRegression(max_iter=1000, random_state=SEED)
-    stacker.fit(X_st_train, y_meta_stacker)
-    joblib.dump(stacker, os.path.join(RESULTS_DIR, f"{ticker_key}_stacker.joblib"))
-    y_meta_stacker_pred = stacker.predict(X_st_train)
-    print(f"Meta-set stacker training acc: {accuracy_score(y_meta_stacker, y_meta_stacker_pred):.4f}")
+    # Simple average probabilities
+    p_meta = (p_rf_meta + p_gb_meta + p_xgb_meta + p_lstm_meta) / 4.0
+    y_meta_pred = np.argmax(p_meta, axis=1)
     
-    # Generate features for meta-model training (completely out-of-sample for the stacker!)
-    X_meta_filter_tree = tree_features(X_meta_filter)
-    p_rf_filter = rf.predict_proba(X_meta_filter_tree)
-    p_gb_filter = gb.predict_proba(X_meta_filter_tree)
-    p_xgb_filter = xgb_base.predict_proba(X_meta_filter_tree)
-    p_lstm_filter = lstm.predict(X_meta_filter, verbose=0)
-    
-    X_st_filter = stacker_features(p_rf_filter, p_gb_filter, p_xgb_filter, p_lstm_filter)
-    p_meta_filter = stacker.predict_proba(X_st_filter)
-    y_meta_filter_pred = np.argmax(p_meta_filter, axis=1)
-    
-    X_meta_input = meta_filter_features(p_meta_filter, X_meta_filter[:, -1, :])
-    y_meta_target = (y_meta_filter_pred == y_meta_filter).astype(int)
+    X_meta_input = meta_filter_features(p_meta, X_meta[:, -1, :])
+    y_meta_target = (y_meta_pred == y_meta).astype(int)
     print(f"Meta-target balance (1=correct): {np.mean(y_meta_target):.4f}")
     
     meta_model = XGBClassifier(n_estimators=80, max_depth=4, learning_rate=0.05, eval_metric='logloss', random_state=SEED)
@@ -657,13 +641,13 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     joblib.dump(meta_model, os.path.join(RESULTS_DIR, f"{ticker_key}_meta.joblib"))
     
     meta_conf_val = meta_model.predict_proba(X_meta_input)[:, 1]
-    meta_threshold = tune_meta_threshold(meta_conf_val, y_meta_filter, y_meta_filter_pred)
+    meta_threshold = tune_meta_threshold(meta_conf_val, y_meta, y_meta_pred)
     joblib.dump(meta_threshold, os.path.join(RESULTS_DIR, f"{ticker_key}_meta_threshold.joblib"))
     print(f"Tuned meta confidence threshold: {meta_threshold:.2f}")
     
     # --- FINAL EVALUATION (Test Set) ---
     print("Evaluating on test set...")
-    t_prob = predict_ensemble_probs(rf, gb, xgb_base, lstm, stacker, X_test)
+    t_prob = predict_ensemble_probs(rf, gb, xgb_base, lstm, None, X_test)
     y_test_pred = np.argmax(t_prob, axis=1)
     
     X_test_meta = meta_filter_features(t_prob, X_test[:, -1, :])
