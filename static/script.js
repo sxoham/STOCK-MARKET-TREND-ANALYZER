@@ -515,12 +515,12 @@ function renderGaugeChart(techData) {
     label.textContent = techData.rating;
     label.className = techData.rating.toLowerCase().replace(' ', '-');
 
-    // Color based on rating
-    let color = '#94a3b8'; // Neutral
-    if (score >= 4) color = '#22c55e'; // Strong Buy
-    else if (score >= 1) color = '#4ade80'; // Buy
-    else if (score <= -4) color = '#ef4444'; // Strong Sell
-    else if (score <= -1) color = '#f87171'; // Sell
+    // Color based on rating matching backend thresholds (-6 to +6 scale)
+    let color = '#94a3b8'; // Neutral (-1, 0, 1)
+    if (score >= 4) color = '#22c55e'; // Strong Buy (4, 5, 6)
+    else if (score >= 2) color = '#4ade80'; // Buy (2, 3)
+    else if (score <= -4) color = '#ef4444'; // Strong Sell (-4, -5, -6)
+    else if (score <= -2) color = '#f87171'; // Sell (-2, -3)
 
     label.style.color = color;
 

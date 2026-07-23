@@ -1,6 +1,6 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-from flask import Flask, render_template, jsonify, request, send_from_directory
+from flask import Flask, render_template, jsonify, request, send_from_directory, redirect
 import sqlite3
 import json
 import datetime
@@ -33,7 +33,7 @@ def get_model_db_connection():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return redirect('/login')
 
 @app.route('/login')
 def login():
@@ -267,24 +267,48 @@ def get_prediction(ticker):
             "stoch_d": df["%D"].fillna(0).tolist()
         }
         
-        # Technical Analysis Score (simple aggregate)
-        # Using last row values
+        # Technical Analysis Score (6-indicator aggregate: RSI, MACD, EMA20, EMA50, EMA200, Stochastic %K)
+        # Scale: -6 to +6
         last = df.iloc[-1]
         tech_score = 0
-        if last["RSI"] > 70: tech_score -= 1
-        elif last["RSI"] < 30: tech_score += 1
-        if last["MACD"] > 0: tech_score += 1
+        
+        rsi_val = last["RSI"] if not pd.isna(last.get("RSI")) else 50
+        macd_val = last["MACD"] if not pd.isna(last.get("MACD")) else 0
+        close_val = last["Close"] if not pd.isna(last.get("Close")) else 0
+        ema20_val = last["EMA20"] if "EMA20" in last and not pd.isna(last["EMA20"]) else close_val
+        ema50_val = last["EMA50"] if "EMA50" in last and not pd.isna(last["EMA50"]) else close_val
+        ema200_val = last["EMA200"] if "EMA200" in last and not pd.isna(last["EMA200"]) else close_val
+        stoch_k_val = last["%K"] if "%K" in last and not pd.isna(last["%K"]) else 50
+        
+        # 1. RSI
+        if rsi_val > 70: tech_score -= 1
+        elif rsi_val < 30: tech_score += 1
+        
+        # 2. MACD
+        if macd_val > 0: tech_score += 1
         else: tech_score -= 1
-        if last["Close"] > last["EMA50"]: tech_score += 1
+        
+        # 3. Close vs EMA20
+        if close_val > ema20_val: tech_score += 1
         else: tech_score -= 1
-        if last["Close"] > last["EMA200"]: tech_score += 1
+        
+        # 4. Close vs EMA50
+        if close_val > ema50_val: tech_score += 1
         else: tech_score -= 1
+        
+        # 5. Close vs EMA200
+        if close_val > ema200_val: tech_score += 1
+        else: tech_score -= 1
+        
+        # 6. Stochastic %K
+        if stoch_k_val > 80: tech_score -= 1
+        elif stoch_k_val < 20: tech_score += 1
         
         rating = "NEUTRAL"
         if tech_score >= 2: rating = "BUY"
-        if tech_score >= 3: rating = "STRONG BUY"
+        if tech_score >= 4: rating = "STRONG BUY"
         if tech_score <= -2: rating = "SELL"
-        if tech_score <= -3: rating = "STRONG SELL"
+        if tech_score <= -4: rating = "STRONG SELL"
         
         technical_analysis = {
             "score": tech_score,
@@ -336,6 +360,7 @@ def generate_live_prediction(ticker):
     
     # Macro
     try:
+        # pyrefly: ignore [bad-argument-type]
         macro = main.download_macro_data(start=pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d'), end=pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d'))
         if not macro.empty:
             df = df.join(macro)

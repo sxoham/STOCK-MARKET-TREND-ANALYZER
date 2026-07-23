@@ -161,7 +161,14 @@
   </div>
 
   <script type="module">
-    import { auth, signInWithEmailAndPassword, signInWithGoogle } from "/static/firebase-auth.js";
+    import { auth, signInWithEmailAndPassword, signInWithGoogle, onAuthStateChanged } from "/static/firebase-auth.js";
+
+    // Auto-redirect if already logged in
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = "/dashboard";
+      }
+    });
 
     // Modal functions
     function showMessageModal(title, message, isError = false) {
