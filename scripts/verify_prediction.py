@@ -198,7 +198,7 @@ def verify_and_update():
     conn.close()
 
     # Retrain updated models
-    if tickers_to_update:
+    if tickers_to_update and "--no-retrain" not in sys.argv:
         print("\nRetraining models...")
 
         for ticker in tickers_to_update:
@@ -207,6 +207,8 @@ def verify_and_update():
                 main.train_single_model(ticker)
             except Exception as e:
                 print(f"Retraining failed for {ticker}: {e}")
+    elif tickers_to_update:
+        print("\nSkipping retraining (deferred to next pipeline step)...")
 
     print("\nVerification and update complete.")
 

@@ -152,7 +152,7 @@ def make_predictions():
                     best_class = int(np.argmax(probs))
                     if meta_confidence < meta_threshold:
                         best_class = 1
-                        prob = meta_confidence
+                        prob = float(probs[1])
                     else:
                         prob = float(probs[best_class])
                 else:

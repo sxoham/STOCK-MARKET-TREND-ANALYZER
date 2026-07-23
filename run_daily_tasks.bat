@@ -7,7 +7,7 @@ echo.
 cd /d "F:\Project\STOCK MARKET TREND ANALYZER"
 
 echo [1/4] Verifying past predictions...
-.venv\Scripts\python.exe scripts/verify_prediction.py
+.venv\Scripts\python.exe scripts/verify_prediction.py --no-retrain
 
 echo.
 
