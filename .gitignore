@@ -31,8 +31,8 @@ stock_models_global/
 .DS_Store
 Thumbs.db
 Untitled
+git.txt
 
 # Logs
 *.log
 scripts/*_log.txt
-
