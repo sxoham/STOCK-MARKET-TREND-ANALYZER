@@ -696,9 +696,20 @@ async function runBacktest() {
             return;
         }
 
-        document.getElementById('btTotalReturn').textContent = data.metrics.total_return.toFixed(2) + '%';
-        document.getElementById('btMarketReturn').textContent = data.metrics.market_return.toFixed(2) + '%';
-        document.getElementById('btWinRate').textContent = data.metrics.win_rate.toFixed(2) + '%';
+        const m = data.metrics;
+
+        const totalReturnEl = document.getElementById('btTotalReturn');
+        const marketReturnEl = document.getElementById('btMarketReturn');
+        totalReturnEl.textContent = m.total_return.toFixed(2) + '%';
+        marketReturnEl.textContent = m.market_return.toFixed(2) + '%';
+        document.getElementById('btWinRate').textContent = m.win_rate.toFixed(2) + '%';
+        document.getElementById('btTotalTrades').textContent = m.total_trades;
+        document.getElementById('btMaxDrawdown').textContent = m.max_drawdown.toFixed(2) + '%';
+
+        // Color-code returns
+        totalReturnEl.style.color = m.total_return >= 0 ? '#4ade80' : '#f87171';
+        marketReturnEl.style.color = m.market_return >= 0 ? '#4ade80' : '#f87171';
+        document.getElementById('btMaxDrawdown').style.color = '#f87171';
 
         renderBacktestChart(data.chart);
 
@@ -745,9 +756,11 @@ function renderBacktestChart(data) {
 }
 
 function resetBacktestUI() {
-    document.getElementById('btTotalReturn').textContent = '--';
-    document.getElementById('btMarketReturn').textContent = '--';
-    document.getElementById('btWinRate').textContent = '--';
+    const ids = ['btTotalReturn', 'btMarketReturn', 'btWinRate', 'btTotalTrades', 'btMaxDrawdown'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = '--'; el.style.color = ''; }
+    });
     if (backtestChart) backtestChart.destroy();
 }
 

@@ -457,29 +457,33 @@ def backtest_endpoint(ticker):
         
         if result_df is None or result_df.empty:
             return jsonify({"error": "Not enough data for backtest"}), 400
-            
-        # Calculate Metrics
-        initial = result_df["Cum_Strategy_Return"].iloc[0]
-        final = result_df["Cum_Strategy_Return"].iloc[-1]
-        total_return = (final - initial) / initial * 100
         
-        m_initial = result_df["Cum_Market_Return"].iloc[0]
-        m_final = result_df["Cum_Market_Return"].iloc[-1]
-        market_return = (m_final - m_initial) / m_initial * 100
+        # --- Metric Calculations ---
+        # Cumulative return curves start at 1.0, so total return = (final - 1) * 100
+        final_strategy = result_df["Cum_Strategy_Return"].iloc[-1]
+        final_market = result_df["Cum_Market_Return"].iloc[-1]
+        total_return = (final_strategy - 1.0) * 100
+        market_return = (final_market - 1.0) * 100
         
-        wins = result_df[result_df["Strategy_Daily_Return"] > 0]
-        total_trades = result_df[result_df["Signal"] != 0] # Only days we held? Or strictly trades?
-        # Backtest strategy in main.py holds 1 for BUY/HOLD. 
-        # The 'Signal' in result_df seems to be 1 for BUY/HOLD days.
-        # Win rate should be positive return days / total active days
-        active_days = len(result_df[result_df["Signal"] == 1])
-        win_rate = (len(wins) / active_days * 100) if active_days > 0 else 0
+        # Win rate: positive-return days among all BUY days
+        buy_days = result_df[result_df["Signal"] == 1]
+        total_trades = len(buy_days)
+        wins = len(buy_days[buy_days["Strategy_Daily_Return"] > 0])
+        win_rate = (wins / total_trades * 100) if total_trades > 0 else 0
+        
+        # Max Drawdown on strategy curve
+        strat_curve = result_df["Cum_Strategy_Return"]
+        rolling_max = strat_curve.cummax()
+        drawdown = (strat_curve - rolling_max) / rolling_max
+        max_drawdown = float(drawdown.min() * 100)
         
         return jsonify({
             "metrics": {
-                "total_return": total_return,
-                "market_return": market_return,
-                "win_rate": win_rate
+                "total_return": round(total_return, 2),
+                "market_return": round(market_return, 2),
+                "win_rate": round(win_rate, 2),
+                "total_trades": total_trades,
+                "max_drawdown": round(max_drawdown, 2)
             },
             "chart": {
                 "dates": pd.DatetimeIndex(result_df.index).strftime('%Y-%m-%d').tolist(),
@@ -490,6 +494,7 @@ def backtest_endpoint(ticker):
         
     except Exception as e:
         print(f"Backtest error: {e}")
+        import traceback; traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

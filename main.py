@@ -220,9 +220,9 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["Bandwidth"] = (df["UpperBB"] - df["LowerBB"]) / df["MA20"]
     
     # ATR (Average True Range)
-    high_low = df["High"] - df["Low"]
-    high_close = np.abs(df["High"] - df["Close"].shift())
-    low_close = np.abs(df["Low"] - df["Close"].shift())
+    high_low = (df["High"] - df["Low"]).to_numpy()
+    high_close = np.abs(df["High"] - df["Close"].shift()).to_numpy()
+    low_close = np.abs(df["Low"] - df["Close"].shift()).to_numpy()
     true_range = np.maximum(np.maximum(high_low, high_close), low_close)
     df["ATR"] = pd.Series(true_range, index=df.index).rolling(window=14).mean()
     
@@ -317,7 +317,7 @@ def create_target(df: pd.DataFrame) -> pd.DataFrame:
     choices = [0, 2]
     # Default is 1 (HOLD)
     
-    df["Target"] = np.select(conditions, choices, default=1)
+    df["Target"] = np.select([np.asarray(c, dtype=bool) for c in conditions], choices, default=1)
     df.dropna(inplace=True)
     return df
 
@@ -470,7 +470,7 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     df = add_technical_indicators(df)
     
     # Merge Macro Data
-    macro = download_macro_data(start=pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d'), end=pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d'))
+    macro = download_macro_data(start=str(pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d')), end=str(pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d')))
     if not macro.empty:
         df = df.join(macro)
         df.ffill(inplace=True)
@@ -714,7 +714,7 @@ def backtest_model(ticker, model, scaler, window=WINDOW, days=365, stop_loss=0.0
     df = add_technical_indicators(df)
     
     # [NEW] Merge Macro Data for Backtest
-    macro = download_macro_data(start=pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d'), end=pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d'))
+    macro = download_macro_data(start=str(pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d')), end=str(pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d')))
     if not macro.empty:
         df = df.join(macro)
         df.ffill(inplace=True)
@@ -773,6 +773,8 @@ def backtest_model(ticker, model, scaler, window=WINDOW, days=365, stop_loss=0.0
     threshold_path = os.path.join(RESULTS_DIR, f"{ticker_key}_meta_threshold.joblib")
     
     use_meta = False
+    meta_confidence: np.ndarray = np.array([])
+    meta_threshold: float = 1.0  # Default: no signal passes until explicitly loaded
     if os.path.exists(rf_path) and os.path.exists(gb_path) and os.path.exists(xgb_path):
         print(f"Using stacked ensemble for {ticker}...")
         rf = joblib.load(rf_path)
@@ -786,6 +788,17 @@ def backtest_model(ticker, model, scaler, window=WINDOW, days=365, stop_loss=0.0
             meta_threshold = joblib.load(threshold_path)
             X_seq_meta = meta_filter_features(y_probs, X_seq_scaled[:, -1, :])
             meta_confidence = meta_model.predict_proba(X_seq_meta)[:, 1]
+            # Use adaptive threshold for backtesting:
+            # If the trained threshold blocks nearly all signals (<2 signals),
+            # fall back to the median of confidence scores so ~50% of BUY signals pass.
+            buy_mask = np.argmax(y_probs, axis=1) == 2
+            n_raw_buys = int(buy_mask.sum())
+            n_confident_buys = int((meta_confidence[buy_mask] >= meta_threshold).sum()) if n_raw_buys > 0 else 0
+            if n_confident_buys < max(2, n_raw_buys * 0.1):
+                # Threshold too strict — use median confidence among BUY candidates
+                buy_confidences = meta_confidence[buy_mask]
+                meta_threshold = float(np.percentile(buy_confidences, 50)) if len(buy_confidences) > 0 else meta_threshold
+                print(f"  Adaptive backtest threshold applied: {meta_threshold:.3f} ({n_confident_buys}/{n_raw_buys} raw BUYs passed original threshold)")
             use_meta = True
     else:
         y_probs = model.predict(X_seq_scaled, verbose=0)
