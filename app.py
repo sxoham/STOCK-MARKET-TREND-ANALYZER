@@ -248,75 +248,80 @@ def get_prediction(ticker):
         end_date = datetime.date.today().strftime("%Y-%m-%d")
         start_date = (datetime.date.today() - datetime.timedelta(days=365)).strftime("%Y-%m-%d")
         df = main.download_stock(ticker, start=start_date, end=end_date)
-        df = main.add_technical_indicators(df)
         
-        # Format for JSON
-        dates = pd.DatetimeIndex(df.index).strftime('%Y-%m-%d').tolist()
-        history = {
-            "dates": dates,
-            "open": df["Open"].tolist(),
-            "high": df["High"].tolist(),
-            "low": df["Low"].tolist(),
-            "close": df["Close"].tolist(),
-            "volume": df["Volume"].tolist(),
-            "rsi": df["RSI"].fillna(0).tolist(),
-            "macd": df["MACD"].fillna(0).tolist(),
-            "ema50": df["EMA50"].fillna(0).tolist(),
-            "ema200": df["EMA200"].fillna(0).tolist(),
-            "stoch_k": df["%K"].fillna(0).tolist(),
-            "stoch_d": df["%D"].fillna(0).tolist()
-        }
-        
-        # Technical Analysis Score (6-indicator aggregate: RSI, MACD, EMA20, EMA50, EMA200, Stochastic %K)
-        # Scale: -6 to +6
-        last = df.iloc[-1]
-        tech_score = 0
-        
-        rsi_val = last["RSI"] if not pd.isna(last.get("RSI")) else 50
-        macd_val = last["MACD"] if not pd.isna(last.get("MACD")) else 0
-        close_val = last["Close"] if not pd.isna(last.get("Close")) else 0
-        ema20_val = last["EMA20"] if "EMA20" in last and not pd.isna(last["EMA20"]) else close_val
-        ema50_val = last["EMA50"] if "EMA50" in last and not pd.isna(last["EMA50"]) else close_val
-        ema200_val = last["EMA200"] if "EMA200" in last and not pd.isna(last["EMA200"]) else close_val
-        stoch_k_val = last["%K"] if "%K" in last and not pd.isna(last["%K"]) else 50
-        
-        # 1. RSI
-        if rsi_val > 70: tech_score -= 1
-        elif rsi_val < 30: tech_score += 1
-        
-        # 2. MACD
-        if macd_val > 0: tech_score += 1
-        else: tech_score -= 1
-        
-        # 3. Close vs EMA20
-        if close_val > ema20_val: tech_score += 1
-        else: tech_score -= 1
-        
-        # 4. Close vs EMA50
-        if close_val > ema50_val: tech_score += 1
-        else: tech_score -= 1
-        
-        # 5. Close vs EMA200
-        if close_val > ema200_val: tech_score += 1
-        else: tech_score -= 1
-        
-        # 6. Stochastic %K
-        if stoch_k_val > 80: tech_score -= 1
-        elif stoch_k_val < 20: tech_score += 1
-        
-        rating = "NEUTRAL"
-        if tech_score >= 2: rating = "BUY"
-        if tech_score >= 4: rating = "STRONG BUY"
-        if tech_score <= -2: rating = "SELL"
-        if tech_score <= -4: rating = "STRONG SELL"
-        
-        technical_analysis = {
-            "score": tech_score,
-            "rating": rating
-        }
+        if df is None or df.empty:
+            history = {}
+            technical_analysis = {"score": 0, "rating": "NEUTRAL"}
+        else:
+            df = main.add_technical_indicators(df)
+            
+            # Format for JSON
+            dates = pd.DatetimeIndex(df.index).strftime('%Y-%m-%d').tolist()
+            history = {
+                "dates": dates,
+                "open": df["Open"].tolist(),
+                "high": df["High"].tolist(),
+                "low": df["Low"].tolist(),
+                "close": df["Close"].tolist(),
+                "volume": df["Volume"].tolist(),
+                "rsi": df["RSI"].fillna(0).tolist(),
+                "macd": df["MACD"].fillna(0).tolist(),
+                "ema50": df["EMA50"].fillna(0).tolist(),
+                "ema200": df["EMA200"].fillna(0).tolist(),
+                "stoch_k": df["%K"].fillna(0).tolist(),
+                "stoch_d": df["%D"].fillna(0).tolist()
+            }
+            
+            # Technical Analysis Score (6-indicator aggregate: RSI, MACD, EMA20, EMA50, EMA200, Stochastic %K)
+            # Scale: -6 to +6
+            last = df.iloc[-1]
+            tech_score = 0
+            
+            rsi_val = last["RSI"] if not pd.isna(last.get("RSI")) else 50
+            macd_val = last["MACD"] if not pd.isna(last.get("MACD")) else 0
+            close_val = last["Close"] if not pd.isna(last.get("Close")) else 0
+            ema20_val = last["EMA20"] if "EMA20" in last and not pd.isna(last["EMA20"]) else close_val
+            ema50_val = last["EMA50"] if "EMA50" in last and not pd.isna(last["EMA50"]) else close_val
+            ema200_val = last["EMA200"] if "EMA200" in last and not pd.isna(last["EMA200"]) else close_val
+            stoch_k_val = last["%K"] if "%K" in last and not pd.isna(last["%K"]) else 50
+            
+            # 1. RSI
+            if rsi_val > 70: tech_score -= 1
+            elif rsi_val < 30: tech_score += 1
+            
+            # 2. MACD
+            if macd_val > 0: tech_score += 1
+            else: tech_score -= 1
+            
+            # 3. Close vs EMA20
+            if close_val > ema20_val: tech_score += 1
+            else: tech_score -= 1
+            
+            # 4. Close vs EMA50
+            if close_val > ema50_val: tech_score += 1
+            else: tech_score -= 1
+            
+            # 5. Close vs EMA200
+            if close_val > ema200_val: tech_score += 1
+            else: tech_score -= 1
+            
+            # 6. Stochastic %K
+            if stoch_k_val > 80: tech_score -= 1
+            elif stoch_k_val < 20: tech_score += 1
+            
+            rating = "NEUTRAL"
+            if tech_score >= 2: rating = "BUY"
+            if tech_score >= 4: rating = "STRONG BUY"
+            if tech_score <= -2: rating = "SELL"
+            if tech_score <= -4: rating = "STRONG SELL"
+            
+            technical_analysis = {
+                "score": tech_score,
+                "rating": rating
+            }
         
     except Exception as e:
-        print(f"History error: {e}")
+        print(f"History error for {ticker}: {e}")
         history = {}
         technical_analysis = {"score": 0, "rating": "NEUTRAL"}
         
@@ -339,7 +344,19 @@ def generate_live_prediction(ticker):
     feature_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_features.joblib")
     
     if not os.path.exists(model_path) or not os.path.exists(scaler_path):
-        return "NEUTRAL", 0.0
+        print(f"Model for {ticker} not found. Training model on demand...")
+        try:
+            main.train_single_model(ticker)
+            model_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_best_model.keras")
+            if not os.path.exists(model_path):
+                model_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_final_model.keras")
+            scaler_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_scaler.save")
+        except Exception as e:
+            print(f"Error training model for {ticker}: {e}")
+            return "TRAINING", 0.0
+            
+        if not os.path.exists(model_path) or not os.path.exists(scaler_path):
+            return "TRAINING", 0.0
         
     model = load_model(model_path)
     scaler = joblib.load(scaler_path)
@@ -379,11 +396,21 @@ def generate_live_prediction(ticker):
     else:
         df["Sentiment_Score"] = 0.0
         
+    if hasattr(scaler, 'n_features_in_') and scaler.n_features_in_ != len(active_features):
+        if scaler.n_features_in_ == len(main.FEATURE_COLS):
+            active_features = main.FEATURE_COLS
+
     features = df[active_features].tail(main.WINDOW).values
     if len(features) < main.WINDOW:
         return "NEUTRAL", 0.0
         
-    features_scaled = scaler.transform(features)
+    try:
+        features_scaled = scaler.transform(features)
+    except Exception as e:
+        print(f"Scaler transform warning for {ticker}: {e}. Refitting scaler dynamically.")
+        from sklearn.preprocessing import StandardScaler
+        features_scaled = StandardScaler().fit_transform(features)
+        
     X_input = features_scaled.reshape(1, main.WINDOW, len(active_features))
     
     ticker_key = ticker.replace('.', '_')
@@ -395,25 +422,40 @@ def generate_live_prediction(ticker):
     threshold_path = os.path.join(RESULTS_DIR, f"{ticker_key}_meta_threshold.joblib")
     
     if os.path.exists(rf_path) and os.path.exists(gb_path) and os.path.exists(xgb_path):
-        rf = joblib.load(rf_path)
-        gb = joblib.load(gb_path)
-        xgb = joblib.load(xgb_path)
-        stacker = joblib.load(stacker_path) if os.path.exists(stacker_path) else None
-        probs = main.predict_ensemble_probs(rf, gb, xgb, model, stacker, X_input)[0]
-        
-        if os.path.exists(meta_path) and os.path.exists(threshold_path):
-            meta_model = joblib.load(meta_path)
-            meta_threshold = joblib.load(threshold_path)
-            X_meta_input = main.meta_filter_features(probs.reshape(1, -1), X_input[:, -1, :])
-            meta_confidence = float(meta_model.predict_proba(X_meta_input)[0, 1])
+        try:
+            rf = joblib.load(rf_path)
+            gb = joblib.load(gb_path)
+            xgb = joblib.load(xgb_path)
+            stacker = joblib.load(stacker_path) if os.path.exists(stacker_path) else None
+            probs = main.predict_ensemble_probs(rf, gb, xgb, model, stacker, X_input)[0]
             
-            best_class = int(np.argmax(probs))
-            if meta_confidence < meta_threshold:
-                best_class = 1
-                prob = float(probs[1])
+            if os.path.exists(meta_path) and os.path.exists(threshold_path):
+                meta_model = joblib.load(meta_path)
+                meta_threshold = joblib.load(threshold_path)
+                X_meta_input = main.meta_filter_features(probs.reshape(1, -1), X_input[:, -1, :])
+                meta_confidence = float(meta_model.predict_proba(X_meta_input)[0, 1])
+                
+                best_class = int(np.argmax(probs))
+                if meta_confidence < meta_threshold:
+                    best_class = 1
+                    prob = float(probs[1])
+                else:
+                    prob = float(probs[best_class])
             else:
+                best_class = int(np.argmax(probs))
                 prob = float(probs[best_class])
-        else:
+        except Exception as e:
+            print(f"Failed to load ensemble for predict ({ticker}): {e}. Falling back to base model.")
+            if model is None:
+                return "NEUTRAL", 0.0
+            try:
+                if callable(model):
+                    preds = model(X_input, training=False)
+                else:
+                    preds = model.predict(X_input, verbose=0)
+                probs = np.asarray(preds)[0]
+            except Exception:
+                probs = np.asarray(model.predict(X_input, verbose=0))[0]
             best_class = int(np.argmax(probs))
             prob = float(probs[best_class])
     else:

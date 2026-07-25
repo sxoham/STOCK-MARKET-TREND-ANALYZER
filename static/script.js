@@ -299,8 +299,18 @@ async function selectStock(ticker, element) {
     updateWatchlistUI();
 
     document.getElementById('selectedStockTitle').textContent = ticker;
-    document.getElementById('statusIndicator').textContent = 'Loading data... (May train if new)';
+    document.getElementById('statusIndicator').textContent = 'Training model & loading data...';
     document.getElementById('statusIndicator').style.color = '#f59e0b'; // Amber for processing
+
+    const predValue = document.getElementById('predictionValue');
+    const predProbContainer = document.querySelector('.prediction-prob');
+    if (predValue) {
+        predValue.textContent = 'Training...';
+        predValue.className = 'prediction-value training';
+    }
+    if (predProbContainer) {
+        predProbContainer.innerHTML = 'Status: <span id="predictionProb">Model is being trained...</span>';
+    }
 
     updateWatchlistButton();
 
@@ -370,11 +380,38 @@ async function fetchSentiment(ticker) {
 function updateDashboard(data) {
     // Prediction
     const predValue = document.getElementById('predictionValue');
-    const predProb = document.getElementById('predictionProb');
+    const predProbContainer = document.querySelector('.prediction-prob');
 
-    predValue.textContent = data.prediction;
-    predValue.className = `prediction-value ${data.prediction.toLowerCase()}`;
-    predProb.textContent = (data.probability * 100).toFixed(2);
+    const isTraining = !data.prediction || 
+                       data.prediction === 'TRAINING' || 
+                       data.prediction === 'Training Model...' || 
+                       (data.prediction === 'NEUTRAL' && (data.probability === 0 || data.probability === 0.5));
+
+    if (isTraining) {
+        predValue.textContent = 'Training...';
+        predValue.className = 'prediction-value training';
+        if (predProbContainer) {
+            predProbContainer.innerHTML = 'Status: <span id="predictionProb">Model is being trained...</span>';
+        }
+    } else {
+        const rawPred = data.prediction.toUpperCase();
+        predValue.textContent = rawPred;
+
+        let className = 'prediction-value';
+        if (rawPred === 'UP' || rawPred === 'BUY' || rawPred === 'STRONG BUY') {
+            className += ' up';
+        } else if (rawPred === 'DOWN' || rawPred === 'SELL' || rawPred === 'STRONG SELL') {
+            className += ' down';
+        } else {
+            className += ' neutral';
+        }
+        predValue.className = className;
+
+        const probPercent = (data.probability * 100).toFixed(2);
+        if (predProbContainer) {
+            predProbContainer.innerHTML = `Confidence: <span id="predictionProb">${probPercent}</span>%`;
+        }
+    }
 
     // Charts
     if (data.history.close && data.history.close.length > 0) {
@@ -445,6 +482,7 @@ window.confirmDeleteAccount = async function () {
 
 // Render Stochastic Chart
 function renderStochChart(history) {
+    if (!history || !history.dates || !history.stoch_k || history.dates.length === 0) return;
     const ctx = document.getElementById('stochChart').getContext('2d');
     // Check if chart instance exists (need to store it globally or attach to canvas)
     if (window.stochChartInstance) window.stochChartInstance.destroy();
@@ -553,6 +591,7 @@ function renderGaugeChart(techData) {
 
 // Render Price Chart (Plotly)
 function renderPriceChart(history) {
+    if (!history || !history.dates || !history.close || history.dates.length === 0) return;
     const trace1 = {
         x: history.dates,
         close: history.close,
@@ -621,6 +660,7 @@ function renderPriceChart(history) {
 
 // Render RSI Chart
 function renderRSIChart(history) {
+    if (!history || !history.dates || !history.rsi || history.dates.length === 0) return;
     const ctx = document.getElementById('rsiChart').getContext('2d');
     if (rsiChart) rsiChart.destroy();
 
@@ -650,17 +690,19 @@ function renderRSIChart(history) {
 
 // Render MACD Chart
 function renderMACDChart(history) {
+    if (!history || !history.dates || !history.macd || history.dates.length === 0) return;
     const ctx = document.getElementById('macdChart').getContext('2d');
     if (macdChart) macdChart.destroy();
 
+    const macdValues = history.macd || [];
     macdChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: history.dates,
             datasets: [{
                 label: 'MACD',
-                data: history.macd,
-                backgroundColor: history.macd.map(v => v >= 0 ? '#4ade80' : '#f87171')
+                data: macdValues,
+                backgroundColor: macdValues.map(v => v >= 0 ? '#4ade80' : '#f87171')
             }]
         },
         options: {

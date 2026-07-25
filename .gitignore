@@ -32,7 +32,7 @@ stock_models_global/
 Thumbs.db
 Untitled
 git.txt
-
+update.txt
 # Logs
 *.log
 scripts/*_log.txt

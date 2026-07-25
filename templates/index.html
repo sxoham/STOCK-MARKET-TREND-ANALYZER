@@ -17,12 +17,12 @@
   <div class="app-container">
     <aside class="sidebar">
       <div class="logo">
-        <h1>TrendAnalyzer</h1>
+        <h1>Stock Radar</h1>
       </div>
 
       <div class="portfolio-summary">
         <h3 onclick="openProfile()" class="portfolio-trigger">
-          <span id="portfolioHeader">Hello, Trader</span> <span id="headerIcon">👋</span>
+          <span id="portfolioHeader">Hello, Trader</span> <span id="headerIcon"></span>
         </h3>
         <div class="balance-card">
           <div class="label">Balance</div>
@@ -178,13 +178,14 @@
             </div>
           </div>
         </div>
-      </div><br>
 
-      <!-- Price Chart (Interactive) -->
-      <div class="card chart-card full-width">
-        <h3>Price History (Interactive)</h3>
-        <div class="chart-container" id="priceChart">
-          <!-- Plotly Chart -->
+        <br>
+        <!-- Price Chart (Interactive) -->
+        <div class="card chart-card full-width">
+          <h3>Price History (Interactive)</h3>
+          <div class="chart-container" id="priceChart">
+            <!-- Plotly Chart -->
+          </div>
         </div>
       </div><br>
 
@@ -428,7 +429,7 @@
     }
   </style>
 
-  <script type="module" src="{{ url_for('static', filename='script.js') }}?v=18"></script>
+  <script type="module" src="{{ url_for('static', filename='script.js') }}?v=20"></script>
 </body>
 
 </html>

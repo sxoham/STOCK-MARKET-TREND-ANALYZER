@@ -292,6 +292,24 @@ body {
         0 0 40px rgba(248, 113, 113, 0.2);
 }
 
+.prediction-value.training {
+    color: #f59e0b;
+    font-size: 2.5rem;
+    text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+    animation: trainingPulse 1.5s infinite ease-in-out;
+}
+
+.prediction-value.neutral {
+    color: var(--accent-color);
+    font-size: 3rem;
+}
+
+@keyframes trainingPulse {
+    0% { opacity: 0.5; transform: scale(0.98); }
+    50% { opacity: 1; transform: scale(1.02); }
+    100% { opacity: 0.5; transform: scale(0.98); }
+}
+
 .actions {
     display: flex;
     gap: 1rem;

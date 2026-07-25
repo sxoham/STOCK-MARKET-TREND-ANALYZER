@@ -1,5 +1,6 @@
 import os
 import random
+from typing import Any
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -412,7 +413,7 @@ def tune_meta_threshold(confidence: np.ndarray, y_true: np.ndarray, y_pred: np.n
     return best_t
 
 def predict_ensemble_probs(
-    rf, gb, xgb_base, lstm, stacker, X_seq: np.ndarray
+    rf, gb, xgb_base, lstm, stacker, X_seq: Any
 ) -> np.ndarray:
     """Stacked class probabilities; falls back to uniform average if no stacker."""
     X_last = tree_features(X_seq)
@@ -749,6 +750,10 @@ def backtest_model(ticker, model, scaler, window=WINDOW, days=365, stop_loss=0.0
     else:
         # Fallback if no selection file
         active_features = FEATURE_COLS
+
+    if hasattr(scaler, 'n_features_in_') and scaler.n_features_in_ != len(active_features):
+        if scaler.n_features_in_ == len(FEATURE_COLS):
+            active_features = FEATURE_COLS
         
     features = sim_df[active_features].values
     
@@ -762,7 +767,13 @@ def backtest_model(ticker, model, scaler, window=WINDOW, days=365, stop_loss=0.0
     # Scale
     nsamples, ntime, nfeat = X_seq.shape
     X_seq_2d = X_seq.reshape(-1, nfeat)
-    X_seq_scaled = scaler.transform(X_seq_2d).reshape(nsamples, ntime, nfeat)
+    try:
+        X_seq_scaled = scaler.transform(X_seq_2d).reshape(nsamples, ntime, nfeat)
+    except Exception as e:
+        print(f"Scaler transform warning in backtest for {ticker}: {e}. Refitting scaler dynamically.")
+        from sklearn.preprocessing import StandardScaler
+        X_seq_2d_scaled = StandardScaler().fit_transform(X_seq_2d)
+        X_seq_scaled = X_seq_2d_scaled.reshape(nsamples, ntime, nfeat)
     
     ticker_key = ticker.replace('.', '_')
     rf_path = os.path.join(RESULTS_DIR, f"{ticker_key}_rf.joblib")
@@ -776,30 +787,34 @@ def backtest_model(ticker, model, scaler, window=WINDOW, days=365, stop_loss=0.0
     meta_confidence: np.ndarray = np.array([])
     meta_threshold: float = 1.0  # Default: no signal passes until explicitly loaded
     if os.path.exists(rf_path) and os.path.exists(gb_path) and os.path.exists(xgb_path):
-        print(f"Using stacked ensemble for {ticker}...")
-        rf = joblib.load(rf_path)
-        gb = joblib.load(gb_path)
-        xgb = joblib.load(xgb_path)
-        stacker = joblib.load(stacker_path) if os.path.exists(stacker_path) else None
-        y_probs = predict_ensemble_probs(rf, gb, xgb, model, stacker, X_seq_scaled)
-        
-        if os.path.exists(meta_path) and os.path.exists(threshold_path):
-            meta_model = joblib.load(meta_path)
-            meta_threshold = joblib.load(threshold_path)
-            X_seq_meta = meta_filter_features(y_probs, X_seq_scaled[:, -1, :])
-            meta_confidence = meta_model.predict_proba(X_seq_meta)[:, 1]
-            # Use adaptive threshold for backtesting:
-            # If the trained threshold blocks nearly all signals (<2 signals),
-            # fall back to the median of confidence scores so ~50% of BUY signals pass.
-            buy_mask = np.argmax(y_probs, axis=1) == 2
-            n_raw_buys = int(buy_mask.sum())
-            n_confident_buys = int((meta_confidence[buy_mask] >= meta_threshold).sum()) if n_raw_buys > 0 else 0
-            if n_confident_buys < max(2, n_raw_buys * 0.1):
-                # Threshold too strict — use median confidence among BUY candidates
-                buy_confidences = meta_confidence[buy_mask]
-                meta_threshold = float(np.percentile(buy_confidences, 50)) if len(buy_confidences) > 0 else meta_threshold
-                print(f"  Adaptive backtest threshold applied: {meta_threshold:.3f} ({n_confident_buys}/{n_raw_buys} raw BUYs passed original threshold)")
-            use_meta = True
+        try:
+            print(f"Using stacked ensemble for {ticker}...")
+            rf = joblib.load(rf_path)
+            gb = joblib.load(gb_path)
+            xgb = joblib.load(xgb_path)
+            stacker = joblib.load(stacker_path) if os.path.exists(stacker_path) else None
+            y_probs = predict_ensemble_probs(rf, gb, xgb, model, stacker, X_seq_scaled)
+            
+            if os.path.exists(meta_path) and os.path.exists(threshold_path):
+                meta_model = joblib.load(meta_path)
+                meta_threshold = joblib.load(threshold_path)
+                X_seq_meta = meta_filter_features(y_probs, X_seq_scaled[:, -1, :])
+                meta_confidence = meta_model.predict_proba(X_seq_meta)[:, 1]
+                # Use adaptive threshold for backtesting:
+                # If the trained threshold blocks nearly all signals (<2 signals),
+                # fall back to the median of confidence scores so ~50% of BUY signals pass.
+                buy_mask = np.argmax(y_probs, axis=1) == 2
+                n_raw_buys = int(buy_mask.sum())
+                n_confident_buys = int((meta_confidence[buy_mask] >= meta_threshold).sum()) if n_raw_buys > 0 else 0
+                if n_confident_buys < max(2, n_raw_buys * 0.1):
+                    # Threshold too strict — use median confidence among BUY candidates
+                    buy_confidences = meta_confidence[buy_mask]
+                    meta_threshold = float(np.percentile(buy_confidences, 50)) if len(buy_confidences) > 0 else meta_threshold
+                    print(f"  Adaptive backtest threshold applied: {meta_threshold:.3f} ({n_confident_buys}/{n_raw_buys} raw BUYs passed original threshold)")
+                use_meta = True
+        except Exception as e:
+            print(f"Failed to load ensemble for backtest ({ticker}): {e}. Falling back to base model.")
+            y_probs = model.predict(X_seq_scaled, verbose=0)
     else:
         y_probs = model.predict(X_seq_scaled, verbose=0)
     
