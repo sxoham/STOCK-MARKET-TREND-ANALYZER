@@ -311,12 +311,13 @@ def create_target(df: pd.DataFrame, horizon: int = 1) -> pd.DataFrame:
     df["Next_Return"] = df["Close"].shift(-horizon) / df["Close"] - 1
     
     # Horizon-specific thresholding
+    # Horizon-specific thresholding
     if horizon >= 20:
-        threshold = 0.050 # 5.0% threshold for 1-Month (20-Day)
+        threshold = 0.040 # 4.0% threshold for 1-Month (20-Day)
     elif horizon >= 5:
-        threshold = 0.030 # 3.0% threshold for 5-Day (1-Week)
+        threshold = 0.025 # 2.5% threshold for 5-Day (1-Week)
     else:
-        threshold = 0.015 # 1.5% threshold for 1-Day
+        threshold = 0.010 # 1.0% threshold for 1-Day
         
     conditions = [
         (df["Next_Return"] < -threshold), # SELL (0)
@@ -408,15 +409,18 @@ def sample_weights_from_counts(y: np.ndarray) -> np.ndarray:
     return np.array([weight_map[yi] for yi in y])
 
 def tune_meta_threshold(confidence: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Pick confidence threshold that maximizes accuracy on the meta set."""
-    best_t, best_acc = 0.5, 0.0
-    for t in np.arange(0.45, 0.86, 0.05):
+    """Pick confidence threshold that balances precision with signal trade volume."""
+    best_t, best_score = 0.50, -1.0
+    total = len(confidence)
+    for t in np.arange(0.45, 0.66, 0.05):
         mask = confidence >= t
-        if mask.sum() < 30:
+        if mask.sum() < max(15, int(total * 0.05)):
             continue
         acc = accuracy_score(y_true[mask], y_pred[mask])
-        if acc > best_acc:
-            best_acc, best_t = acc, float(t)
+        pass_ratio = mask.sum() / (total + 1e-9)
+        score = acc + 0.10 * pass_ratio
+        if score > best_score:
+            best_score, best_t = score, float(t)
     return best_t
 
 def predict_ensemble_probs(
@@ -536,8 +540,8 @@ def explain_prediction(ticker: str, X_last_scaled: np.ndarray, active_features: 
     total_abs_all = total_abs_all if total_abs_all > 1e-9 else 1.0
     all_attributions = []
     for s in scores:
-        pct = (s["abs_impact"] / total_abs_all) * 100.0
-        is_positive = (s["raw_impact"] >= 0 and predicted_class == 2) or (s["raw_impact"] < 0 and predicted_class == 0)
+        pct = (float(s["abs_impact"]) / total_abs_all) * 100.0
+        is_positive = (float(s["raw_impact"]) >= 0 and predicted_class == 2) or (float(s["raw_impact"]) < 0 and predicted_class == 0)
         direction = "positive" if is_positive else "negative"
         sign = "+" if direction == "positive" else "-"
         all_attributions.append({
@@ -546,19 +550,19 @@ def explain_prediction(ticker: str, X_last_scaled: np.ndarray, active_features: 
             "pct": round(pct, 1),
             "impact_str": f"{sign}{round(pct, 1)}%",
             "direction": direction,
-            "z_score": round(s["z_val"], 2),
-            "importance": round(s["importance"], 4)
+            "z_score": round(float(s["z_val"]), 2),
+            "importance": round(float(s["importance"]), 4)
         })
 
     top_scores = scores[:4]
-    total_abs_top = sum(s["abs_impact"] for s in top_scores) + 1e-9
+    total_abs_top = sum(float(s["abs_impact"]) for s in top_scores) + 1e-9
     
     drivers = []
     for s in top_scores:
-        pct = int(round((s["abs_impact"] / total_abs_top) * 100))
+        pct = int(round((float(s["abs_impact"]) / total_abs_top) * 100))
         pct = max(12, min(pct, 48))
         
-        is_positive = (s["raw_impact"] >= 0 and predicted_class == 2) or (s["raw_impact"] < 0 and predicted_class == 0)
+        is_positive = (float(s["raw_impact"]) >= 0 and predicted_class == 2) or (float(s["raw_impact"]) < 0 and predicted_class == 0)
         direction = "positive" if is_positive else "negative"
         sign = "+" if direction == "positive" else "-"
         

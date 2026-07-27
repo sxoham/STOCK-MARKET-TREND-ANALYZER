@@ -402,7 +402,9 @@ def generate_live_prediction(ticker, horizon: int = 1):
     
     # Macro
     try:
-        macro = main.download_macro_data(start=pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d'), end=pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d'))
+        start_str = str(pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d'))
+        end_str = str(pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d'))
+        macro = main.download_macro_data(start=start_str, end=end_str)
         if not macro.empty:
             df = df.join(macro)
             df.ffill(inplace=True)
@@ -459,7 +461,15 @@ def generate_live_prediction(ticker, horizon: int = 1):
                 meta_confidence = float(meta_model.predict_proba(X_meta_input)[0, 1])
                 
                 best_class = int(np.argmax(probs))
-                if meta_confidence < meta_threshold:
+                effective_threshold = min(float(meta_threshold), 0.60)
+                # Soft-margin: if argmax is HOLD but directional class is within 5%, prefer directional signal
+                if best_class == 1:
+                    directional = int(np.argmax([probs[0], -1, probs[2]]))  # 0=SELL or 2=BUY
+                    directional_class = 0 if probs[0] > probs[2] else 2
+                    if float(probs[directional_class]) >= float(probs[1]) - 0.05:
+                        best_class = directional_class
+                # Only force HOLD if meta-confidence is low AND ensemble probability is under 45%
+                if meta_confidence < effective_threshold and float(probs[best_class]) < 0.45:
                     best_class = 1
                     prob = float(probs[1])
                 else:
@@ -504,9 +514,14 @@ def generate_live_prediction(ticker, horizon: int = 1):
         
     # Generate XAI drivers
     try:
-        xai_res = main.explain_prediction(ticker, features_scaled[-1], active_features, best_class, horizon=horizon, return_dict=True)
-        top_drivers = xai_res.get("top_drivers", [])
-        all_attributions = xai_res.get("all_attributions", [])
+        last_scaled_vec: np.ndarray = np.asarray(features_scaled[-1])
+        xai_res = main.explain_prediction(ticker, last_scaled_vec, list(active_features), best_class, horizon=horizon, return_dict=True)
+        if isinstance(xai_res, dict):
+            top_drivers = xai_res.get("top_drivers", [])
+            all_attributions = xai_res.get("all_attributions", [])
+        else:
+            top_drivers = xai_res
+            all_attributions = []
     except Exception as ex:
         print(f"XAI driver extraction warning: {ex}")
         top_drivers = []

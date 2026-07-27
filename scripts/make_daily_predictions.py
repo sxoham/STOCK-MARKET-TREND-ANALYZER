@@ -5,8 +5,8 @@ import datetime
 import pandas as pd
 import numpy as np
 import joblib
-from tensorflow.keras.models import load_model
 import tensorflow as tf
+load_model = tf.keras.models.load_model  # avoids static-analysis false-positive on keras submodule
 tf.get_logger().setLevel('ERROR')
 import sys
 import os
@@ -88,7 +88,7 @@ def make_predictions():
             
             # Macro
             try:
-                macro = main.download_macro_data(start=pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d'), end=pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d'))
+                macro = main.download_macro_data(start=str(pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d')), end=str(pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d')))
                 if not macro.empty:
                     df = df.join(macro)
                     df.ffill(inplace=True)
@@ -150,7 +150,14 @@ def make_predictions():
                     meta_confidence = float(meta_model.predict_proba(X_meta_input)[0, 1])
                     
                     best_class = int(np.argmax(probs))
-                    if meta_confidence < meta_threshold:
+                    effective_threshold = min(float(meta_threshold), 0.60)
+                    # Soft-margin: if argmax is HOLD but directional class is within 5%, prefer directional signal
+                    if best_class == 1:
+                        directional_class = 0 if probs[0] > probs[2] else 2
+                        if float(probs[directional_class]) >= float(probs[1]) - 0.05:
+                            best_class = directional_class
+                    # Only force HOLD if meta-confidence is low AND ensemble probability is under 45%
+                    if meta_confidence < effective_threshold and float(probs[best_class]) < 0.45:
                         best_class = 1
                         prob = float(probs[1])
                     else:
@@ -170,7 +177,7 @@ def make_predictions():
             else:
                 prediction = "HOLD"
                 
-            start_price = float(df.iloc[-1]["Close"])
+            start_price = float(df["Close"].iloc[-1].item())
             
             print(f"  Prediction: {prediction} ({prob:.2%}) @ {start_price:.2f}")
             
@@ -185,12 +192,12 @@ def make_predictions():
                     UPDATE predictions 
                     SET prediction=?, probability=?, start_price=?, predicted_date=?
                     WHERE id=?
-                ''', (prediction, float(prob), start_price, next_day, existing[0]))
+                ''', (prediction, prob, start_price, next_day, existing[0]))
             else:
                 c.execute('''
                     INSERT INTO predictions (ticker, date, predicted_date, prediction, probability, start_price)
                     VALUES (?, ?, ?, ?, ?, ?)
-                ''', (ticker, today_str, next_day, prediction, float(prob), start_price))
+                ''', (ticker, today_str, next_day, prediction, prob, start_price))
             
             count += 1
             conn.commit()

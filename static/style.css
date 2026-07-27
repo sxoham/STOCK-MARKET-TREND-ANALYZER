@@ -730,6 +730,7 @@ body {
 
 .trade-input {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 /* Modal Styles */
@@ -1033,11 +1034,6 @@ body {
     /* Ensure transform works */
 }
 
-/* Ensure name doesn't rotate but scales slightly? No, keep it clean per user request */
-.portfolio-trigger:hover #portfolioHeader {
-    /* No transform */
-}
-
 /* Feedback Rating */
 .rating-stars {
     display: flex;
@@ -1129,4 +1125,23 @@ body {
     background: rgba(15, 23, 42, 0.5);
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Modal Body Custom Scrollbar */
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
 }

@@ -1,0 +1,5 @@
+# Pyrefly configuration
+# Points Pyrefly to the virtual environment so it can find installed packages like TensorFlow
+
+[python]
+python_interpreter = ".venv/Scripts/python.exe"
