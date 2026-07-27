@@ -1063,3 +1063,70 @@ body {
     color: var(--text-secondary);
     /* Reset following stars on hover */
 }
+
+/* Multi-Horizon Prediction Selector */
+.horizon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.horizon-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.horizon-btn.active {
+    background: var(--accent-color);
+    color: #0f172a;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+/* Explainable AI (XAI) Driver Pills */
+.xai-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    transition: transform 0.15s ease;
+}
+
+.xai-pill:hover {
+    transform: translateY(-1px);
+}
+
+.xai-pill.positive {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #34d399;
+}
+
+.xai-pill.negative {
+    background: rgba(244, 63, 94, 0.15);
+    border-color: rgba(244, 63, 94, 0.35);
+    color: #fb7185;
+}
+
+.xai-pill.neutral {
+    background: rgba(148, 163, 184, 0.1);
+    color: var(--text-secondary);
+}
+
+/* XAI Feature Breakdown Rows */
+.xai-bar-row {
+    padding: 8px 12px;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}

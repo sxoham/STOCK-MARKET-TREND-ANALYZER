@@ -219,28 +219,46 @@ def get_prediction(ticker):
     if not resolved_ticker:
         return jsonify({"error": f"Ticker symbol '{ticker}' not found on Yahoo Finance"}), 400
     ticker = resolved_ticker
+    
+    horizon_param = request.args.get('horizon', '1d').lower()
+    if horizon_param in ['5d', '5']:
+        horizon = 5
+    elif horizon_param in ['1m', '20d', '20']:
+        horizon = 20
+    else:
+        horizon = 1
         
     today_str = datetime.date.today().strftime('%Y-%m-%d')
-    
-    # 1. Check DB for existing prediction
-    conn = get_model_db_connection()
-    row = conn.execute('SELECT prediction, probability FROM predictions WHERE ticker = ? AND date = ?', (ticker, today_str)).fetchone()
-    conn.close()
-    
     prediction = None
     probability = 0
+    top_drivers = []
+    all_attributions = []
     
-    if row:
-        prediction = row['prediction']
-        probability = row['probability']
-    else:
-        # 2. Generate on-the-fly if missing
+    # 1. Check DB for existing prediction (only for 1d default)
+    if horizon == 1:
+        conn = get_model_db_connection()
+        row = conn.execute('SELECT prediction, probability FROM predictions WHERE ticker = ? AND date = ?', (ticker, today_str)).fetchone()
+        conn.close()
+        if row:
+            prediction = row['prediction']
+            probability = row['probability']
+
+    # 2. Generate on-the-fly if missing or non-standard horizon
+    if not prediction:
         try:
-            prediction, probability = generate_live_prediction(ticker)
+            prediction, probability, top_drivers, all_attributions = generate_live_prediction(ticker, horizon=horizon)
         except Exception as e:
-            print(f"Prediction error for {ticker}: {e}")
+            print(f"Prediction error for {ticker} (horizon={horizon}d): {e}")
             prediction = "NEUTRAL"
             probability = 0.5
+            top_drivers = []
+            all_attributions = []
+    else:
+        # DB row found but need drivers
+        try:
+            _, _, top_drivers, all_attributions = generate_live_prediction(ticker, horizon=horizon)
+        except Exception:
+            pass
             
     # 3. Get History for Charts
     try:
@@ -273,7 +291,6 @@ def get_prediction(ticker):
             }
             
             # Technical Analysis Score (6-indicator aggregate: RSI, MACD, EMA20, EMA50, EMA200, Stochastic %K)
-            # Scale: -6 to +6
             last = df.iloc[-1]
             tech_score = 0
             
@@ -327,38 +344,46 @@ def get_prediction(ticker):
         
     return jsonify({
         "ticker": ticker,
+        "horizon": f"{horizon}d" if horizon != 20 else "1m",
+        "horizon_days": horizon,
         "prediction": prediction,
         "probability": probability,
+        "top_drivers": top_drivers,
+        "all_attributions": all_attributions,
         "history": history,
         "technical_analysis": technical_analysis
     })
 
-def generate_live_prediction(ticker):
-    # Logic adapted from make_daily_predictions.py
-    # Load Model & Assets
-    model_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_best_model.keras")
+def generate_live_prediction(ticker, horizon: int = 1):
+    ticker_key = ticker.replace('.', '_') if horizon == 1 else f"{ticker.replace('.', '_')}_h{horizon}"
+    model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_best_model.keras")
     if not os.path.exists(model_path):
-         model_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_final_model.keras")
+         model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_final_model.keras")
     
-    scaler_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_scaler.save")
-    feature_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_features.joblib")
+    scaler_path = os.path.join(RESULTS_DIR, f"{ticker_key}_scaler.save")
+    feature_path = os.path.join(RESULTS_DIR, f"{ticker_key}_features.joblib")
     
     if not os.path.exists(model_path) or not os.path.exists(scaler_path):
-        print(f"Model for {ticker} not found. Training model on demand...")
+        print(f"Model for {ticker} (horizon={horizon}d) not found. Training model on demand...")
         try:
-            main.train_single_model(ticker)
-            model_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_best_model.keras")
+            main.train_single_model(ticker, horizon=horizon)
+            model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_best_model.keras")
             if not os.path.exists(model_path):
-                model_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_final_model.keras")
-            scaler_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_scaler.save")
+                model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_final_model.keras")
+            scaler_path = os.path.join(RESULTS_DIR, f"{ticker_key}_scaler.save")
         except Exception as e:
             print(f"Error training model for {ticker}: {e}")
-            return "TRAINING", 0.0
+            return "TRAINING", 0.0, [], []
             
         if not os.path.exists(model_path) or not os.path.exists(scaler_path):
-            return "TRAINING", 0.0
+            return "TRAINING", 0.0, [], []
         
-    model = load_model(model_path)
+    try:
+        model = load_model(model_path)
+    except Exception as ex:
+        print(f"Model load with compile warning: {ex}. Retrying load_model without compile...")
+        model = load_model(model_path, compile=False)
+        
     scaler = joblib.load(scaler_path)
     
     if os.path.exists(feature_path):
@@ -366,18 +391,17 @@ def generate_live_prediction(ticker):
     else:
         active_features = main.FEATURE_COLS
 
-    # Get Data (enough for window)
+    # Get Data
     start_date = (datetime.date.today() - datetime.timedelta(days=365)).strftime('%Y-%m-%d')
     df = main.download_stock(ticker, start=start_date, end=None)
     
     if len(df) < main.WINDOW + 50:
-         return "NEUTRAL", 0.0
+         return "NEUTRAL", 0.0, [], []
          
     df = main.add_technical_indicators(df)
     
     # Macro
     try:
-        # pyrefly: ignore [bad-argument-type]
         macro = main.download_macro_data(start=pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d'), end=pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d'))
         if not macro.empty:
             df = df.join(macro)
@@ -402,7 +426,7 @@ def generate_live_prediction(ticker):
 
     features = df[active_features].tail(main.WINDOW).values
     if len(features) < main.WINDOW:
-        return "NEUTRAL", 0.0
+        return "NEUTRAL", 0.0, [], []
         
     try:
         features_scaled = scaler.transform(features)
@@ -413,7 +437,6 @@ def generate_live_prediction(ticker):
         
     X_input = features_scaled.reshape(1, main.WINDOW, len(active_features))
     
-    ticker_key = ticker.replace('.', '_')
     rf_path = os.path.join(RESULTS_DIR, f"{ticker_key}_rf.joblib")
     gb_path = os.path.join(RESULTS_DIR, f"{ticker_key}_gb.joblib")
     xgb_path = os.path.join(RESULTS_DIR, f"{ticker_key}_xgb.joblib")
@@ -447,7 +470,7 @@ def generate_live_prediction(ticker):
         except Exception as e:
             print(f"Failed to load ensemble for predict ({ticker}): {e}. Falling back to base model.")
             if model is None:
-                return "NEUTRAL", 0.0
+                return "NEUTRAL", 0.0, [], []
             try:
                 if callable(model):
                     preds = model(X_input, training=False)
@@ -460,7 +483,7 @@ def generate_live_prediction(ticker):
             prob = float(probs[best_class])
     else:
         if model is None:
-            return "NEUTRAL", 0.0
+            return "NEUTRAL", 0.0, [], []
         try:
             if callable(model):
                 preds = model(X_input, training=False)
@@ -478,7 +501,18 @@ def generate_live_prediction(ticker):
         prediction = "DOWN"
     else:
         prediction = "HOLD"
-    return prediction, prob
+        
+    # Generate XAI drivers
+    try:
+        xai_res = main.explain_prediction(ticker, features_scaled[-1], active_features, best_class, horizon=horizon, return_dict=True)
+        top_drivers = xai_res.get("top_drivers", [])
+        all_attributions = xai_res.get("all_attributions", [])
+    except Exception as ex:
+        print(f"XAI driver extraction warning: {ex}")
+        top_drivers = []
+        all_attributions = []
+
+    return prediction, prob, top_drivers, all_attributions
 
 @app.route('/api/backtest/<ticker>')
 def backtest_endpoint(ticker):

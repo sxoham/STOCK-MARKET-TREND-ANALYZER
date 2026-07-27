@@ -13,6 +13,8 @@ let macdChart = null;
 let gaugeChart = null;
 let backtestChart = null;
 let currentUserEmail = null;
+let currentHorizon = '1d';
+let currentAttributions = [];
 
 let portfolio = {
     balance: 10000,
@@ -316,9 +318,8 @@ async function selectStock(ticker, element) {
 
     // Reset Backtest UI
     resetBacktestUI();
-
     try {
-        const response = await fetch(`/api/predict/${ticker}`);
+        const response = await fetch(`/api/predict/${ticker}?horizon=${currentHorizon}`);
         const data = await response.json();
 
         if (data.error) {
@@ -349,24 +350,33 @@ async function fetchSentiment(ticker) {
     const score = document.getElementById('sentimentScore');
     const list = document.getElementById('newsList');
 
-    badge.textContent = 'Loading...';
-    badge.className = 'sentiment-badge';
-    score.textContent = '--';
-    list.innerHTML = '';
-
     try {
         const response = await fetch(`/api/sentiment/${ticker}`);
         const data = await response.json();
 
-        if (data.error) return;
+        if (data.label === 'Positive') {
+            badge.textContent = 'Positive 🟢';
+            badge.className = 'sentiment-badge positive';
+        } else if (data.label === 'Negative') {
+            badge.textContent = 'Negative 🔴';
+            badge.className = 'sentiment-badge negative';
+        } else {
+            badge.textContent = 'Neutral ⚪';
+            badge.className = 'sentiment-badge neutral';
+        }
 
-        badge.textContent = data.label;
-        badge.className = `sentiment-badge ${data.label}`;
-        score.textContent = data.score.toFixed(2);
+        score.textContent = (data.score || 0).toFixed(2);
 
-        data.headlines.forEach(item => {
+        list.innerHTML = '';
+        const headlines = data.headlines || [];
+        if (headlines.length === 0) {
+            list.innerHTML = '<li>No recent news headlines available</li>';
+            return;
+        }
+
+        headlines.slice(0, 5).forEach(news => {
             const li = document.createElement('li');
-            li.innerHTML = `<a href="${item.link}" target="_blank">${item.title}</a>`;
+            li.innerHTML = `<a href="${news.url || '#'}" target="_blank" rel="noopener noreferrer">${news.title}</a>`;
             list.appendChild(li);
         });
 
@@ -376,8 +386,126 @@ async function fetchSentiment(ticker) {
     }
 }
 
+// Multi-Horizon Switching
+window.switchHorizon = async function (horizon) {
+    currentHorizon = horizon;
+
+    // Update active horizon UI button state
+    document.querySelectorAll('.horizon-btn').forEach(btn => {
+        if (btn.getAttribute('data-horizon') === horizon) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    const labelEl = document.getElementById('predictionHorizonLabel');
+    if (labelEl) {
+        const labelMap = { '1d': '1-Day Forecast', '5d': '5-Day Forecast', '1m': '1-Month Forecast' };
+        labelEl.textContent = labelMap[horizon] || `${horizon} Horizon`;
+    }
+
+    if (currentStock) {
+        const predValue = document.getElementById('predictionValue');
+        const predProbContainer = document.querySelector('.prediction-prob');
+        if (predValue) {
+            predValue.textContent = 'Computing...';
+            predValue.className = 'prediction-value training';
+        }
+        if (predProbContainer) {
+            predProbContainer.innerHTML = 'Status: <span id="predictionProb">Evaluating target horizon model...</span>';
+        }
+        try {
+            const response = await fetch(`/api/predict/${currentStock}?horizon=${horizon}`);
+            const data = await response.json();
+            if (!data.error) {
+                updateDashboard(data);
+            }
+        } catch (e) {
+            console.error("Error switching horizon:", e);
+        }
+    }
+};
+
+// Render Top XAI Driver Pills
+function renderTopDrivers(drivers) {
+    const list = document.getElementById('topDriversList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (!drivers || drivers.length === 0) {
+        list.innerHTML = '<span class="xai-pill neutral">No driver data available</span>';
+        return;
+    }
+
+    drivers.forEach(d => {
+        const pill = document.createElement('span');
+        const dirClass = d.direction === 'positive' ? 'positive' : 'negative';
+        const signSymbol = d.direction === 'positive' ? '▲' : '▼';
+        pill.className = `xai-pill ${dirClass}`;
+        pill.innerHTML = `<span>${signSymbol} ${d.name}</span> <small style="font-weight: 700;">(${d.impact})</small>`;
+        list.appendChild(pill);
+    });
+}
+
+// Open/Close SHAP Feature Breakdown Modal
+window.openXaiModal = function () {
+    const modal = document.getElementById('xaiModal');
+    const tickerEl = document.getElementById('xaiModalTicker');
+    const container = document.getElementById('xaiFeatureBars');
+    if (tickerEl) tickerEl.textContent = currentStock || '--';
+
+    if (container) {
+        container.innerHTML = '';
+        if (!currentAttributions || currentAttributions.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 1rem;">No detailed feature attributions available for this model.</p>';
+        } else {
+            currentAttributions.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'xai-bar-row';
+                const isPos = item.direction === 'positive';
+                const color = isPos ? '#10b981' : '#f43f5e';
+                const pct = Math.min(Math.max(item.pct, 1.5), 100);
+                row.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 3px;">
+                        <span><strong style="color: #f8fafc;">${item.name}</strong> <small style="color: #94a3b8; font-size: 0.75rem;">(${item.feature})</small></span>
+                        <span style="font-weight: 700; color: ${color}; font-size: 0.85rem;">${item.impact_str}</span>
+                    </div>
+                    <div style="width: 100%; height: 7px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; position: relative;">
+                        <div style="width: ${pct}%; height: 100%; background: ${color}; border-radius: 4px; transition: width 0.4s ease;"></div>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+    }
+    if (modal) modal.classList.add('active');
+};
+
+window.closeXaiModal = function () {
+    const modal = document.getElementById('xaiModal');
+    if (modal) modal.classList.remove('active');
+};
+
 // Update Dashboard UI
 function updateDashboard(data) {
+    // Horizon UI Sync
+    if (data.horizon_days) {
+        const hKey = data.horizon_days === 5 ? '5d' : (data.horizon_days === 20 ? '1m' : '1d');
+        document.querySelectorAll('.horizon-btn').forEach(btn => {
+            if (btn.getAttribute('data-horizon') === hKey) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        const labelEl = document.getElementById('predictionHorizonLabel');
+        if (labelEl) {
+            const labelMap = { '1d': '1-Day Forecast', '5d': '5-Day Forecast', '1m': '1-Month Forecast' };
+            labelEl.textContent = labelMap[hKey] || `${data.horizon} Horizon`;
+        }
+    }
+
     // Prediction
     const predValue = document.getElementById('predictionValue');
     const predProbContainer = document.querySelector('.prediction-prob');
@@ -412,6 +540,10 @@ function updateDashboard(data) {
             predProbContainer.innerHTML = `Confidence: <span id="predictionProb">${probPercent}</span>%`;
         }
     }
+
+    // XAI Drivers & Attributions
+    renderTopDrivers(data.top_drivers || []);
+    currentAttributions = data.all_attributions || [];
 
     // Charts
     if (data.history.close && data.history.close.length > 0) {

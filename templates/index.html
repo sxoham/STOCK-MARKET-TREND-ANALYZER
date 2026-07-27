@@ -127,8 +127,16 @@
         <div class="dashboard-grid">
           <!-- Prediction Card -->
           <div class="card prediction-card">
-            <div class="card-header">
-              <h3>Prediction (Next Day)</h3>
+            <div class="card-header" style="flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+              <div>
+                <h3 style="margin: 0;">AI Trend Forecast</h3>
+                <span id="predictionHorizonLabel" style="font-size: 0.75rem; color: var(--text-secondary);">1-Day Horizon</span>
+              </div>
+              <div class="horizon-selector" style="display: flex; gap: 4px; background: rgba(255,255,255,0.05); padding: 3px; border-radius: 8px;">
+                <button class="horizon-btn active" data-horizon="1d" onclick="window.switchHorizon('1d')">1-Day</button>
+                <button class="horizon-btn" data-horizon="5d" onclick="window.switchHorizon('5d')">5-Day</button>
+                <button class="horizon-btn" data-horizon="1m" onclick="window.switchHorizon('1m')">1-Month</button>
+              </div>
               <div class="actions">
                 <button class="btn-trade buy" onclick="openTradeModal('BUY')">Buy</button>
                 <button class="btn-trade sell" onclick="openTradeModal('SELL')">Sell</button>
@@ -137,6 +145,17 @@
             <div class="prediction-content">
               <div class="prediction-value" id="predictionValue">--</div>
               <div class="prediction-prob">Confidence: <span id="predictionProb">--</span>%</div>
+
+              <!-- Explainable AI (SHAP / Feature Drivers) -->
+              <div class="xai-container" style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary);">🤖 Key Model Drivers (XAI)</span>
+                  <button id="viewXaiBtn" class="btn-secondary" style="font-size: 0.75rem; padding: 2px 8px;" onclick="window.openXaiModal()">Feature Breakdown 📊</button>
+                </div>
+                <div id="topDriversList" class="xai-drivers-grid" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  <span class="xai-pill neutral">Loading model drivers...</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -381,6 +400,29 @@
       <div class="modal-actions">
         <button class="btn-secondary" onclick="window.closeFeedbackModal()">Cancel</button>
         <button class="btn-primary" onclick="window.submitFeedback()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHAP / XAI Feature Breakdown Modal -->
+  <div id="xaiModal" class="modal">
+    <div class="modal-content" style="max-width: 550px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+        <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+          <span>🧠</span> AI Feature Attribution Breakdown
+        </h3>
+        <button class="btn-close" onclick="window.closeXaiModal()">×</button>
+      </div>
+      <div class="modal-body" style="max-height: 450px; overflow-y: auto; padding-right: 4px;">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          SHAP / Tree-based feature importance breakdown showing how technical indicators & macro signals drove the <strong id="xaiModalTicker">--</strong> model prediction.
+        </p>
+        <div id="xaiFeatureBars" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top: 1rem;">
+        <button class="btn-secondary" onclick="window.closeXaiModal()">Close</button>
       </div>
     </div>
   </div>

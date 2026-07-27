@@ -221,11 +221,11 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["Bandwidth"] = (df["UpperBB"] - df["LowerBB"]) / df["MA20"]
     
     # ATR (Average True Range)
-    high_low = (df["High"] - df["Low"]).to_numpy()
-    high_close = np.abs(df["High"] - df["Close"].shift()).to_numpy()
-    low_close = np.abs(df["Low"] - df["Close"].shift()).to_numpy()
-    true_range = np.maximum(np.maximum(high_low, high_close), low_close)
-    df["ATR"] = pd.Series(true_range, index=df.index).rolling(window=14).mean()
+    high_low = df["High"] - df["Low"]
+    high_close = (df["High"] - df["Close"].shift()).abs()
+    low_close = (df["Low"] - df["Close"].shift()).abs()
+    true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+    df["ATR"] = true_range.rolling(window=14).mean()
     
     # [STATIONARY] Normalized ATR
     df["ATR_Pct"] = df["ATR"] / df["Close"]
@@ -300,26 +300,33 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df.ffill(inplace=True)
     return df
 
-def create_target(df: pd.DataFrame) -> pd.DataFrame:
+def create_target(df: pd.DataFrame, horizon: int = 1) -> pd.DataFrame:
     """
     Generates the target variable for a 3-class classification problem (SELL, HOLD, BUY).
-    1-day future return matches the daily prediction and verification pipeline.
+    Supports multi-horizon forecasting (e.g. 1-Day, 5-Day, 20-Day).
     """
     df = df.copy()
     
-    # Calculate future return (1-day horizon)
-    df["Next_Return"] = df["Close"].shift(-1) / df["Close"] - 1
+    # Calculate future return over specified horizon
+    df["Next_Return"] = df["Close"].shift(-horizon) / df["Close"] - 1
     
-    # 1.5% threshold matching verify_prediction.py
+    # Horizon-specific thresholding
+    if horizon >= 20:
+        threshold = 0.050 # 5.0% threshold for 1-Month (20-Day)
+    elif horizon >= 5:
+        threshold = 0.030 # 3.0% threshold for 5-Day (1-Week)
+    else:
+        threshold = 0.015 # 1.5% threshold for 1-Day
+        
     conditions = [
-        (df["Next_Return"] < -0.015), # SELL (0)
-        (df["Next_Return"] > 0.015)   # BUY (2)
+        (df["Next_Return"] < -threshold), # SELL (0)
+        (df["Next_Return"] > threshold)   # BUY (2)
     ]
     choices = [0, 2]
     # Default is 1 (HOLD)
     
     df["Target"] = np.select([np.asarray(c, dtype=bool) for c in conditions], choices, default=1)
-    df.dropna(inplace=True)
+    df.dropna(subset=["Next_Return"], inplace=True)
     return df
 
 def create_sequences(features, target, window: int = WINDOW) -> tuple:
@@ -426,27 +433,27 @@ def predict_ensemble_probs(
 
 def build_lstm_model(input_shape: tuple) -> Model:
     """
-    Constructs a Bidirectional LSTM model with Dropout and Batch Normalization.
+    Constructs a Bidirectional LSTM with Multi-Head Temporal Attention Neural Network.
     
     Args:
         input_shape (tuple): Shape of the input data (window_size, num_features).
         
     Returns:
-        keras.models.Model: Compiled Keras model.
+        keras.models.Model: Compiled Keras model with Temporal Attention layer.
     """
     inputs = Input(shape=input_shape)
     
-    # 1. GRU Layer 1
+    # 1. Bidirectional LSTM Layer (returns sequences for temporal attention)
     x = Bidirectional(LSTM(64, return_sequences=True))(inputs)
-    x = Dropout(0.3)(x)
     x = BatchNormalization()(x)
-    
-    # 2. GRU Layer 2
-    x = LSTM(32, return_sequences=False)(x)
     x = Dropout(0.3)(x)
-    x = BatchNormalization()(x)
     
-    # 3. Dense Head
+    # 2. Temporal Multi-Head Attention Layer
+    attn_out = MultiHeadAttention(num_heads=4, key_dim=32)(x, x)
+    x = LayerNormalization()(x + attn_out)
+    
+    # 3. Global Temporal Pooling & Dense Head
+    x = GlobalAveragePooling1D()(x)
     x = Dense(32, activation="relu")(x)
     x = Dropout(0.2)(x)
     
@@ -457,12 +464,126 @@ def build_lstm_model(input_shape: tuple) -> Model:
     model.compile(optimizer=Adam(learning_rate=0.001), loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     return model
 
+FEATURE_LABEL_MAP = {
+    "RSI": ("RSI Oversold", "RSI Overbought"),
+    "MACD_Norm": ("MACD Bearish Momentum", "MACD Bullish Crossover"),
+    "Return": ("Negative Price Momentum", "Positive Price Momentum"),
+    "Volume_Change": ("Volume Contraction", "High Volume Surge"),
+    "Dist_EMA20": ("Price Below EMA20", "Price Above EMA20"),
+    "Dist_EMA50": ("Price Below EMA50", "Price Above EMA50"),
+    "Dist_EMA200": ("Price Below EMA200", "Price Above EMA200"),
+    "Rel_EMA20_50": ("EMA20 Below EMA50", "EMA20 Golden Crossover"),
+    "BBP": ("Lower Bollinger Band Touch", "Upper Bollinger Band Breakout"),
+    "Bandwidth": ("Low Band Squeeze", "High Band Volatility"),
+    "ATR_Pct": ("Low Volatility Range", "High Volatility Surge"),
+    "ROC": ("Negative Rate of Change", "Positive Rate of Change"),
+    "Nifty_Return": ("Macro Market Headwind", "Macro Market Tailwind"),
+    "USD_Change": ("USD Strength Pressure", "USD Weakness Support"),
+    "Gold_Change": ("Macro Gold Drop", "Macro Gold Spike"),
+    "Oil_Change": ("Oil Price Drop", "Oil Price Spike"),
+    "ADX": ("Weak Trend Strength", "Strong Trend Strength"),
+    "CCI": ("CCI Oversold Signal", "CCI Overbought Signal"),
+    "MFI": ("Money Outflow Pressure", "Money Inflow Accumulation"),
+    "OBV_Slope": ("Volume Distribution", "Volume Accumulation"),
+    "Sentiment_Score": ("Negative News Sentiment", "Positive News Sentiment")
+}
+
+def explain_prediction(ticker: str, X_last_scaled: np.ndarray, active_features: list, predicted_class: int, horizon: int = 1, return_dict: bool = False) -> list | dict:
+    """
+    Generates feature attribution breakdown (Explainable AI) showing top positive and negative drivers.
+    Returns percentage contributions and direction for top drivers and full feature set.
+    """
+    ticker_key = ticker.replace('.', '_') if horizon == 1 else f"{ticker.replace('.', '_')}_h{horizon}"
+    rf_path = os.path.join(RESULTS_DIR, f"{ticker_key}_rf.joblib")
+    xgb_path = os.path.join(RESULTS_DIR, f"{ticker_key}_xgb.joblib")
+    
+    importances = np.ones(len(active_features)) / len(active_features)
+    try:
+        if os.path.exists(xgb_path):
+            xgb = joblib.load(xgb_path)
+            if hasattr(xgb, 'feature_importances_') and len(xgb.feature_importances_) == len(active_features):
+                importances = xgb.feature_importances_
+        elif os.path.exists(rf_path):
+            rf = joblib.load(rf_path)
+            if hasattr(rf, 'feature_importances_') and len(rf.feature_importances_) == len(active_features):
+                importances = rf.feature_importances_
+    except Exception:
+        pass
+
+    scores = []
+    total_abs_all = 0.0
+    for idx, feature_name in enumerate(active_features):
+        z_val = float(X_last_scaled[idx]) if idx < len(X_last_scaled) else 0.0
+        imp = float(importances[idx]) if idx < len(importances) else 1.0 / len(active_features)
+        
+        impact_score = z_val * imp
+        labels = FEATURE_LABEL_MAP.get(feature_name, (f"Low {feature_name}", f"High {feature_name}"))
+        label = labels[1] if z_val >= 0 else labels[0]
+        abs_imp = abs(impact_score)
+        total_abs_all += abs_imp
+        
+        scores.append({
+            "feature": feature_name,
+            "label": label,
+            "raw_impact": impact_score,
+            "abs_impact": abs_imp,
+            "z_val": z_val,
+            "importance": imp
+        })
+        
+    scores.sort(key=lambda x: x["abs_impact"], reverse=True)
+    
+    total_abs_all = total_abs_all if total_abs_all > 1e-9 else 1.0
+    all_attributions = []
+    for s in scores:
+        pct = (s["abs_impact"] / total_abs_all) * 100.0
+        is_positive = (s["raw_impact"] >= 0 and predicted_class == 2) or (s["raw_impact"] < 0 and predicted_class == 0)
+        direction = "positive" if is_positive else "negative"
+        sign = "+" if direction == "positive" else "-"
+        all_attributions.append({
+            "feature": s["feature"],
+            "name": s["label"],
+            "pct": round(pct, 1),
+            "impact_str": f"{sign}{round(pct, 1)}%",
+            "direction": direction,
+            "z_score": round(s["z_val"], 2),
+            "importance": round(s["importance"], 4)
+        })
+
+    top_scores = scores[:4]
+    total_abs_top = sum(s["abs_impact"] for s in top_scores) + 1e-9
+    
+    drivers = []
+    for s in top_scores:
+        pct = int(round((s["abs_impact"] / total_abs_top) * 100))
+        pct = max(12, min(pct, 48))
+        
+        is_positive = (s["raw_impact"] >= 0 and predicted_class == 2) or (s["raw_impact"] < 0 and predicted_class == 0)
+        direction = "positive" if is_positive else "negative"
+        sign = "+" if direction == "positive" else "-"
+        
+        drivers.append({
+            "feature": s["feature"],
+            "name": s["label"],
+            "impact": f"{sign}{pct}%",
+            "pct": pct,
+            "direction": direction
+        })
+        
+    if return_dict:
+        return {
+            "top_drivers": drivers,
+            "all_attributions": all_attributions
+        }
+    return drivers
+
 # 4. Main loop: for each stock, prepare data -> train -> evaluate -> save
-def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
+def train_single_model(ticker: str, force_rfe: bool = False, horizon: int = 1) -> dict | None:
     """
-    End-to-end training pipeline with Meta-Labeling.
+    End-to-end training pipeline with Meta-Labeling and Multi-Horizon forecasting.
     """
-    print(f"\n===== Processing {ticker} =====")
+    ticker_key = ticker.replace('.', '_') if horizon == 1 else f"{ticker.replace('.', '_')}_h{horizon}"
+    print(f"\n===== Processing {ticker} (Horizon: {horizon}d) =====")
     df = download_stock(ticker)
     if df.shape[0] < WINDOW + 100:
         print(f"Not enough data for {ticker}. Skipping.")
@@ -489,7 +610,7 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     df.ffill(inplace=True)
     df.replace([np.inf, -np.inf], 0, inplace=True)
 
-    df = create_target(df)
+    df = create_target(df, horizon=horizon)
 
     feature_cols = FEATURE_COLS
     features = df[feature_cols].values
@@ -504,7 +625,7 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     print(f"Train class distribution: {dict(Counter(y_train))}")
     
     # --- FEATURE SELECTION (RFE) on TRAIN Set ---
-    feature_save_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_features.joblib")
+    feature_save_path = os.path.join(RESULTS_DIR, f"{ticker_key}_features.joblib")
     selected_features = []
     selected_indices = []
     
@@ -550,7 +671,7 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     X_meta = scaler.transform(X_meta.reshape(-1, nfeat)).reshape(X_meta.shape)
     X_test = scaler.transform(X_test.reshape(-1, nfeat)).reshape(X_test.shape)
 
-    joblib.dump(scaler, os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_scaler.save"))
+    joblib.dump(scaler, os.path.join(RESULTS_DIR, f"{ticker_key}_scaler.save"))
 
     # Class weights
     class_counts = Counter(y_train)
@@ -595,17 +716,7 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     )
     xgb_base.fit(X_train_tree, y_train, sample_weight=sw)
     
-    inputs = Input(shape=(X_train.shape[1], X_train.shape[2]))
-    x = Bidirectional(LSTM(64, return_sequences=True))(inputs)
-    x = BatchNormalization()(x)
-    x = Dropout(0.3)(x)
-    x = LSTM(32, return_sequences=False)(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.3)(x)
-    x = Dense(32, activation="relu")(x)
-    outputs = Dense(3, activation="softmax")(x)
-    lstm = Model(inputs=inputs, outputs=outputs)
-    lstm.compile(optimizer=Adam(learning_rate=0.001), loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+    lstm = build_lstm_model((X_train.shape[1], X_train.shape[2]))
     
     callbacks = [
         EarlyStopping(monitor="val_loss", patience=7, restore_best_weights=True),
@@ -614,7 +725,6 @@ def train_single_model(ticker: str, force_rfe: bool = False) -> dict | None:
     lstm.fit(X_train, y_train, validation_split=0.1, epochs=50, batch_size=32, class_weight=class_weight, callbacks=callbacks, verbose="0")
     
     # Save Base Models
-    ticker_key = ticker.replace('.', '_')
     joblib.dump(rf, os.path.join(RESULTS_DIR, f"{ticker_key}_rf.joblib"))
     joblib.dump(gb, os.path.join(RESULTS_DIR, f"{ticker_key}_gb.joblib"))
     joblib.dump(xgb_base, os.path.join(RESULTS_DIR, f"{ticker_key}_xgb.joblib"))
