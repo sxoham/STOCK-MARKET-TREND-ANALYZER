@@ -36,7 +36,7 @@ STOCKS = [
     "LT.NS", "AXISBANK.NS", "ASIANPAINT.NS", "MARUTI.NS", "TITAN.NS", 
     "BAJFINANCE.NS", "SUNPHARMA.NS", "HCLTECH.NS", "TATASTEEL.NS", "NTPC.NS"
 ]
-START_DATE = "2000-01-01"
+START_DATE = "2000-01-01"   
 import datetime
 END_DATE = datetime.date.today().strftime("%Y-%m-%d")
 WINDOW = 30
