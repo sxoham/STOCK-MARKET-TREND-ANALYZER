@@ -106,6 +106,7 @@ def verify_and_update():
         })
 
     tickers_to_update = set()
+    results = []  # Collect all verified results for the final summary
 
     for ticker, preds in predictions_by_ticker.items():
         print(f"\nProcessing ticker: {ticker} ({len(preds)} pending predictions)")
@@ -190,6 +191,19 @@ def verify_and_update():
 
                 tickers_to_update.add(ticker)
 
+                results.append({
+                    "id": pred_id,
+                    "ticker": ticker,
+                    "date_made": date_made,
+                    "predicted_date": future_df.index[0].strftime('%Y-%m-%d'),
+                    "prediction": prediction,
+                    "actual": actual_move,
+                    "start_price": start_price,
+                    "next_close": next_close,
+                    "return_pct": actual_return,
+                    "is_correct": is_correct,
+                })
+
         except Exception as e:
             print(f"Error processing ticker {ticker}: {e}")
             continue
@@ -211,6 +225,34 @@ def verify_and_update():
         print("\nSkipping retraining (deferred to next pipeline step)...")
 
     print("\nVerification and update complete.")
+
+    # ── Final Summary Table ──────────────────────────────────────────────────
+    if results:
+        print("\n" + "=" * 90)
+        print(" PREDICTION VERIFICATION SUMMARY")
+        print("=" * 90)
+        header = (
+            f"{'ID':>4}  {'Ticker':<8}  {'Date Made':<12}  {'Target Date':<12}  "
+            f"{'Predicted':<10}  {'Actual':<7}  {'Start':>8}  {'Close':>8}  "
+            f"{'Return':>8}  {'Result':<8}"
+        )
+        print(header)
+        print("-" * 90)
+        correct_count = 0
+        for r in results:
+            result_label = "✔ CORRECT" if r["is_correct"] else "✘ WRONG"
+            if r["is_correct"]:
+                correct_count += 1
+            row = (
+                f"{r['id']:>4}  {r['ticker']:<8}  {r['date_made']:<12}  {r['predicted_date']:<12}  "
+                f"{r['prediction']:<10}  {r['actual']:<7}  {r['start_price']:>8.2f}  "
+                f"{r['next_close']:>8.2f}  {r['return_pct']:>+7.2f}%  {result_label:<8}"
+            )
+            print(row)
+        print("-" * 90)
+        accuracy = (correct_count / len(results)) * 100
+        print(f"  Total: {len(results)} predictions  |  Correct: {correct_count}  |  Accuracy: {accuracy:.1f}%")
+        print("=" * 90)
 
     if len(tickers_to_update) == 0 and rows:
         print(
