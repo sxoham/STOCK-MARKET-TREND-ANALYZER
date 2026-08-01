@@ -1,6 +1,8 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-from flask import Flask, render_template, jsonify, request, send_from_directory, redirect
+from flask import Flask, render_template, jsonify, request, send_from_directory, redirect, Response, stream_with_context
+import queue
+import threading
 import sqlite3
 import json
 import datetime
@@ -586,7 +588,91 @@ def backtest_endpoint(ticker):
     except Exception as e:
         print(f"Backtest error: {e}")
         import traceback; traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+@app.route('/api/stream_train/<ticker>')
+def stream_train(ticker):
+    resolved_ticker = resolve_and_validate_ticker(ticker)
+    if not resolved_ticker:
+        return jsonify({"error": f"Ticker symbol '{ticker}' not found on Yahoo Finance"}), 400
+    ticker = resolved_ticker
+
+    horizon_param = request.args.get('horizon', '1d').lower()
+    if horizon_param in ['5d', '5']:
+        horizon = 5
+    elif horizon_param in ['1m', '20d', '20']:
+        horizon = 20
+    else:
+        horizon = 1
+
+    ticker_key = ticker.replace('.', '_') if horizon == 1 else f"{ticker.replace('.', '_')}_h{horizon}"
+    model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_best_model.keras")
+    if not os.path.exists(model_path):
+        model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_final_model.keras")
+    scaler_path = os.path.join(RESULTS_DIR, f"{ticker_key}_scaler.save")
+
+    def generate():
+        # If model is already trained, emit complete status immediately
+        if os.path.exists(model_path) and os.path.exists(scaler_path):
+            payload = json.dumps({"step": "Completed", "progress": 100, "message": f"Model for {ticker} is already trained and ready!"})
+            yield f"data: {payload}\n\n"
+            return
+
+        msg_queue = queue.Queue()
+
+        def progress_cb(step, progress, message):
+            msg_queue.put({"step": step, "progress": progress, "message": message})
+
+        def run_training():
+            try:
+                main.train_single_model(ticker, horizon=horizon, progress_callback=progress_cb)
+            except Exception as e:
+                print(f"SSE training error for {ticker}: {e}")
+                msg_queue.put({"step": "Error", "progress": 100, "message": str(e)})
+            finally:
+                msg_queue.put(None)
+
+        t = threading.Thread(target=run_training)
+        t.start()
+
+        while True:
+            item = msg_queue.get()
+            if item is None:
+                break
+            payload = json.dumps(item)
+            yield f"data: {payload}\n\n"
+
+    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+
+@app.route('/api/watchlist_alerts', methods=['GET', 'POST'])
+def watchlist_alerts():
+    if request.method == 'POST':
+        req = request.get_json() or {}
+        watchlist = req.get('watchlist', [])
+    else:
+        raw_list = request.args.get('tickers', '')
+        watchlist = [t.strip() for t in raw_list.split(',') if t.strip()]
+
+    if not watchlist:
+        return jsonify([])
+
+    alerts = []
+    for ticker in watchlist:
+        try:
+            prediction, prob, top_drivers, _ = generate_live_prediction(ticker, horizon=1)
+            conf_pct = int(round(prob * 100))
+            if prediction in ["UP", "BUY"] and conf_pct >= 80:
+                driver_text = top_drivers[0]["name"] if top_drivers else "Strong Indicators"
+                alerts.append({
+                    "ticker": ticker,
+                    "prediction": prediction,
+                    "confidence": conf_pct,
+                    "driver": driver_text,
+                    "message": f"🚀 High-Confidence BUY Signal ({conf_pct}%) on {ticker}!"
+                })
+        except Exception as e:
+            print(f"Watchlist alert check failed for {ticker}: {e}")
+            continue
+
+    return jsonify(alerts)
 
 if __name__ == '__main__':
     # Create DB if not exists (users)

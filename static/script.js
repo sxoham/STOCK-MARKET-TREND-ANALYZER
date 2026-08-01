@@ -47,7 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load stocks immediately (public data)
     fetchStocks();
 
-    // Search Listener
+    // Request notification permission for high confidence alerts
+    requestNotificationPermission();
+
+    // Periodically check watchlist alerts every 60 seconds
+    setInterval(() => {
+        checkWatchlistAlerts();
+    }, 60000);
 });
 
 // Search Listener
@@ -286,23 +292,19 @@ async function fetchStocks() {
 async function selectStock(ticker, element) {
     currentStock = ticker;
 
-    // Update UI selection
-    // Update UI selection
     if (element) {
         document.querySelectorAll('.stock-list li').forEach(li => li.classList.remove('active'));
         element.classList.add('active');
     }
 
-    // Show refresh button
     const refreshBtn = document.getElementById('refreshBtn');
     if (refreshBtn) refreshBtn.style.display = 'block';
 
-    // Also highlight in watchlist if present
     updateWatchlistUI();
 
     document.getElementById('selectedStockTitle').textContent = ticker;
-    document.getElementById('statusIndicator').textContent = 'Training model & loading data...';
-    document.getElementById('statusIndicator').style.color = '#f59e0b'; // Amber for processing
+    document.getElementById('statusIndicator').textContent = 'Analyzing stock model...';
+    document.getElementById('statusIndicator').style.color = '#f59e0b';
 
     const predValue = document.getElementById('predictionValue');
     const predProbContainer = document.querySelector('.prediction-prob');
@@ -311,38 +313,37 @@ async function selectStock(ticker, element) {
         predValue.className = 'prediction-value training';
     }
     if (predProbContainer) {
-        predProbContainer.innerHTML = 'Status: <span id="predictionProb">Model is being trained...</span>';
+        predProbContainer.innerHTML = 'Status: <span id="predictionProb">Streaming live model training...</span>';
     }
 
     updateWatchlistButton();
-
-    // Reset Backtest UI
     resetBacktestUI();
-    try {
-        const response = await fetch(`/api/predict/${ticker}?horizon=${currentHorizon}`);
-        const data = await response.json();
 
-        if (data.error) {
-            alert(data.error);
-            document.getElementById('statusIndicator').textContent = 'Error loading data';
-            return;
+    // Trigger real-time SSE progress stream before rendering dashboard data
+    startSSETrainingStream(ticker, currentHorizon, async () => {
+        try {
+            const response = await fetch(`/api/predict/${ticker}?horizon=${currentHorizon}`);
+            const data = await response.json();
+
+            if (data.error) {
+                alert(data.error);
+                document.getElementById('statusIndicator').textContent = 'Error loading data';
+                return;
+            }
+
+            updateDashboard(data);
+            const time = new Date().toLocaleTimeString();
+            document.getElementById('statusIndicator').textContent = 'Live Data - ' + time;
+            document.getElementById('statusIndicator').style.color = 'var(--text-secondary)';
+
+            fetchSentiment(ticker);
+        } catch (error) {
+            console.error('Error loading stock data:', error);
+            alert("Error: " + error.message + ". If this is a new stock, check if the ticker is valid.");
+            document.getElementById('statusIndicator').textContent = 'Error: ' + error.message;
+            document.getElementById('statusIndicator').style.color = 'var(--danger-color)';
         }
-
-        updateDashboard(data);
-        const time = new Date().toLocaleTimeString();
-        document.getElementById('statusIndicator').textContent = 'Live Data - ' + time;
-
-        // Fetch Sentiment separately
-        fetchSentiment(ticker);
-
-    } catch (error) {
-        console.error('Error loading stock data:', error);
-        // Alert only if it's a real error, not just a cancel. 
-        // For new stocks, it might timeout or standard error.
-        alert("Error: " + error.message + ". If this is a new stock, check if the ticker is valid.");
-        document.getElementById('statusIndicator').textContent = 'Error: ' + error.message;
-        document.getElementById('statusIndicator').style.color = 'var(--danger-color)';
-    }
+    });
 }
 
 async function fetchSentiment(ticker) {
@@ -1247,10 +1248,13 @@ function updateWatchlistUI() {
     watchlist.forEach(ticker => {
         const li = document.createElement('li');
         li.textContent = ticker;
+        li.setAttribute('data-ticker', ticker);
         li.onclick = () => selectStock(ticker, li);
         if (ticker === currentStock) li.classList.add('active');
         list.appendChild(li);
     });
+
+    checkWatchlistAlerts();
 }
 
 function updateWatchlistButton() {
@@ -1536,5 +1540,184 @@ window.submitFeedback = async function () {
         btn.disabled = false;
     }
 }
+
+// ==========================================================================
+// Real-Time SSE Training Progress & Watchlist Alert System
+// ==========================================================================
+
+let activeEventSource = null;
+let highConfidenceAlerts = new Set();
+
+function startSSETrainingStream(ticker, horizon, onComplete) {
+    if (activeEventSource) {
+        activeEventSource.close();
+        activeEventSource = null;
+    }
+
+    const container = document.getElementById('trainingProgressContainer');
+    const badge = document.getElementById('progressStepBadge');
+    const percentEl = document.getElementById('progressPercent');
+    const barFill = document.getElementById('progressBarFill');
+    const msgEl = document.getElementById('progressStatusMessage');
+
+    if (container) container.style.display = 'block';
+    if (badge) badge.textContent = 'Training';
+    if (percentEl) percentEl.textContent = '0%';
+    if (barFill) barFill.style.width = '0%';
+    if (msgEl) msgEl.textContent = `Connecting live model training stream for ${ticker}...`;
+
+    let eventCompleted = false;
+
+    activeEventSource = new EventSource(`/api/stream_train/${encodeURIComponent(ticker)}?horizon=${horizon}`);
+
+    activeEventSource.onmessage = function (event) {
+        try {
+            const data = JSON.parse(event.data);
+            const step = data.step || 'Training';
+            const progress = data.progress || 0;
+            const message = data.message || 'Processing...';
+
+            if (badge) badge.textContent = step;
+            if (percentEl) percentEl.textContent = `${progress}%`;
+            if (barFill) barFill.style.width = `${progress}%`;
+            if (msgEl) msgEl.textContent = message;
+
+            if (step === 'Completed' || progress >= 100) {
+                eventCompleted = true;
+                if (activeEventSource) {
+                    activeEventSource.close();
+                    activeEventSource = null;
+                }
+                setTimeout(() => {
+                    if (container) container.style.display = 'none';
+                    if (onComplete) onComplete();
+                }, 600);
+            } else if (step === 'Error') {
+                eventCompleted = true;
+                if (activeEventSource) {
+                    activeEventSource.close();
+                    activeEventSource = null;
+                }
+                if (msgEl) msgEl.textContent = `Error: ${message}`;
+            }
+        } catch (e) {
+            console.error("SSE parse error:", e);
+        }
+    };
+
+    activeEventSource.onerror = function () {
+        if (activeEventSource) {
+            activeEventSource.close();
+            activeEventSource = null;
+        }
+        if (!eventCompleted) {
+            if (container) container.style.display = 'none';
+            if (onComplete) onComplete();
+        }
+    };
+}
+
+function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            console.log("Browser Notification permission:", permission);
+        });
+    }
+}
+
+function showAlertToast(alertData) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-card';
+    toast.innerHTML = `
+        <div class="toast-header">
+            <div class="toast-title">
+                <span>🚀 High Confidence BUY Signal</span>
+            </div>
+            <button class="toast-close" onclick="this.closest('.toast-card').remove()">&times;</button>
+        </div>
+        <div class="toast-body">
+            <strong>${alertData.ticker}</strong> hit <strong>${alertData.confidence}% Confidence</strong>!
+            <div class="toast-driver">Top Driver: ${alertData.driver}</div>
+        </div>
+    `;
+
+    toast.onclick = (e) => {
+        if (!e.target.classList.contains('toast-close')) {
+            selectStock(alertData.ticker);
+        }
+    };
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.remove();
+        }
+    }, 8000);
+}
+
+function triggerDesktopNotification(alertData) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+            new Notification(`🚀 High-Confidence BUY Signal: ${alertData.ticker}`, {
+                body: `Confidence: ${alertData.confidence}% | ${alertData.driver}`,
+                icon: '/static/favicon.ico'
+            });
+        } catch (e) {
+            console.error("Desktop notification error:", e);
+        }
+    }
+}
+
+async function checkWatchlistAlerts() {
+    if (!watchlist || watchlist.length === 0) return;
+
+    try {
+        const response = await fetch('/api/watchlist_alerts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ watchlist: watchlist })
+        });
+        const alerts = await response.json();
+
+        if (Array.isArray(alerts)) {
+            alerts.forEach(alertData => {
+                const alertKey = `${alertData.ticker}_${alertData.confidence}`;
+                if (!highConfidenceAlerts.has(alertKey)) {
+                    highConfidenceAlerts.add(alertKey);
+                    showAlertToast(alertData);
+                    triggerDesktopNotification(alertData);
+                }
+            });
+            updateWatchlistAlertBadges(alerts);
+        }
+    } catch (e) {
+        console.error("Watchlist alert check error:", e);
+    }
+}
+
+function updateWatchlistAlertBadges(alerts) {
+    const alertMap = new Map((alerts || []).map(a => [a.ticker, a.confidence]));
+    const items = document.querySelectorAll('#watchlist li');
+    items.forEach(li => {
+        const ticker = li.getAttribute('data-ticker') || li.textContent.trim().split(' ')[0];
+        let badge = li.querySelector('.watchlist-alert-badge');
+        if (alertMap.has(ticker)) {
+            const conf = alertMap.get(ticker);
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'watchlist-alert-badge';
+                li.appendChild(badge);
+            }
+            badge.textContent = `🔥 ${conf}%`;
+        } else if (badge) {
+            badge.remove();
+        }
+    });
+}
+
 
 

@@ -1,15 +1,3 @@
-1. 🤖 AI & Model Explainability (High Value)
-   Explainable AI (SHAP / Feature Importance Breakdown):
-   Show why the model predicted BUY or SELL (e.g., "Top Drivers: RSI Oversold (+35%), MACD Bullish Crossover (+28%), Macro Gold Spike (-12%)").
-   Multi-Horizon Predictions:
-   Allow users to switch prediction horizons between 1-Day, 5-Day (1-Week), and 1-Month forecasts.
-   Transformer / Attention Neural Network Layer:
-   Integrate a Temporal Attention mechanism into the LSTM model for improved long-term pattern recognition.
-2. ⚡ Real-Time Streaming & UX
-   Live Model Training Progress (Server-Sent Events / SSE):
-   Show a live step-by-step progress bar while a searched stock model is training (e.g., "Epoch 15/50 | Training XGBoost | Tuning Meta-Threshold...") instead of a static status text.
-   Price Target & Model Confidence Alerts:
-   Push browser notifications or alert toasts when a watchlist stock hits a high-confidence BUY signal (Confidence ≥ 80%).
 3. 💼 Advanced Portfolio & Risk Analytics
    Automated Trade Execution (Stop-Loss & Take-Profit):
    Allow setting Stop-Loss (%) and Take-Profit (%) targets when making paper trades, automatically liquidating positions when price targets are hit.

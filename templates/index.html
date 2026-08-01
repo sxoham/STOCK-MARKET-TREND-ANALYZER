@@ -9,12 +9,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/darkveil.css">
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
-  <div class="app-container">
+<body style="background: transparent;">
+  <!-- DarkVeil animated background -->
+  <canvas id="darkVeilBg" class="darkveil-canvas" style="position:fixed;inset:0;width:100vw;height:100vh;z-index:0;"></canvas>
+
+  <div class="app-container" style="position:relative;z-index:1;">
     <aside class="sidebar">
       <div class="logo">
         <h1>Stock Radar</h1>
@@ -80,6 +84,17 @@
               <button id="refreshBtn" class="btn-secondary btn-icon-circle" onclick="window.refreshData()"
                 style="display: none; width: 24px; height: 24px; font-size: 12px; padding: 0;"
                 title="Refresh Data">↻</button>
+            </div>
+            <!-- Real-Time SSE Model Training Progress Container -->
+            <div id="trainingProgressContainer" class="training-progress-container" style="display: none;">
+              <div class="progress-header">
+                <span class="progress-step-badge" id="progressStepBadge">Training</span>
+                <span class="progress-percent" id="progressPercent">0%</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+              </div>
+              <div class="progress-status-message" id="progressStatusMessage">Preparing live model training...</div>
             </div>
           </div>
 
@@ -481,7 +496,23 @@
     }
   </style>
 
+  <!-- Watchlist Alert Toasts Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
   <script type="module" src="{{ url_for('static', filename='script.js') }}?v=20"></script>
+
+  <!-- DarkVeil background init -->
+  <script type="module">
+    import { initDarkVeil } from '/static/darkveil.js';
+    const dvCanvas = document.getElementById('darkVeilBg');
+    initDarkVeil(dvCanvas, {
+      speed: 0.35,
+      hueShift: 230,
+      noiseIntensity: 0.02,
+      warpAmount: 0.15,
+      resolutionScale: 0.75
+    });
+  </script>
 </body>
 
 </html>

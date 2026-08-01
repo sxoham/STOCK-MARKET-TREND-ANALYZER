@@ -12,8 +12,25 @@ import tensorflow as tf
 from keras.models import Sequential, Model
 from keras.layers import LSTM, Dense, Dropout, BatchNormalization, Bidirectional, Input, MultiHeadAttention, LayerNormalization, GlobalAveragePooling1D, Conv1D
 from keras.optimizers import Adam
-from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, Callback
 from collections import Counter
+
+class EpochProgressCallback(Callback):
+    def __init__(self, progress_callback, start_pct=50, end_pct=80, total_epochs=50):
+        super().__init__()
+        self.progress_callback = progress_callback
+        self.start_pct = start_pct
+        self.end_pct = end_pct
+        self.total_epochs = total_epochs
+
+    def on_epoch_end(self, epoch, logs=None):
+        if self.progress_callback:
+            logs = logs or {}
+            pct = int(self.start_pct + ((epoch + 1) / float(self.total_epochs)) * (self.end_pct - self.start_pct))
+            loss = logs.get('loss', 0.0)
+            msg = f"Epoch {epoch + 1}/{self.total_epochs} | Training LSTM | Loss: {loss:.4f}"
+            self.progress_callback("LSTM Neural Network", pct, msg)
+
 import joblib
 import warnings
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
@@ -582,19 +599,25 @@ def explain_prediction(ticker: str, X_last_scaled: np.ndarray, active_features: 
     return drivers
 
 # 4. Main loop: for each stock, prepare data -> train -> evaluate -> save
-def train_single_model(ticker: str, force_rfe: bool = False, horizon: int = 1) -> dict | None:
+def train_single_model(ticker: str, force_rfe: bool = False, horizon: int = 1, progress_callback = None) -> dict | None:
     """
     End-to-end training pipeline with Meta-Labeling and Multi-Horizon forecasting.
     """
     ticker_key = ticker.replace('.', '_') if horizon == 1 else f"{ticker.replace('.', '_')}_h{horizon}"
     print(f"\n===== Processing {ticker} (Horizon: {horizon}d) =====")
+    if progress_callback:
+        progress_callback("Data Download", 10, f"Downloading price history & technical indicators for {ticker}...")
     df = download_stock(ticker)
     if df.shape[0] < WINDOW + 100:
         print(f"Not enough data for {ticker}. Skipping.")
+        if progress_callback:
+            progress_callback("Error", 100, f"Insufficient data for {ticker}")
         return None
 
     df = add_technical_indicators(df)
     
+    if progress_callback:
+        progress_callback("Macro & Sentiment Alignment", 18, "Fetching macro indicators (Nifty, USD, Gold, Oil) & sentiment data...")
     # Merge Macro Data
     macro = download_macro_data(start=str(pd.DatetimeIndex(df.index)[0].strftime('%Y-%m-%d')), end=str(pd.DatetimeIndex(df.index)[-1].strftime('%Y-%m-%d')))
     if not macro.empty:
@@ -648,6 +671,8 @@ def train_single_model(ticker: str, force_rfe: bool = False, horizon: int = 1) -
             selected_features = []
             
     if not selected_features:
+        if progress_callback:
+            progress_callback("Feature Selection (RFE)", 25, "Running Recursive Feature Elimination (RFE) on training features...")
         print("Running RFE on Train set...")
         X_train_last_raw = X_train[:, -1, :]
         selector = RFE(RandomForestClassifier(n_estimators=30, random_state=SEED, n_jobs=-1), n_features_to_select=20)
@@ -686,6 +711,8 @@ def train_single_model(ticker: str, force_rfe: bool = False, horizon: int = 1) -
     X_train_tree = tree_features(X_train)
     sw = sample_weights_from_counts(y_train)
     
+    if progress_callback:
+        progress_callback("Ensemble Base Models", 40, "Training Random Forest, Gradient Boosting & XGBoost...")
     print("Training Base Models...")
     rf = RandomForestClassifier(
         n_estimators=150,
@@ -720,12 +747,17 @@ def train_single_model(ticker: str, force_rfe: bool = False, horizon: int = 1) -
     )
     xgb_base.fit(X_train_tree, y_train, sample_weight=sw)
     
+    if progress_callback:
+        progress_callback("LSTM Model Architecture", 50, "Initializing Bidirectional LSTM with Multi-Head Attention...")
     lstm = build_lstm_model((X_train.shape[1], X_train.shape[2]))
     
     callbacks = [
         EarlyStopping(monitor="val_loss", patience=7, restore_best_weights=True),
         ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=3, min_lr=1e-5),
     ]
+    if progress_callback:
+        callbacks.append(EpochProgressCallback(progress_callback, start_pct=50, end_pct=80, total_epochs=50))
+        
     lstm.fit(X_train, y_train, validation_split=0.1, epochs=50, batch_size=32, class_weight=class_weight, callbacks=callbacks, verbose="0")
     
     # Save Base Models
@@ -735,6 +767,8 @@ def train_single_model(ticker: str, force_rfe: bool = False, horizon: int = 1) -
     lstm.save(os.path.join(RESULTS_DIR, f"{ticker_key}_best_model.keras"))
     
     # --- META-MODEL TRAINING (Full Out-of-Sample Meta Set) ---
+    if progress_callback:
+        progress_callback("Meta-Labeling & Threshold Tuning", 85, "Training Meta-Classifier & Tuning Meta-Confidence Threshold...")
     print("Training meta-model...")
     
     # Generate features for meta-model training
@@ -759,6 +793,10 @@ def train_single_model(ticker: str, force_rfe: bool = False, horizon: int = 1) -
     meta_threshold = tune_meta_threshold(meta_conf_val, y_meta, y_meta_pred)
     joblib.dump(meta_threshold, os.path.join(RESULTS_DIR, f"{ticker_key}_meta_threshold.joblib"))
     print(f"Tuned meta confidence threshold: {meta_threshold:.2f}")
+
+    if progress_callback:
+        progress_callback("Completed", 100, f"Model training complete for {ticker}!")
+
     
     # --- FINAL EVALUATION (Test Set) ---
     print("Evaluating on test set...")

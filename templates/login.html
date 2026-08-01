@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/darkveil.css">
   <style>
     /* Keep login-specific styles, variables will cascade from style.css or be overwritten */
     .login-container {
@@ -17,17 +18,23 @@
       align-items: center;
       height: 100vh;
       width: 100%;
-      background: radial-gradient(circle at center, rgba(56, 189, 248, 0.1), transparent 70%);
+      position: relative;
+      overflow: hidden;
+      background: #050c16;
     }
 
     .login-card {
+      position: relative;
+      z-index: 10;
       width: 100%;
       max-width: 400px;
       padding: 2.5rem;
-      background-color: var(--card-bg);
+      background-color: rgba(15, 23, 42, 0.75);
       border-radius: 16px;
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border-color);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      box-shadow: 0 0 60px rgba(59, 130, 246, 0.12), 0 20px 60px rgba(0,0,0,0.6);
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -105,7 +112,8 @@
 </head>
 
 <body>
-  <div class="login-container">
+  <div class="login-container" id="darkVeilContainer">
+    <canvas id="darkVeilCanvas" class="darkveil-canvas"></canvas>
     <div class="login-card">
       <div class="login-header">
         <h1>TrendAnalyzer</h1>
@@ -162,6 +170,7 @@
 
   <script type="module">
     import { auth, signInWithEmailAndPassword, signInWithGoogle, onAuthStateChanged } from "/static/firebase-auth.js";
+    import { initDarkVeil } from '/static/darkveil.js';
 
     // Auto-redirect if already logged in
     onAuthStateChanged(auth, (user) => {
@@ -242,6 +251,10 @@
         btn.disabled = false;
       }
     });
+
+    // Init DarkVeil animated background
+    const dvCanvas = document.getElementById('darkVeilCanvas');
+    initDarkVeil(dvCanvas, { speed: 0.9, hueShift: 220, noiseIntensity: 0.04, warpAmount: 0.3 });
   </script>
 </body>
 
