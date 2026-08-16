@@ -224,7 +224,6 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["MACD_Norm"] = df["MACD"] / df["Close"]
     
     df["Volatility"] = df["Return"].rolling(window=10).std()
-    
     # Bollinger Bands
     df["MA20"] = df["Close"].rolling(window=20).mean()
     std20 = df["Close"].rolling(window=20).std()
@@ -364,7 +363,7 @@ def create_sequences(features, target, window: int = WINDOW) -> tuple:
     X, y = [], []
     for i in range(window, len(features)):
         X.append(features[i-window:i])
-        y.append(target[i])
+        y.append(target[i-1])
     X = np.array(X)
     y = np.array(y)
     return X, y
@@ -422,7 +421,7 @@ def meta_filter_features(p_prob, X_last) -> np.ndarray:
 def sample_weights_from_counts(y: np.ndarray) -> np.ndarray:
     counts = Counter(y)
     total = len(y)
-    weight_map = {k: total / (len(counts) * v) for k, v in counts.items()}
+    weight_map = {k: (total / (len(counts) * v)) ** 0.5 for k, v in counts.items()}
     return np.array([weight_map[yi] for yi in y])
 
 def tune_meta_threshold(confidence: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -454,35 +453,25 @@ def predict_ensemble_probs(
 
 def build_lstm_model(input_shape: tuple) -> Model:
     """
-    Constructs a Bidirectional LSTM with Multi-Head Temporal Attention Neural Network.
+    Constructs a lightweight, regularized LSTM Neural Network for noisy financial time series.
     
     Args:
         input_shape (tuple): Shape of the input data (window_size, num_features).
         
     Returns:
-        keras.models.Model: Compiled Keras model with Temporal Attention layer.
+        keras.models.Model: Compiled Keras model.
     """
     inputs = Input(shape=input_shape)
     
-    # 1. Bidirectional LSTM Layer (returns sequences for temporal attention)
-    x = Bidirectional(LSTM(64, return_sequences=True))(inputs)
+    # Lightweight single-layer LSTM with high dropout to prevent overfitting
+    x = LSTM(16, dropout=0.4, recurrent_dropout=0.4)(inputs)
     x = BatchNormalization()(x)
-    x = Dropout(0.3)(x)
-    
-    # 2. Temporal Multi-Head Attention Layer
-    attn_out = MultiHeadAttention(num_heads=4, key_dim=32)(x, x)
-    x = LayerNormalization()(x + attn_out)
-    
-    # 3. Global Temporal Pooling & Dense Head
-    x = GlobalAveragePooling1D()(x)
-    x = Dense(32, activation="relu")(x)
-    x = Dropout(0.2)(x)
     
     # Output: 3 classes
     outputs = Dense(3, activation="softmax")(x)
     
     model = Model(inputs=inputs, outputs=outputs)
-    model.compile(optimizer=Adam(learning_rate=0.001), loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+    model.compile(optimizer=Adam(learning_rate=0.0005), loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     return model
 
 FEATURE_LABEL_MAP = {
@@ -702,10 +691,10 @@ def train_single_model(ticker: str, force_rfe: bool = False, horizon: int = 1, p
 
     joblib.dump(scaler, os.path.join(RESULTS_DIR, f"{ticker_key}_scaler.save"))
 
-    # Class weights
+    # Smoothed class weights
     class_counts = Counter(y_train)
     total = len(y_train)
-    class_weight = {k: total / (3 * v) for k, v in class_counts.items()}
+    class_weight = {k: (total / (3 * v)) ** 0.5 for k, v in class_counts.items()}
     
     # --- TRAIN BASE MODELS (Train Set) ---
     X_train_tree = tree_features(X_train)
