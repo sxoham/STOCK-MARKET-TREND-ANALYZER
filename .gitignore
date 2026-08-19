@@ -28,11 +28,13 @@ stock_models_optionB/
 stock_models_global/
 
 # OS / misc
+Data/
 .DS_Store
 Thumbs.db
 Untitled
 git.txt
-update.txt
+scripts/
+
 # Logs
 *.log
 scripts/*_log.txt
