@@ -189,15 +189,36 @@ def build_data_quality_report(
 
     if fetcher_diagnostics:
         add("\n  --- GDELT Retrieval Diagnostics ---")
-        add(f"    API Requests Made         : {fetcher_diagnostics.get('api_requests', 0)}")
-        add(f"    Successful Requests (200) : {fetcher_diagnostics.get('successful_requests', 0)}")
-        add(f"    Rate Limit Hits (429)     : {fetcher_diagnostics.get('rate_limit_responses', 0)}")
-        add(f"    Failed Requests           : {fetcher_diagnostics.get('failed_requests', 0)}")
-        add(f"    Total Articles Retrieved  : {fetcher_diagnostics.get('articles_retrieved', 0)}")
-        add(f"    Rejected (Company Match)  : {fetcher_diagnostics.get('articles_rejected_company_match', 0)}")
-        add(f"    Duplicates Removed        : {fetcher_diagnostics.get('duplicates_removed', 0)}")
-        add(f"    Skipped (No Trading Day)  : {fetcher_diagnostics.get('articles_skipped_no_trading_session', 0)}")
-        add(f"    Mapped to Trading Sessions: {fetcher_diagnostics.get('articles_mapped_to_trading_sessions', 0)}")
+        add(f"    API Requests Made              : {fetcher_diagnostics.get('api_requests', 0)}")
+        add(f"    Successful Requests (200)      : {fetcher_diagnostics.get('successful_requests', 0)}")
+        add(f"    Rate Limit Hits (429)          : {fetcher_diagnostics.get('rate_limit_responses', 0)}")
+        add(f"    Failed Requests                : {fetcher_diagnostics.get('failed_requests', 0)}")
+        add(f"    Query Failures                 : {fetcher_diagnostics.get('query_failures', 0)}")
+        add(f"    Total Articles Retrieved       : {fetcher_diagnostics.get('articles_retrieved', 0)}")
+        add(f"    Rejected (Company Match)       : {fetcher_diagnostics.get('articles_rejected_company_match', 0)}")
+        add(f"    Rejected (Invalid Timestamp)   : {fetcher_diagnostics.get('articles_rejected_invalid_timestamp', 0)}")
+        add(f"    Rejected (Low Precision TS)    : {fetcher_diagnostics.get('articles_rejected_low_precision_timestamp', 0)}")
+        add(f"    Duplicates Removed             : {fetcher_diagnostics.get('duplicates_removed', 0)}")
+        add(f"    Skipped (No Trading Day)       : {fetcher_diagnostics.get('articles_skipped_no_trading_session', 0)}")
+        add(f"    Mapped to Trading Sessions     : {fetcher_diagnostics.get('articles_mapped_to_trading_sessions', 0)}")
+        add(f"  --- Pagination Window Statistics ---")
+        add(f"    Pagination Splits              : {fetcher_diagnostics.get('pagination_splits', 0)}")
+        add(f"    Complete Windows               : {fetcher_diagnostics.get('complete_windows', 0)}")
+        add(f"    Truncated Windows              : {fetcher_diagnostics.get('truncated_windows', 0)}")
+        add(f"    Incomplete Windows             : {fetcher_diagnostics.get('incomplete_windows', 0)}")
+        add(f"    Budget Exhausted Errors        : {fetcher_diagnostics.get('pagination_budget_exhausted', 0)}")
+
+        truncated_ranges = fetcher_diagnostics.get("truncated_ranges", [])
+        if truncated_ranges:
+            add(f"\n  [!] WARNING: {len(truncated_ranges)} TRUNCATED WINDOW(S) DETECTED")
+            add(f"      These windows hit the GDELT 250-record cap and could NOT be")
+            add(f"      subdivided further. Coverage in these periods is INCOMPLETE.")
+            add(f"      Do NOT treat these periods as fully fetched.")
+            for (tk, ws, we) in truncated_ranges:
+                add(f"        Ticker={tk}  Window=[{ws}, {we}]")
+        elif fetcher_diagnostics.get('truncated_windows', 0) == 0 and fetcher_diagnostics.get('incomplete_windows', 0) == 0:
+            add(f"    Coverage Completeness          : All fetched windows complete (no truncation)")
+
 
     if not df_articles.empty:
         add(f"  Earliest Article Seen     : {df_articles['seen_at'].dropna().min()[:10] if 'seen_at' in df_articles else 'N/A'}")

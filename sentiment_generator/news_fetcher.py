@@ -12,7 +12,8 @@ import requests
 
 from .config import (
     STOCKS, COMPANY_ALIASES, MARKET_TIMEZONE,
-    MARKET_CLOSE_HOUR, MARKET_CLOSE_MINUTE, GDELT_MAX_RECORDS
+    MARKET_CLOSE_HOUR, MARKET_CLOSE_MINUTE, GDELT_MAX_RECORDS,
+    GDELT_MAX_REQUESTS_PER_WINDOW
 )
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,23 @@ TRACKING_PARAMS = {
     "ncid", "sr_share", "ved", "usqp"
 }
 
+# Minimum alias token length / characteristics for inclusion in GDELT query.
+# Tokens shorter than this AND not containing a space are excluded to prevent
+# overly broad GDELT searches (e.g. "IT" alone would match almost everything).
+_GDELT_ALIAS_MIN_LEN = 4
+
+
+class LowPrecisionTimestampError(ValueError):
+    """
+    Raised by parse_gdelt_timestamp() when a GDELT timestamp carries only
+    date-level precision (YYYYMMDD) without an intra-day time component.
+
+    Inherits from ValueError so existing broad except-ValueError callers
+    continue to work, but callers that need to distinguish low-precision
+    rejections from genuinely malformed timestamps can catch this subclass
+    first, incrementing only the correct diagnostic counter.
+    """
+
 
 class NewsFetcher:
     """
@@ -63,12 +81,17 @@ class NewsFetcher:
     - Look-ahead bias elimination: pre-market/mid-session news -> day D; after-market news -> next session.
     - Strict NSE calendar boundaries: articles mapping beyond verified calendar return None and are skipped.
     - Robust recursive bisection pagination to eliminate 250-article silent truncations.
-      Recursion terminates only when the window is <= min_window_seconds, never by a fixed depth cap.
+      Recursion terminates ONLY when the window is <= min_window_seconds (never by a fixed depth cap),
+      or when the shared request budget is exhausted (raises RuntimeError).
       Sub-window failures raise RuntimeError and are never silently treated as empty coverage.
-      Midpoint ownership: left branch = [start, mid); right branch = [mid, end)  (right-exclusive mid+1s).
+      Midpoint ownership: left branch = [start, mid); right branch = [mid, end) (right-exclusive mid+1s).
+    - Shared mutable request budget passed through the entire recursive tree to bound HTTP requests.
     - Thread-local requests.Session for concurrent ThreadPoolExecutor thread-safety.
     - Strict canonical URL/headline+source deduplication.
+      Articles with both empty URL and empty headline are never collapsed into each other.
     - Full rejection of invalid/unparseable timestamps without fabricating temporal placement.
+    - Date-only GDELT timestamps are rejected (never silently converted to midnight).
+    - Truncated windows (>= 250 results, unsplittable) are tracked as machine-readable diagnostics.
     """
     def __init__(self, trading_calendar: List[str]):
         """
@@ -91,12 +114,26 @@ class NewsFetcher:
             "articles_retrieved": 0,
             "articles_rejected_company_match": 0,
             "articles_rejected_invalid_timestamp": 0,
+            "articles_rejected_low_precision_timestamp": 0,
             "articles_rejected_out_of_range": 0,
             "articles_skipped_no_trading_session": 0,
             "articles_mapped_to_trading_sessions": 0,
             "duplicates_removed": 0,
-            "articles_missing_published_at": 0
+            "articles_missing_published_at": 0,
+            # Pagination / window-level diagnostics
+            "pagination_splits": 0,
+            "truncated_windows": 0,
+            "incomplete_windows": 0,
+            "complete_windows": 0,
+            "query_failures": 0,
+            "pagination_budget_exhausted": 0,
         }
+
+        # Internally tracked truncated window ranges for quality reporting.
+        # Each entry is a tuple: (ticker, start_str, end_str).
+        # Access via get_diagnostics() which returns a copy.
+        self._truncated_ranges: List[Tuple[str, str, str]] = []
+        self._truncated_ranges_lock = threading.Lock()
 
         # Precompile company matching regexes once at initialization
         self._compiled_matchers = self._compile_matchers()
@@ -115,10 +152,115 @@ class NewsFetcher:
             if key in self.stats:
                 self.stats[key] += count
 
-    def get_diagnostics(self) -> Dict[str, int]:
-        """Returns a snapshot of diagnostic telemetry."""
+    def get_diagnostics(self) -> Dict[str, Any]:
+        """
+        Returns a snapshot of all diagnostic telemetry, including:
+        - All stat counters (thread-safe copy).
+        - 'truncated_ranges': list of (ticker, start_str, end_str) tuples identifying
+          time windows that hit the GDELT 250-record cap and could not be subdivided
+          further. These represent potentially incomplete coverage periods.
+        """
         with self._stats_lock:
-            return dict(self.stats)
+            snapshot = dict(self.stats)
+        with self._truncated_ranges_lock:
+            snapshot["truncated_ranges"] = list(self._truncated_ranges)
+        return snapshot
+
+    # ─── GDELT Query Construction ────────────────────────────────────────────────
+    def _build_gdelt_query(self, ticker: str) -> str:
+        """
+        Builds a GDELT OR query from the primary company name and configured aliases,
+        maximising recall while keeping the query precise.
+
+        Selection criteria for alias inclusion:
+        - Alias contains a space (multi-word phrases are specific enough), OR
+        - Alias length >= _GDELT_ALIAS_MIN_LEN (4) characters.
+        - Extremely short generic tokens (e.g. "IT") are excluded to avoid
+          unrelated result flooding.
+
+        The primary company name from STOCKS is always included first.
+        Duplicates are removed case-insensitively.
+        The final query is capped at 512 characters; lower-priority aliases
+        (i.e. those beyond the primary name) are trimmed greedily if needed.
+
+        The post-fetch is_relevant_to_company() filter remains the authoritative
+        relevance gate — this query is solely for GDELT recall maximisation.
+        """
+        primary = STOCKS.get(ticker, ticker.split('.')[0])
+        aliases = COMPANY_ALIASES.get(ticker, [])
+
+        # Collect eligible candidates: primary name + all aliases except exact duplicate
+        raw_candidates: List[str] = [primary]
+        for alias in aliases:
+            if alias != primary:
+                raw_candidates.append(alias)
+
+        # Filter: keep multi-word aliases OR single-word aliases meeting minimum length.
+        # Deduplicate case-insensitively while filtering.
+        seen_lower: Set[str] = set()
+        multi_word: List[str] = []     # contains a space — more specific
+        single_word: List[str] = []    # no space, len >= _GDELT_ALIAS_MIN_LEN
+
+        for cand in raw_candidates:
+            cand_stripped = cand.strip()
+            if not cand_stripped:
+                continue
+            lower = cand_stripped.lower()
+            if lower in seen_lower:
+                continue
+            seen_lower.add(lower)
+
+            if " " in cand_stripped:
+                multi_word.append(cand_stripped)
+            elif len(cand_stripped) >= _GDELT_ALIAS_MIN_LEN:
+                single_word.append(cand_stripped)
+            # else: too short and no space — excluded from GDELT query
+
+        # Deterministic priority ordering:
+        #   1. Primary company name (first multi-word or first single-word, already first in raw_candidates)
+        #   2. Remaining multi-word aliases (longest first for better specificity)
+        #   3. Single-word aliases (longest first)
+        # The primary name is always in exactly one of the two buckets and was appended
+        # first, so it will sort to the front of its respective group naturally when we
+        # sort by descending length — but to guarantee it stays first regardless of
+        # length, we separate it out and prepend it explicitly.
+        primary_stripped = primary.strip()
+
+        # Remove primary from its bucket so we can prepend it unconditionally
+        multi_word_rest = sorted(
+            [a for a in multi_word if a != primary_stripped],
+            key=lambda s: (-len(s), s)
+        )
+        single_word_rest = sorted(
+            [a for a in single_word if a != primary_stripped],
+            key=lambda s: (-len(s), s)
+        )
+
+        # Build ordered list: primary first, then multi-word aliases (longest first),
+        # then single-word aliases (longest first).  All three branches produce the same
+        # list structure; the if/elif only documents which bucket the primary fell into.
+        if primary_stripped in multi_word or primary_stripped in single_word:
+            selected: List[str] = [primary_stripped] + multi_word_rest + single_word_rest
+        else:
+            # Primary didn't pass the filter (too short, no space); include it anyway
+            # as the mandatory first term so it is always present in the GDELT query.
+            selected = [primary_stripped] + multi_word_rest + single_word_rest
+
+        if not selected:
+            selected = [primary_stripped]
+
+        # Assemble OR query, capping at 512 characters.
+        # Primary term is always included; trim lower-priority aliases greedily.
+        MAX_QUERY_LEN = 512
+        parts = [f'"{selected[0]}"']
+        for term in selected[1:]:
+            candidate_part = f' OR "{term}"'
+            if len("".join(parts)) + len(candidate_part) <= MAX_QUERY_LEN:
+                parts.append(candidate_part)
+            else:
+                break
+
+        return "".join(parts)
 
     # ─── Precompiled Contextual Entity Matchers ─────────────────────────────────
     def _compile_matchers(self) -> Dict[str, Dict[str, Any]]:
@@ -126,7 +268,7 @@ class NewsFetcher:
         matchers = {}
         for ticker, company_name in STOCKS.items():
             aliases = COMPANY_ALIASES.get(ticker, [company_name])
-            
+
             multi_word = [a.lower() for a in aliases if " " in a]
             single_word = [a for a in aliases if " " not in a]
             single_patterns = [
@@ -208,9 +350,13 @@ class NewsFetcher:
         if "imperial tobacco" in text_lower or "itc limited" in text_lower or "itc ltd" in text_lower:
             return True
         if re.search(r'\bITC\b', text):
-            # Require business or financial context for bare uppercase ITC.
-            # Use the helper which applies word-boundary checks for short tokens.
-            if self._has_financial_context(text_lower):
+            # For bare uppercase ITC, require explicit financial/corporate vocabulary.
+            # IMPORTANT: do NOT call _has_financial_context() here — it includes \bit\b
+            # (word-boundary match for 'it') which can fire on ordinary sentences such as
+            # "ITC launches initiative. It will help..." even with zero financial content.
+            # Use FINANCIAL_CONTEXT_KEYWORDS directly; these are all >=4 chars and
+            # unambiguously financial so they cannot false-positive on common prose.
+            if any(kw in text_lower for kw in FINANCIAL_CONTEXT_KEYWORDS):
                 return True
         return False
 
@@ -218,15 +364,30 @@ class NewsFetcher:
         if re.search(r'\b(?:l&t|larsen\s*(?:&|and)\s*toubro)\b', text_lower):
             return True
         if re.search(r'\bLT\b', text):
-            if any(kw in text_lower for kw in ["construction", "infra", "order", "contract", "larsen", "toubro", "shares", "results", "subramanian", "am naik", "infotech", "technology", "q1", "q2", "q3", "q4"]):
+            if any(kw in text_lower for kw in [
+                "construction", "infra", "order", "contract", "larsen", "toubro",
+                "shares", "results", "infotech", "technology", "q1", "q2", "q3", "q4"
+            ]):
+                return True
+            # Named executive signals: require "l&t" context nearby via phrase check
+            if re.search(r'\b(?:sn\s+subramanian|s\.n\.\s+subramanian|am\s+naik|a\.m\.\s+naik)\b', text_lower):
                 return True
         return False
 
     def _match_titan(self, text: str, text_lower: str) -> bool:
-        if re.search(r'\b(?:titan\s+(?:company|ltd|limited|watches|jewellery|jewelry|eyeplus)|tanishq|fastrack|mia|caratlane)\b', text_lower):
+        # NOTE: bare "mia" is intentionally excluded — it is too short and generic
+        # (e.g. "Mia Khalifa", "missing in action") and causes false-positive matches.
+        # "Mia by Tanishq" is covered by the Tanishq branch below.
+        if re.search(
+            r'\b(?:titan\s+(?:company|ltd|limited|watches|jewellery|jewelry|eyeplus)|tanishq|fastrack|caratlane)\b',
+            text_lower
+        ):
             return True
         if re.search(r'\bTitan\b', text):
-            if any(kw in text_lower for kw in ["tata", "jewellery", "jewelry", "watches", "tanishq", "quarter", "results", "shares", "stock", "profit", "sales", "eyewear"]):
+            if any(kw in text_lower for kw in [
+                "tata", "jewellery", "jewelry", "watches", "tanishq", "quarter",
+                "results", "shares", "stock", "profit", "sales", "eyewear"
+            ]):
                 return True
         return False
 
@@ -234,7 +395,10 @@ class NewsFetcher:
         if re.search(r'\b(?:state\s+bank\s+of\s+india|state\s+bank)\b', text_lower):
             return True
         if re.search(r'\bSBI\b', text):
-            if any(kw in text_lower for kw in ["bank", "banking", "shares", "stock", "lending", "npa", "dinesh khara", "quarter", "results", "loan", "card", "life", "mutual fund"]):
+            if any(kw in text_lower for kw in [
+                "bank", "banking", "shares", "stock", "lending", "npa", "dinesh khara",
+                "quarter", "results", "loan", "card", "life", "mutual fund"
+            ]):
                 return True
             if _FINANCIAL_CONTEXT_WORDBOUND.search(text_lower):  # catches bare 'npa', 'md'
                 return True
@@ -244,14 +408,21 @@ class NewsFetcher:
         if re.search(r'\b(?:tata\s+consultancy\s+services|tata\s+consultancy)\b', text_lower):
             return True
         if re.search(r'\bTCS\b', text):
-            if any(kw in text_lower for kw in ["tata", "tech", "deal", "contract", "shares", "stock", "quarter", "results", "krithivasan", "ceo", "earnings", "q1", "q2", "q3", "q4", "profit", "revenue", "dividend"]):
+            if any(kw in text_lower for kw in [
+                "tata", "tech", "deal", "contract", "shares", "stock", "quarter",
+                "results", "krithivasan", "ceo", "earnings", "q1", "q2", "q3", "q4",
+                "profit", "revenue", "dividend"
+            ]):
                 return True
             if _FINANCIAL_CONTEXT_WORDBOUND.search(text_lower):  # catches 'it services', 'md'
                 return True
         return False
 
     def _match_reliance(self, text: str, text_lower: str) -> bool:
-        if re.search(r'\b(?:reliance\s+(?:industries|retail|jio|oil|telecom|digital|power|petroleum|bp|greens|ent)|mukesh\s+ambani|ril)\b', text_lower):
+        if re.search(
+            r'\b(?:reliance\s+(?:industries|retail|jio|oil|telecom|digital|power|petroleum|bp|greens|ent)|mukesh\s+ambani|ril)\b',
+            text_lower
+        ):
             return True
         if re.search(r'\bReliance\b', text):
             if self._has_financial_context(text_lower):
@@ -299,38 +470,112 @@ class NewsFetcher:
         h = re.sub(r'\s+', ' ', h)
         return h.strip().lower()
 
-    def _article_dedupe_key(self, article: Dict[str, Any]) -> Tuple[str, str, str]:
-        """Generates a stable, canonical deduplication key for an article record."""
+    def _article_dedupe_key(self, article: Dict[str, Any]) -> Optional[Tuple[str, str, str]]:
+        """
+        Generates a stable, canonical deduplication key for an article record.
+
+        Returns None if BOTH the normalized URL and normalized headline are empty,
+        meaning the article cannot be safely keyed and must NOT be deduplicated
+        against any other record (each such article is kept independently).
+
+        Primary path (URL-based):  (ticker, trading_date, normalized_url)
+        Fallback path (hl-based):  (ticker, trading_date, norm_headline::src_domain)
+        """
         ticker = article.get("ticker", "")
         trading_date = article.get("trading_date", "")
         norm_url = self.normalize_url(article.get("url", ""))
         if norm_url:
             return (ticker, trading_date, norm_url)
         norm_h = self.normalize_headline(article.get("headline", ""))
-        src_ts = str(article.get("source_timestamp", ""))
-        return (ticker, trading_date, f"{norm_h}::{src_ts}")
+        if not norm_h:
+            # Both URL and headline are empty — cannot generate a meaningful key.
+            # Return None to signal: do NOT deduplicate this record against anything.
+            return None
+        # Include source domain to prevent cross-publisher merges on shared headlines.
+        raw_url = article.get("url", "") or ""
+        try:
+            src_domain = urllib.parse.urlparse(raw_url).netloc.lower().lstrip("www.")
+        except Exception:
+            src_domain = ""
+        return (ticker, trading_date, f"{norm_h}::{src_domain}")
 
     # ─── Timestamp & NSE Trading Session Mapping ──────────────────────────────
-    def parse_gdelt_timestamp(self, seendate_raw: str) -> Tuple[str, str, datetime.datetime]:
+    def parse_gdelt_timestamp(self, seendate_raw: str) -> Tuple[str, str, datetime.datetime, bool]:
         """
-        Parses GDELT seendate (UTC) into:
-        1. source_timestamp: raw string from source
-        2. seen_at: ISO-8601 string with timezone (+05:30)
-        3. ist_dt: datetime object in Asia/Kolkata timezone
-        
-        Raises ValueError on malformed or unparseable timestamps (never falls back to now()).
+        Parses a GDELT seendate string (UTC) into a 4-tuple:
+
+            (source_timestamp, seen_at_iso, ist_dt, date_only)
+
+        where:
+            source_timestamp : raw string from GDELT, preserved as audit field
+            seen_at_iso      : ISO-8601 string with Asia/Kolkata (+05:30) offset
+            ist_dt           : datetime object in Asia/Kolkata timezone
+            date_only        : True if the GDELT timestamp carries only date precision
+                               (YYYYMMDD), not full second-level precision (YYYYMMDDHHMMSS)
+
+        Precision rules:
+            - YYYYMMDDHHMMSS (14+ digits after stripping non-numeric chars): full precision,
+              date_only=False.
+            - YYYYMMDD (8 digits): date-only precision, date_only=True.
+              These are NOT converted to midnight; the caller must reject them.
+            - Anything else: malformed — raises ValueError immediately.
+
+        Raises:
+            ValueError: on malformed or unparseable timestamps, or when a date-only
+                        timestamp is detected (caller must treat as rejection).
+
+        There is NO fallback to datetime.now(). Missing or malformed timestamps
+        are always rejected without fabricating temporal placement.
         """
         raw_clean = re.sub(r'[^0-9]', '', str(seendate_raw))
-        if len(raw_clean) >= 14:
-            dt_utc = datetime.datetime.strptime(raw_clean[:14], "%Y%m%d%H%M%S").replace(tzinfo=self.tz_utc)
-        elif len(raw_clean) >= 8:
-            dt_utc = datetime.datetime.strptime(raw_clean[:8] + "000000", "%Y%m%d%H%M%S").replace(tzinfo=self.tz_utc)
-        else:
-            raise ValueError(f"Malformed or unparseable GDELT timestamp: '{seendate_raw}'")
 
-        ist_dt = dt_utc.astimezone(self.tz_market)
-        seen_at_iso = ist_dt.isoformat()
-        return str(seendate_raw), seen_at_iso, ist_dt
+        if len(raw_clean) == 14:
+            # Canonical GDELT seendate format: exactly YYYYMMDDHHMMSS (14 digits).
+            dt_utc = datetime.datetime.strptime(raw_clean, "%Y%m%d%H%M%S").replace(tzinfo=self.tz_utc)
+            ist_dt = dt_utc.astimezone(self.tz_market)
+            seen_at_iso = ist_dt.isoformat()
+            return str(seendate_raw), seen_at_iso, ist_dt, False
+
+        if len(raw_clean) > 14:
+            # More than 14 numeric digits — not a known GDELT format.
+            # GDELT's canonical seendate is exactly YYYYMMDDHHMMSS (14 digits).
+            # Log a warning so the anomaly is visible, then use the first 14 digits
+            # defensively rather than silently discarding the article.
+            logger.warning(
+                "GDELT timestamp '%s' has %d digits after stripping non-numeric chars; "
+                "expected exactly 14 (YYYYMMDDHHMMSS). Using first 14 digits defensively.",
+                seendate_raw, len(raw_clean)
+            )
+            dt_utc = datetime.datetime.strptime(raw_clean[:14], "%Y%m%d%H%M%S").replace(tzinfo=self.tz_utc)
+            ist_dt = dt_utc.astimezone(self.tz_market)
+            seen_at_iso = ist_dt.isoformat()
+            return str(seendate_raw), seen_at_iso, ist_dt, False
+
+        if len(raw_clean) == 8:
+            # Exactly 8 digits: YYYYMMDD date-only precision.
+            # Do NOT convert to midnight — a midnight timestamp would introduce false temporal
+            # precision and could violate look-ahead-bias requirements (an article seen on
+            # 2024-01-15 with no time component could belong to any hour of that day,
+            # possibly after market close).
+            # Raises LowPrecisionTimestampError (a ValueError subclass) so the call site
+            # can distinguish this case from a genuinely malformed timestamp and avoid
+            # double-counting across both diagnostic counters.
+            self._inc_stat("articles_rejected_low_precision_timestamp")
+            logger.debug(
+                "Rejected date-only GDELT timestamp '%s' — insufficient precision "
+                "to safely assign to a trading session without look-ahead risk.",
+                seendate_raw
+            )
+            raise LowPrecisionTimestampError(
+                f"Date-only GDELT timestamp (insufficient precision): '{seendate_raw}'"
+            )
+
+        # 9–13 digits: an intermediate length that does not map to any known GDELT format.
+        # This is not a valid date-only (8) nor a full timestamp (>=14); treat as malformed.
+        raise ValueError(
+            f"Malformed or unparseable GDELT timestamp (unexpected digit count "
+            f"{len(raw_clean)}): '{seendate_raw}'"
+        )
 
     def get_next_trading_day(self, cal_date: str) -> Optional[str]:
         """
@@ -344,14 +589,53 @@ class NewsFetcher:
 
     def map_to_nse_trading_session(self, ist_dt: datetime.datetime) -> Optional[str]:
         """
-        Maps an article's timestamp (IST) to the correct NSE trading session.
-        
-        Look-Ahead Bias Elimination Rules:
-        1. Trading day D + arrival before 15:30:00 IST -> D (available before close to predict D+1).
-        2. Trading day D + arrival at/after 15:30:00 IST -> next_trading_day(D).
-        3. Weekend / NSE Holiday -> next_trading_day(D).
-        
-        Returns None if no valid next trading session exists in the verified calendar.
+        Maps an article's IST timestamp to the correct NSE trading session date.
+
+        Temporal provenance
+        -------------------
+        The ``ist_dt`` parameter is expected to come from GDELT's ``seendate`` field
+        (converted to IST), NOT from a verified publisher publication timestamp.
+        GDELT's seendate records when GDELT's crawler indexed the article, which can
+        lag the actual publication time by minutes or hours.
+
+        This means the guarantee this function provides is:
+            "The article was seen/indexed by GDELT before the mapped trading cutoff."
+        It is NOT:
+            "The article was published before the mapped trading cutoff."
+
+        For a stronger temporal guarantee, callers that have access to a verified
+        ``published_at`` field should pass that value instead.  For GDELT-only records,
+        the seendate-based mapping is the best available approximation.  Each article
+        dict carries ``timestamp_basis="gdelt_seendate"`` to make this provenance explicit.
+
+        Look-ahead bias elimination rules
+        ----------------------------------
+        1. Trading day D + article arrives before 15:30:00 IST  →  D
+           (information was available before market close on D)
+        2. Trading day D + article arrives at/after 15:30:00 IST  →  next_trading_day(D)
+           (after-hours news; not usable for same-day D signal)
+        3. Weekend or NSE holiday  →  next_trading_day(date)
+           (market was closed; news belongs to the next open session)
+        4. No valid next session in the calendar  →  None  (article is skipped)
+
+        Downstream modeling semantics
+        ------------------------------
+        The sentiment row produced for trading day D is computed from articles
+        **available to a trader before D closes** (rule 1 above).  The model uses
+        this row as a feature for **predicting the next session's (D+1) direction**,
+        NOT the movement of D itself.  Do not change this mapping unless the
+        training pipeline is verified to use D-sentiment to predict D (same-day).
+
+        Parameters
+        ----------
+        ist_dt : datetime.datetime
+            Article timestamp localised to Asia/Kolkata (IST).
+
+        Returns
+        -------
+        str or None
+            YYYY-MM-DD trading date, or None if no valid session exists.
+
         """
         cal_date = ist_dt.strftime("%Y-%m-%d")
         cutoff_time = datetime.time(MARKET_CLOSE_HOUR, MARKET_CLOSE_MINUTE, 0, 0)
@@ -372,33 +656,97 @@ class NewsFetcher:
         start_dt: datetime.datetime,
         end_dt: datetime.datetime,
         min_window_seconds: int = 3600,
-        _recursing: bool = False
+        _recursing: bool = False,
+        _request_budget: Optional[List[int]] = None
     ) -> List[Dict[str, Any]]:
         """
-        Fetches GDELT articles for a date range with recursive bisection pagination
-        whenever the 250-record GDELT limit is reached.
+        Fetches GDELT articles for a UTC datetime range with recursive bisection
+        pagination whenever the 250-record GDELT limit is reached.
 
-        Recursion terminates ONLY when the window is <= min_window_seconds (default 1 hour).
-        There is no fixed depth cap — splitting continues until sub-windows are below the
-        API limit or the minimum window size is reached.
+        Parameters
+        ----------
+        ticker : str
+            NSE ticker symbol (e.g. 'RELIANCE.NS').
+        start_dt : datetime.datetime
+            Window start — must be timezone-aware (UTC).
+        end_dt : datetime.datetime
+            Window end — must be timezone-aware (UTC) and strictly after start_dt.
+        min_window_seconds : int
+            Minimum sub-window size in seconds before bisection stops (default 3600 = 1 hour).
+        _recursing : bool
+            Internal flag; True when called from a recursive bisection branch.
+        _request_budget : Optional[List[int]]
+            Internal shared mutable counter [remaining_requests].
+            Initialised automatically at the root call; passed as-is to all recursive
+            calls so the entire pagination tree shares a single budget.
 
-        Boundary convention (non-overlapping half-open intervals):
-          Left sub-request  : [start_dt,         mid_dt)       → enddatetime = mid_dt - 1s
-          Right sub-request : [mid_dt,            end_dt)       → startdatetime = mid_dt
-        This ensures an article timestamped exactly at mid_dt belongs to the right branch only.
+        Returns
+        -------
+        List[Dict[str, Any]]
+            Validated, deduplicated articles mapped to NSE trading sessions.
+            Return type is always List[Dict] regardless of pagination depth.
 
-        On sub-window failure a RuntimeError is raised immediately — the failure is NEVER
-        silently absorbed and treated as empty coverage.
+        Raises
+        ------
+        ValueError
+            If start_dt >= end_dt, or if either timestamp is timezone-naive.
+        RuntimeError
+            If all HTTP retries fail for a window, or if the shared request
+            budget is exhausted before pagination completes.
 
-        Guarantees:
+        Pagination guarantees
+        ----------------------
         - Never silently truncates at 250 articles.
-        - Deduplicates merged intervals by canonical URL and normalized headline+source.
-        - Strictly validates trading_date in verified NSE calendar.
-        - Rejects malformed historical timestamps without fabricating temporal placement.
-        - Preserves raw audit fields (source_timestamp, seen_at, published_at=None).
+        - Bisection continues until sub-windows are below min_window_seconds,
+          or until the shared budget is exhausted (raises RuntimeError).
+        - Non-overlapping boundaries: left = [start, mid-1s]; right = [mid, end).
+        - Sub-window failures raise RuntimeError immediately — never silently absorbed.
+        - Complete windows (< 250 results) increment complete_windows.
+        - Truncated windows (>= 250, unsplittable) increment truncated_windows and
+          incomplete_windows, and are recorded in self._truncated_ranges.
         """
-        company_name = STOCKS.get(ticker, ticker.split('.')[0])
-        query = f'"{company_name}"'
+        # ── Input validation ──────────────────────────────────────────────────
+        if start_dt.tzinfo is None or end_dt.tzinfo is None:
+            raise ValueError(
+                f"fetch_gdelt_window requires timezone-aware datetimes; "
+                f"got start_dt.tzinfo={start_dt.tzinfo!r}, end_dt.tzinfo={end_dt.tzinfo!r}"
+            )
+
+        # Normalize to whole seconds — GDELT's API operates at second-level precision.
+        # Microseconds in start_dt/end_dt would silently be dropped in strftime("%Y%m%d%H%M%S")
+        # and could cause the post-normalization inequality check to flip on equal walls.
+        # Timezone information is preserved; only the sub-second component is zeroed.
+        start_dt = start_dt.replace(microsecond=0)
+        end_dt = end_dt.replace(microsecond=0)
+
+        if start_dt >= end_dt:
+            raise ValueError(
+                f"fetch_gdelt_window requires start_dt < end_dt; "
+                f"got start_dt={start_dt.isoformat()}, end_dt={end_dt.isoformat()}"
+            )
+
+        # ── Shared request budget initialisation (root call only) ─────────────
+        # IMPORTANT: recursive calls must pass the SAME _request_budget list object.
+        # Never create a fresh budget inside a recursive call.
+        if _request_budget is None:
+            _request_budget = [GDELT_MAX_REQUESTS_PER_WINDOW]
+
+        # ── Budget check before issuing the HTTP request ──────────────────────
+        if _request_budget[0] <= 0:
+            self._inc_stat("pagination_budget_exhausted")
+            msg = (
+                f"GDELT pagination budget exhausted for {ticker} "
+                f"({start_dt.strftime('%Y%m%d%H%M%S')} to {end_dt.strftime('%Y%m%d%H%M%S')}). "
+                f"Some sub-windows were not fetched. Coverage for this period is INCOMPLETE."
+            )
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        # Consume one unit of the shared budget
+        _request_budget[0] -= 1
+
+        # ── Build GDELT query ──────────────────────────────────────────────────
+        query = self._build_gdelt_query(ticker)
 
         start_str = start_dt.strftime("%Y%m%d%H%M%S")
         end_str = end_dt.strftime("%Y%m%d%H%M%S")
@@ -413,7 +761,7 @@ class NewsFetcher:
         }
 
         session = self._get_session()
-        raw_items = []
+        raw_items: List[Dict[str, Any]] = []
         fetch_success = False
         last_error = None
 
@@ -455,11 +803,14 @@ class NewsFetcher:
 
         if not fetch_success:
             self._inc_stat("failed_requests")
-            raise RuntimeError(f"GDELT API request failed for {ticker} ({start_str} to {end_str}): {last_error}")
+            self._inc_stat("query_failures")
+            raise RuntimeError(
+                f"GDELT API request failed for {ticker} ({start_str} to {end_str}): {last_error}"
+            )
 
         self._inc_stat("articles_retrieved", len(raw_items))
 
-        # Process retrieved items for this window
+        # ── Process retrieved items for this window ────────────────────────────
         articles: List[Dict[str, Any]] = []
         for item in raw_items:
             if not isinstance(item, dict):
@@ -472,9 +823,17 @@ class NewsFetcher:
 
             seendate_raw = (item.get("seendate") or "").strip()
             try:
-                src_ts, seen_at_iso, ist_dt = self.parse_gdelt_timestamp(seendate_raw)
-            except Exception:
-                # Rejects malformed historical timestamp without fabricating temporal placement
+                # parse_gdelt_timestamp returns a 4-tuple.
+                # LowPrecisionTimestampError (subclass of ValueError) is raised for date-only
+                # timestamps; it already incremented articles_rejected_low_precision_timestamp
+                # inside parse_gdelt_timestamp — do NOT also increment invalid_timestamp here.
+                # Plain ValueError covers genuinely malformed/unparseable timestamps only.
+                src_ts, seen_at_iso, ist_dt, _date_only = self.parse_gdelt_timestamp(seendate_raw)
+            except LowPrecisionTimestampError:
+                # articles_rejected_low_precision_timestamp already incremented — nothing more to do.
+                continue
+            except ValueError:
+                # Genuinely malformed timestamp (not a precision issue).
                 self._inc_stat("articles_rejected_invalid_timestamp")
                 continue
 
@@ -489,7 +848,13 @@ class NewsFetcher:
                 continue
 
             self._inc_stat("articles_mapped_to_trading_sessions")
-            self._inc_stat("articles_missing_published_at")  # GDELT seendate is index time, not verified pub time
+            # articles_missing_published_at counts every GDELT article that was mapped to a
+            # trading session.  Because GDELT's seendate is its own index/observation time and
+            # NOT a verified publisher publication timestamp, published_at is always None for
+            # GDELT-sourced records.  This counter therefore equals articles_mapped_to_trading_sessions
+            # for GDELT; it exists so cross-source pipelines can distinguish sources that do
+            # supply a verified published_at from those (GDELT) that do not.
+            self._inc_stat("articles_missing_published_at")
 
             raw_url = (item.get("url") or "").strip()
 
@@ -499,52 +864,103 @@ class NewsFetcher:
                 "headline": title,
                 "source": "GDELT",
                 "url": raw_url,
-                "published_at": None,  # Explicitly None: do not invent publication times
+                "published_at": None,  # Explicitly None: do not invent publication times.
                 "seen_at": seen_at_iso,
                 "source_timestamp": src_ts,
+                # timestamp_basis records which timestamp was used for trading-session mapping.
+                # For all GDELT-sourced records this is always 'gdelt_seendate': the time GDELT
+                # indexed the article, which may differ from the actual publisher publication time.
+                # Downstream pipelines MUST NOT assume this equals the article's original
+                # publish time.  It is preserved here for provenance/audit purposes.
+                "timestamp_basis": "gdelt_seendate",
                 "trading_date": trading_date
             })
 
-        # Recursive splitting if GDELT limit (250) was reached and window is still splittable
+        # ── Recursive splitting or window completion ───────────────────────────
         duration_sec = (end_dt - start_dt).total_seconds()
-        if len(raw_items) >= GDELT_MAX_RECORDS and duration_sec > min_window_seconds:
-            mid_dt = start_dt + (end_dt - start_dt) / 2
 
-            # ── Boundary convention (non-overlapping half-open intervals) ──────────────
-            # Left  branch covers [start_dt, mid_dt).  Its GDELT enddatetime is mid_dt-1s
-            # so an article timestamped exactly at mid_dt is NOT fetched by the left branch.
-            # Right branch covers [mid_dt, end_dt).  Its GDELT startdatetime is mid_dt.
-            # This prevents any article at the exact midpoint from appearing in both results.
+        if len(raw_items) >= GDELT_MAX_RECORDS and duration_sec > min_window_seconds:
+            # Window hit the cap AND is still large enough to split — recurse.
+            self._inc_stat("pagination_splits")
+
+            # Compute midpoint using integer-second arithmetic to guarantee whole-second
+            # boundaries.  start_dt and end_dt already have microsecond=0 (enforced above),
+            # but dividing a timedelta by 2.0 can still produce a fractional-second result
+            # when the window duration is an odd number of seconds (e.g. 3601s // 2 = 1800s
+            # but / 2.0 = 1800.5s → microsecond=500000).  Fractional midpoints make the
+            # left_end and right_start different after the recursive microsecond-normalization
+            # step, potentially causing boundary drift across recursion levels.
+            duration_int_sec = int((end_dt - start_dt).total_seconds())
+            mid_dt = start_dt + datetime.timedelta(seconds=duration_int_sec // 2)
+
+            # Sanity guard: mid_dt must be strictly between start_dt and end_dt.
+            # If the window is so small that integer division collapses the midpoint onto
+            # a boundary, we cannot split safely — treat this window as truncated instead.
+            if mid_dt <= start_dt or mid_dt >= end_dt:
+                self._inc_stat("truncated_windows")
+                self._inc_stat("incomplete_windows")
+                with self._truncated_ranges_lock:
+                    self._truncated_ranges.append((ticker, start_str, end_str))
+                logger.warning(
+                    "[%s] TRUNCATED WINDOW: window too small to bisect safely "
+                    "(%s to %s, %ds). Returning partial results.",
+                    ticker, start_str, end_str, duration_int_sec
+                )
+                articles = self._deduplicate_articles(articles)
+                return articles
+
+            # GDELT boundary semantics (both startdatetime and enddatetime are inclusive):
+            #   Left  sub-request : startdatetime=start_str,   enddatetime=(mid - 1s)_str
+            #   Right sub-request : startdatetime=mid_str,     enddatetime=end_str
+            # An article timestamped exactly at mid_dt is fetched ONLY by the right branch.
+            # An article timestamped exactly at (mid_dt - 1s) is fetched ONLY by the left.
+            # There is no overlap and no gap between the two windows.
             left_end_dt = mid_dt - datetime.timedelta(seconds=1)
 
-            # Delay with jitter before bisection sub-requests to avoid HTTP 429
+            # Polite jitter before sub-requests to reduce HTTP 429 risk
             time.sleep(2 + random.uniform(0.2, 0.8))
 
             # Sub-window failures raise RuntimeError immediately; they are NEVER silently
             # absorbed or substituted with a subset of the parent's truncated 250-item list.
+            # The SAME _request_budget object is passed to both branches so the tree shares
+            # one global budget — no branch can create a fresh local budget.
             left_arts: List[Dict[str, Any]] = self.fetch_gdelt_window(
-                ticker, start_dt, left_end_dt, min_window_seconds, _recursing=True
+                ticker, start_dt, left_end_dt, min_window_seconds,
+                _recursing=True, _request_budget=_request_budget
             )
 
             time.sleep(2 + random.uniform(0.2, 0.8))
 
             right_arts: List[Dict[str, Any]] = self.fetch_gdelt_window(
-                ticker, mid_dt, end_dt, min_window_seconds, _recursing=True
+                ticker, mid_dt, end_dt, min_window_seconds,
+                _recursing=True, _request_budget=_request_budget
             )
 
             # Combine and deduplicate across the two non-overlapping sub-intervals
             articles = self._deduplicate_articles(left_arts + right_arts)
+
+        elif len(raw_items) >= GDELT_MAX_RECORDS and duration_sec <= min_window_seconds:
+            # Window hit the 250-record cap but is already at or below the minimum
+            # splittable size.  Coverage for this interval is POTENTIALLY INCOMPLETE.
+            self._inc_stat("truncated_windows")
+            self._inc_stat("incomplete_windows")
+            # complete_windows is intentionally NOT incremented here.
+
+            with self._truncated_ranges_lock:
+                self._truncated_ranges.append((ticker, start_str, end_str))
+
+            logger.warning(
+                "[%s] TRUNCATED WINDOW: minimum window (%ds) reached but result count=%d "
+                "still hits the GDELT cap (%d). Articles in [%s, %s] may be incomplete. "
+                "Consider reducing min_window_seconds to improve coverage.",
+                ticker, min_window_seconds, len(raw_items), GDELT_MAX_RECORDS,
+                start_str, end_str
+            )
+            articles = self._deduplicate_articles(articles)
+
         else:
-            # Window at or below min_window_seconds: accept current results as-is.
-            # If we reached here because the window is too small to split further but
-            # still hit 250 records, log a warning so the operator can investigate.
-            if len(raw_items) >= GDELT_MAX_RECORDS:
-                logger.warning(
-                    f"[{ticker}] Minimum window ({min_window_seconds}s) reached but result"
-                    f" count={len(raw_items)} still hits the GDELT limit "
-                    f"({start_str} to {end_str}). Some articles in this interval may be"
-                    f" truncated. Consider reducing min_window_seconds."
-                )
+            # Window returned fewer than GDELT_MAX_RECORDS — coverage is complete.
+            self._inc_stat("complete_windows")
             articles = self._deduplicate_articles(articles)
 
         return articles
@@ -554,7 +970,7 @@ class NewsFetcher:
         Deduplicates article records using canonical deduplication keys.
 
         Primary key  (URL-based):      (ticker, trading_date, normalized_url)
-        Fallback key (headline-based): (ticker, trading_date, normalized_headline, source)
+        Fallback key (headline-based): (ticker, trading_date, normalized_headline::src_domain)
 
         The source domain is included in the headline fallback key to avoid merging
         genuinely different articles that happen to share a headline across publishers
@@ -562,38 +978,27 @@ class NewsFetcher:
         normalized headline but distinct URLs that were lost during URL normalization).
         Only articles from the exact same publisher with the exact same headline are
         treated as duplicates under the fallback path.
+
+        Articles for which BOTH the normalized URL and normalized headline are empty
+        are never deduplicated against each other — each such article is preserved
+        independently to avoid spurious collapsing of unrelated records.
         """
-        seen_url_keys: Set[Tuple[str, str, str]] = set()
-        seen_hl_keys: Set[Tuple[str, str, str, str]] = set()
+        seen_keys: Set[Tuple[str, str, str]] = set()
         unique: List[Dict[str, Any]] = []
 
         for a in articles_list:
-            ticker = a["ticker"]
-            td = a["trading_date"]
-            dedupe_key = self._article_dedupe_key(a)
-            norm_h = self.normalize_headline(a.get("headline", ""))
-            # Extract normalized source domain for headline fallback key
-            raw_url = a.get("url", "") or ""
-            try:
-                src_domain = urllib.parse.urlparse(raw_url).netloc.lower().lstrip("www.")
-            except Exception:
-                src_domain = ""
-            # Headline fallback includes source domain to prevent cross-publisher merges
-            hl_key: Tuple[str, str, str, str] = (ticker, td, norm_h, src_domain)
+            key = self._article_dedupe_key(a)
 
-            is_dup = False
-            if dedupe_key in seen_url_keys:
-                is_dup = True
-            elif norm_h and hl_key in seen_hl_keys:
-                # Only deduplicate on headline if both have the same source domain
-                is_dup = True
-
-            if not is_dup:
-                seen_url_keys.add(dedupe_key)
-                if norm_h:
-                    seen_hl_keys.add(hl_key)
+            if key is None:
+                # Both URL and headline are empty: cannot generate a meaningful key.
+                # Preserve the article independently without deduplication.
                 unique.append(dict(a))
-            else:
+                continue
+
+            if key in seen_keys:
                 self._inc_stat("duplicates_removed")
+            else:
+                seen_keys.add(key)
+                unique.append(dict(a))
 
         return unique

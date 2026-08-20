@@ -126,5 +126,9 @@ ROOT_DAILY_SENTIMENT_CSV = os.path.abspath(os.path.join(BASE_DIR, "..", "daily_s
 # ─── Hugging Face Model & Execution Configuration ─────────────────────────────
 FINBERT_MODEL_NAME = "ProsusAI/finbert"
 GDELT_MAX_RECORDS = 250
+# Safety budget for recursive GDELT pagination per fetch_gdelt_window() root call.
+# A single month window can bisect at most ~log2(30*24*3600/3600) ≈ 10 levels deep,
+# so 64 is generous while preventing runaway recursion on pathological inputs.
+GDELT_MAX_REQUESTS_PER_WINDOW = 64
 FETCH_WORKERS = 4
 LOW_COVERAGE_THRESHOLD = 0.10  # Flag years/tickers with <10% trading-day coverage
