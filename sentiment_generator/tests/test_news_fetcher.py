@@ -402,6 +402,66 @@ class TestNewsFetcher(unittest.TestCase):
                          "'power' inside 'empower' must not trigger financial context")
 
     # =========================================================================
+    # D8.  TCS / SBI WORD-BOUNDARY REGRESSION
+    # =========================================================================
+
+    def test_D8_tcs_tech_and_deal_word_boundary(self):
+        """
+        'tech' and 'deal' must be matched as whole words for TCS, not as substrings.
+
+        Required cases (from review):
+          TCS technical announcement  → False  ('tech' inside 'technical' must not fire)
+          TCS ideal situation         → False  ('deal' inside 'ideal' must not fire)
+          TCS tech contract           → True   ('tech' as whole word fires via word-boundary)
+          TCS deal with Microsoft     → True   ('deal' as whole word fires via word-boundary)
+        """
+        rel = self.fetcher.is_relevant_to_company
+
+        # False cases: substring-only occurrence — must not match
+        self.assertFalse(
+            rel("TCS technical announcement raises concerns about workforce planning", "TCS.NS"),
+            "'tech' inside 'technical' must not trigger TCS match")
+        self.assertFalse(
+            rel("TCS ideal outcome for the workforce reorganisation was announced", "TCS.NS"),
+            "'deal' inside 'ideal' must not trigger TCS match")
+
+        # True cases: whole-word occurrence — must match
+        self.assertTrue(
+            rel("TCS tech unit wins outsourcing mandate from European insurer", "TCS.NS"),
+            "'tech' as whole word must trigger TCS match")
+        self.assertTrue(
+            rel("TCS deal with Microsoft worth over 500 million dollars announced", "TCS.NS"),
+            "'deal' as whole word must trigger TCS match")
+
+        # Additional coverage: explicit strong keywords still work
+        self.assertTrue(
+            rel("TCS Q3 results beat analyst estimates on strong revenue growth", "TCS.NS"),
+            "Unambiguous keywords (results, revenue) must still trigger TCS match")
+        self.assertTrue(
+            rel("Tata Consultancy Services signs 1 billion dollar contract", "TCS.NS"),
+            "Full company name must always trigger TCS match")
+
+    def test_D8b_sbi_bank_word_boundary(self):
+        """
+        'bank' must be matched as a whole word for SBI, not as a substring.
+        'embankment' contains 'bank' as a substring and must not trigger an SBI match.
+        """
+        rel = self.fetcher.is_relevant_to_company
+
+        # False: 'bank' inside 'embankment' — must not fire
+        self.assertFalse(
+            rel("SBI embankment project near the riverside to be completed by 2027", "SBIN.NS"),
+            "'bank' inside 'embankment' must not trigger SBI match")
+
+        # True: 'bank' as whole word — must fire
+        self.assertTrue(
+            rel("SBI bank branch network expanded to 23000 locations", "SBIN.NS"),
+            "'bank' as whole word must trigger SBI match")
+        self.assertTrue(
+            rel("State Bank of India cuts home loan rates by 25 basis points", "SBIN.NS"),
+            "Explicit 'State Bank of India' phrase must always trigger SBI match")
+
+    # =========================================================================
     # Original tests (preserved)
     # =========================================================================
 

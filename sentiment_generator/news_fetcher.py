@@ -13,7 +13,7 @@ import requests
 from .config import (
     STOCKS, COMPANY_ALIASES, MARKET_TIMEZONE,
     MARKET_CLOSE_HOUR, MARKET_CLOSE_MINUTE, GDELT_MAX_RECORDS,
-    GDELT_MAX_REQUESTS_PER_WINDOW
+    GDELT_MAX_REQUESTS_PER_WINDOW, GDELT_REQUEST_SLEEP_SECONDS
 )
 
 logger = logging.getLogger(__name__)
@@ -82,6 +82,25 @@ _ITC_BARE_STRONG_SIGNALS: frozenset = frozenset({
     # Regulatory
     "rbi", "sebi",
 })
+
+# Precompiled word-boundary regex derived from _ITC_BARE_STRONG_SIGNALS.
+#
+# Sorted longest-first so that longer tokens take priority in the alternation
+# (e.g. 'cigarette' is tried before 'ceo'), which is the standard convention
+# for regex alternations to avoid partial-match shadowing.
+#
+# Using \b anchors on both sides means each token must occur as a whole word.
+# Examples:
+#   'loss'    will not fire on 'glossy'    ('gl' precedes the match, no boundary)
+#   'revenue' will not fire on 'revenues'  (no \b between 'e' and 's'; both are \w)
+#   'nse'     will not fire inside a longer alphanumeric token
+# All of the above are correct behaviour for this filter.
+_ITC_BARE_STRONG_SIGNALS_RE: re.Pattern = re.compile(
+    r'\b(?:' +
+    '|'.join(re.escape(tok) for tok in sorted(_ITC_BARE_STRONG_SIGNALS, key=len, reverse=True)) +
+    r')\b',
+    re.IGNORECASE,
+)
 
 # Tracking query parameters to strip during canonical URL normalization
 TRACKING_PARAMS = {
@@ -297,16 +316,21 @@ class NewsFetcher:
 
         # Assemble OR query, capping at 512 characters.
         # Primary term is always included; trim lower-priority aliases greedily.
+        # GDELT DOC API requires multi-term queries using boolean OR to be enclosed in parentheses:
+        # e.g., ("Reliance Industries" OR "Reliance Jio" OR "Mukesh Ambani")
         MAX_QUERY_LEN = 512
         parts = [f'"{selected[0]}"']
         for term in selected[1:]:
             candidate_part = f' OR "{term}"'
-            if len("".join(parts)) + len(candidate_part) <= MAX_QUERY_LEN:
+            # +2 accounts for surrounding parentheses '(' and ')' when multiple terms are present
+            if len("".join(parts)) + len(candidate_part) + 2 <= MAX_QUERY_LEN:
                 parts.append(candidate_part)
             else:
                 break
 
-        return "".join(parts)
+        if len(parts) > 1:
+            return f"({''.join(parts)})"
+        return parts[0]
 
     # ─── Precompiled Contextual Entity Matchers ─────────────────────────────────
     def _compile_matchers(self) -> Dict[str, Dict[str, Any]]:
@@ -408,10 +432,10 @@ class NewsFetcher:
             # "ITC announces initiative as the board approves the order" would pass the
             # broad check despite 'ITC' referring to an unrelated organisation.
             #
-            # Use _ITC_BARE_STRONG_SIGNALS instead: a tighter subset that requires a
-            # clearly ITC-financial signal (earnings, securities, indices, ITC verticals)
-            # before accepting a bare 'ITC' match.
-            if any(kw in text_lower for kw in _ITC_BARE_STRONG_SIGNALS):
+            # Use _ITC_BARE_STRONG_SIGNALS_RE: each signal is matched as a whole word
+            # via \b anchors, so short tokens like 'loss' cannot fire on 'glossy',
+            # 'nse' cannot fire inside a longer token, etc.
+            if _ITC_BARE_STRONG_SIGNALS_RE.search(text_lower):
                 return True
         return False
 
@@ -451,11 +475,15 @@ class NewsFetcher:
             return True
         if re.search(r'\bSBI\b', text):
             if any(kw in text_lower for kw in [
-                "bank", "banking", "shares", "stock", "lending", "npa", "dinesh khara",
+                # 'bank' is intentionally excluded from this substring list — it is short
+                # enough to appear inside 'embankment'.  The word-boundary check below
+                # (via _FINANCIAL_CONTEXT_WORDBOUND which includes \bbank\b) handles it.
+                "banking", "shares", "stock", "lending", "npa", "dinesh khara",
                 "quarter", "results", "loan", "card", "life", "mutual fund"
             ]):
                 return True
-            if _FINANCIAL_CONTEXT_WORDBOUND.search(text_lower):  # catches bare 'npa', 'md'
+            # Word-boundary check: catches 'bank' (whole word), 'npa', 'md', 'it services', etc.
+            if _FINANCIAL_CONTEXT_WORDBOUND.search(text_lower):
                 return True
         return False
 
@@ -464,12 +492,18 @@ class NewsFetcher:
             return True
         if re.search(r'\bTCS\b', text):
             if any(kw in text_lower for kw in [
-                "tata", "tech", "deal", "contract", "shares", "stock", "quarter",
+                # 'tech' and 'deal' are intentionally excluded from this substring list.
+                # 'tech' appears inside 'technical', 'technology', 'biotechnology';
+                # 'deal' appears inside 'ideal', 'ordeal'.
+                # Both are handled via the word-boundary check below.
+                "tata", "contract", "shares", "stock", "quarter",
                 "results", "krithivasan", "ceo", "earnings", "q1", "q2", "q3", "q4",
                 "profit", "revenue", "dividend"
             ]):
                 return True
-            if _FINANCIAL_CONTEXT_WORDBOUND.search(text_lower):  # catches 'it services', 'md'
+            # Word-boundary check: catches 'tech' (whole word), 'deal' (whole word),
+            # 'it' (as in 'IT services'), 'md', 'bank', etc.
+            if _FINANCIAL_CONTEXT_WORDBOUND.search(text_lower):
                 return True
         return False
 
@@ -832,13 +866,35 @@ class NewsFetcher:
         raw_items: List[Dict[str, Any]] = []
         fetch_success = False
         last_error = None
+        # 429s get their own retry budget so a throttling burst does not prematurely
+        # exhaust the general error retry pool.
+        # - MAX_ATTEMPTS   : total loop iterations (7) — covers transient network flaps
+        # - MAX_RL_RETRIES : max 429 responses before giving up specifically on rate-limits
+        MAX_ATTEMPTS   = 7
+        MAX_RL_RETRIES = 5
+        rate_limit_attempts = 0
 
         self._inc_stat("api_requests")
 
-        for attempt in range(5):
+        for attempt in range(MAX_ATTEMPTS):
             try:
+                # Mandatory pre-request sleep: primary rate-limit defence.
+                # Keeps per-thread request rate at ~40 req/min (1.5s sleep),
+                # preventing GDELT throttling before it occurs.
+                # The 429 exponential back-off below is the safety net for bursts.
+                time.sleep(GDELT_REQUEST_SLEEP_SECONDS)
                 res = session.get(GDELT_DOC_API_URL, params=params, timeout=15)
-                if res.status_code == 200 and res.text.strip():
+                if res.status_code == 200:
+                    body = res.text.strip()
+                    if not body:
+                        # GDELT returns HTTP 200 with an empty body when a query produces
+                        # zero results for the requested time window.  This is NOT a failure
+                        # — it simply means no articles were indexed in that interval.
+                        # Treat as zero results and stop retrying immediately.
+                        raw_items = []
+                        fetch_success = True
+                        self._inc_stat("successful_requests")
+                        break
                     try:
                         data = res.json()
                         if isinstance(data, dict):
@@ -855,12 +911,25 @@ class NewsFetcher:
                         time.sleep(2 + attempt * 2)
                 elif res.status_code == 429:
                     self._inc_stat("rate_limit_responses")
+                    rate_limit_attempts += 1
+                    if rate_limit_attempts > MAX_RL_RETRIES:
+                        last_error = f"HTTP 429 Rate Limit (exceeded {MAX_RL_RETRIES} retries)"
+                        break  # Give up — persistent throttle, not transient
                     retry_after = res.headers.get("Retry-After")
                     if retry_after and retry_after.isdigit():
                         sleep_sec = float(retry_after) + random.uniform(0.5, 1.5)
                     else:
-                        sleep_sec = (2 ** attempt) * 4 + random.uniform(0.5, 2.0)
-                    last_error = f"HTTP 429 Rate Limit (sleeping {sleep_sec:.1f}s)"
+                        sleep_sec = (2 ** rate_limit_attempts) * 4 + random.uniform(0.5, 2.0)
+                    last_error = f"HTTP 429 Rate Limit (sleeping {sleep_sec:.1f}s, attempt {rate_limit_attempts}/{MAX_RL_RETRIES})"
+                    logger.warning(
+                        "GDELT 429 rate-limit for %s [%s to %s]; sleeping %.1fs (attempt %d/%d)",
+                        ticker, start_str, end_str, sleep_sec, rate_limit_attempts, MAX_RL_RETRIES
+                    )
+                    # Close the session connection pool so the next retry uses a fresh TCP connection
+                    try:
+                        session.close()
+                    except Exception:
+                        pass
                     time.sleep(sleep_sec)
                 else:
                     last_error = f"HTTP {res.status_code}"

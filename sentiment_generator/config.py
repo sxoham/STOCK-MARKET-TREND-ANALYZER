@@ -130,5 +130,18 @@ GDELT_MAX_RECORDS = 250
 # A single month window can bisect at most ~log2(30*24*3600/3600) ≈ 10 levels deep,
 # so 64 is generous while preventing runaway recursion on pathological inputs.
 GDELT_MAX_REQUESTS_PER_WINDOW = 64
-FETCH_WORKERS = 4
+
+# Mandatory pre-request sleep before every GDELT DOC API call.
+# This is the PRIMARY rate-limit defence; the exponential back-off retry is the
+# safety net for transient spikes, not the routine throttle mechanism.
+#
+# GDELT strictly enforces a 5-second per-IP rate limit on the DOC 2.0 API:
+# "Please limit requests to one every 5 seconds".
+# At 5.0s per request with FETCH_WORKERS=1, the rate remains strictly compliant.
+GDELT_REQUEST_SLEEP_SECONDS = 5.0
+
+# Number of concurrent worker threads for multi-ticker fetching.
+# Kept at 1 to prevent multiple threads from concurrently violating GDELT's 5-second IP limit.
+FETCH_WORKERS = 1
+
 LOW_COVERAGE_THRESHOLD = 0.10  # Flag years/tickers with <10% trading-day coverage
