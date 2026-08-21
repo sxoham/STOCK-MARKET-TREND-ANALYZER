@@ -27,24 +27,61 @@ HEADERS = {
 # Contextual financial & corporate keywords for verifying ambiguous short names/acronyms.
 #
 # IMPORTANT: only include tokens that are safe for plain substring matching (i.e. they are
-# long enough that they will never appear as an incidental substring of an unrelated word).
-# Short/ambiguous tokens such as 'it', 'md', 'npa' are handled separately via word-boundary
-# regex in _has_financial_context() to avoid false positives like 'it' inside 'schedule'.
+# long enough or specific enough that they will rarely appear as an incidental substring
+# of an unrelated word in a financial news article).
+# Short/ambiguous tokens that CAN appear as substrings of common words are handled
+# separately via word-boundary regex in _FINANCIAL_CONTEXT_WORDBOUND.
+#
+# Tokens intentionally excluded from this set (moved to word-boundary regex below):
+#   'tech'  — appears in 'technical', 'technology', 'biotechnology'
+#   'auto'  — appears in 'automatic', 'automation', 'automated'
+#   'deal'  — appears in 'ideal', 'ordeal'
+#   'power' — appears in 'empower', 'powerless', 'powerpoint'
+#   'tax'   — appears in 'syntax', 'intax'
+#   'bank'  — appears in 'embankment'; also, 'banking' below covers most contexts
 FINANCIAL_CONTEXT_KEYWORDS = {
     "stock", "shares", "results", "profit", "loss", "revenue", "quarter",
     "dividend", "earnings", "board", "management", "nifty", "sensex", "bse", "nse",
     "market", "growth", "sales", "crore", "ebitda", "margin", "target", "analyst",
-    "ceo", "chairman", "acquisition", "order", "contract", "tax", "rbi", "sebi",
-    "tobacco", "cigarette", "fmcg", "hotel", "hotels", "infra", "construction", "bank",
-    "banking", "loan", "npa", "lending", "tech", "deal", "software", "steel",
-    "power", "energy", "pharma", "drug", "auto", "vehicle", "cars", "jewellery", "jewelry"
+    "ceo", "chairman", "acquisition", "order", "contract", "rbi", "sebi",
+    "tobacco", "cigarette", "fmcg", "hotel", "hotels", "infra", "construction",
+    "banking", "loan", "lending", "software", "steel",
+    "energy", "pharma", "drug", "vehicle", "cars", "jewellery", "jewelry"
 }
 
 # Short tokens that require whole-word (\b-bounded) matching to avoid substring collisions.
-# 'it' matches inside words like 'schedule', 'distribution'; 'md' inside 'cmd'; etc.
+# 'it' matches inside 'schedule', 'distribution'; 'md' inside 'cmd'; 'npa' inside 'unpaid'.
+# 'tech' matches inside 'technical', 'technology'; 'auto' inside 'automatic', 'automation';
+# 'deal' matches inside 'ideal', 'ordeal'; 'power' inside 'empower', 'powerless';
+# 'tax' matches inside 'syntax'; 'bank' inside 'embankment'.
 _FINANCIAL_CONTEXT_WORDBOUND = re.compile(
-    r'\b(?:it|md|npa)\b', re.IGNORECASE
+    r'\b(?:it|md|npa|tech|auto|deal|power|tax|bank)\b', re.IGNORECASE
 )
+
+# Strong financial signals used exclusively for the bare-'ITC' matching path.
+#
+# Why a separate set: FINANCIAL_CONTEXT_KEYWORDS contains broad terms like 'board',
+# 'market', 'sales', 'order', and 'management' that appear in countless non-ITC corporate
+# articles.  A headline such as "ITC announces initiative as board approves the order"
+# would pass the broad check even though 'ITC' could refer to any organisation.
+# This tighter set requires a clearly financial signal — earnings metrics, securities,
+# market indices, regulatory bodies, or ITC's specific business verticals — before
+# accepting a bare 'ITC' match.
+_ITC_BARE_STRONG_SIGNALS: frozenset = frozenset({
+    # ITC-specific business verticals
+    "tobacco", "cigarette", "fmcg",
+    # Securities and earnings
+    "shares", "stock", "profit", "loss", "revenue", "earnings", "ebitda",
+    "margin", "crore", "quarter", "results", "dividend",
+    # Market references
+    "nifty", "sensex", "bse", "nse",
+    # Analyst/valuation
+    "analyst", "target", "rating", "valuation",
+    # Corporate actions
+    "ceo", "chairman", "acquisition", "buyback",
+    # Regulatory
+    "rbi", "sebi",
+})
 
 # Tracking query parameters to strip during canonical URL normalization
 TRACKING_PARAMS = {
@@ -84,7 +121,12 @@ class NewsFetcher:
       Recursion terminates ONLY when the window is <= min_window_seconds (never by a fixed depth cap),
       or when the shared request budget is exhausted (raises RuntimeError).
       Sub-window failures raise RuntimeError and are never silently treated as empty coverage.
-      Midpoint ownership: left branch = [start, mid); right branch = [mid, end) (right-exclusive mid+1s).
+      Midpoint ownership: GDELT startdatetime/enddatetime are both inclusive.
+          Left  branch covers [start,   mid − 1s] (enddatetime = mid − 1s).
+          Right branch covers [mid,     end      ] (enddatetime = end).
+          An article timestamped exactly at mid is owned exclusively by the right branch;
+          an article at (mid − 1s) is owned exclusively by the left branch.
+          There is no overlap and no gap between the two branches.
     - Shared mutable request budget passed through the entire recursive tree to bound HTTP requests.
     - Thread-local requests.Session for concurrent ThreadPoolExecutor thread-safety.
     - Strict canonical URL/headline+source deduplication.
@@ -124,6 +166,10 @@ class NewsFetcher:
             "pagination_splits": 0,
             "truncated_windows": 0,
             "incomplete_windows": 0,
+            # complete_windows counts windows where the GDELT response was strictly below the
+            # 250-record cap — i.e. the window was NOT silently truncated by the API limit.
+            # This does NOT guarantee that all news in that period was discovered: GDELT's
+            # own indexing coverage may be incomplete regardless of the response cap.
             "complete_windows": 0,
             "query_failures": 0,
             "pagination_budget_exhausted": 0,
@@ -350,13 +396,22 @@ class NewsFetcher:
         if "imperial tobacco" in text_lower or "itc limited" in text_lower or "itc ltd" in text_lower:
             return True
         if re.search(r'\bITC\b', text):
-            # For bare uppercase ITC, require explicit financial/corporate vocabulary.
+            # For bare uppercase ITC, require strong financial/corporate vocabulary.
+            #
             # IMPORTANT: do NOT call _has_financial_context() here — it includes \bit\b
-            # (word-boundary match for 'it') which can fire on ordinary sentences such as
+            # (word-boundary match for 'it') which fires on ordinary sentences such as
             # "ITC launches initiative. It will help..." even with zero financial content.
-            # Use FINANCIAL_CONTEXT_KEYWORDS directly; these are all >=4 chars and
-            # unambiguously financial so they cannot false-positive on common prose.
-            if any(kw in text_lower for kw in FINANCIAL_CONTEXT_KEYWORDS):
+            #
+            # Do NOT use the full FINANCIAL_CONTEXT_KEYWORDS set here either: it contains
+            # generic terms like 'board', 'market', 'sales', 'order', and 'management'
+            # that appear in countless non-ITC corporate articles.  A headline such as
+            # "ITC announces initiative as the board approves the order" would pass the
+            # broad check despite 'ITC' referring to an unrelated organisation.
+            #
+            # Use _ITC_BARE_STRONG_SIGNALS instead: a tighter subset that requires a
+            # clearly ITC-financial signal (earnings, securities, indices, ITC verticals)
+            # before accepting a bare 'ITC' match.
+            if any(kw in text_lower for kw in _ITC_BARE_STRONG_SIGNALS):
                 return True
         return False
 
@@ -494,7 +549,11 @@ class NewsFetcher:
         # Include source domain to prevent cross-publisher merges on shared headlines.
         raw_url = article.get("url", "") or ""
         try:
-            src_domain = urllib.parse.urlparse(raw_url).netloc.lower().lstrip("www.")
+            netloc_lower = urllib.parse.urlparse(raw_url).netloc.lower()
+            # Use startswith to strip the "www." prefix as a unit, NOT lstrip() which
+            # strips individual characters from the set {'w', '.'} and would incorrectly
+            # mutilate domains like "web.ndtv.com" → "eb.ndtv.com".
+            src_domain = netloc_lower[4:] if netloc_lower.startswith("www.") else netloc_lower
         except Exception:
             src_domain = ""
         return (ticker, trading_date, f"{norm_h}::{src_domain}")
@@ -514,15 +573,32 @@ class NewsFetcher:
                                (YYYYMMDD), not full second-level precision (YYYYMMDDHHMMSS)
 
         Precision rules:
-            - YYYYMMDDHHMMSS (14+ digits after stripping non-numeric chars): full precision,
-              date_only=False.
-            - YYYYMMDD (8 digits): date-only precision, date_only=True.
+            - YYYYMMDDHHMMSS (exactly 14 digits after stripping non-numeric chars): full
+              precision, date_only=False.  GDELT's canonical seendate is exactly this format;
+              any other digit count is treated as malformed or low-precision and rejected.
+            - YYYYMMDD (exactly 8 digits): date-only precision, date_only=True.
               These are NOT converted to midnight; the caller must reject them.
-            - Anything else: malformed — raises ValueError immediately.
+            - Anything else (including >14 digits that result from stripping non-numeric
+              characters out of a corrupt or extended-format string): malformed — raises
+              ValueError immediately.  The >14 case is NOT silently truncated to 14 digits
+              because doing so would accept corrupted data and contradict the guarantee of
+              zero fabricated temporal placement.
 
         Raises:
-            ValueError: on malformed or unparseable timestamps, or when a date-only
-                        timestamp is detected (caller must treat as rejection).
+            LowPrecisionTimestampError
+                When exactly 8 numeric digits are found (YYYYMMDD): date-only precision.
+                This is a subclass of ValueError, so broad ``except ValueError`` callers
+                still catch it, but callers that need to distinguish the low-precision case
+                from a genuinely malformed timestamp can catch this subclass first.
+                ``articles_rejected_low_precision_timestamp`` is incremented here, before
+                the raise, so the caller must NOT increment it again.
+            ValueError
+                When the numeric digit count after stripping non-numeric characters is not
+                exactly 8 or exactly 14.  This covers 0–7, 9–13, and >14 digit counts.
+                In particular, >14 digits (e.g. from a corrupt or non-standard string) are
+                rejected rather than silently truncated, because accepting the first 14 digits
+                of a longer string would fabricate temporal precision from corrupted input.
+                The caller is responsible for incrementing ``articles_rejected_invalid_timestamp``.
 
         There is NO fallback to datetime.now(). Missing or malformed timestamps
         are always rejected without fabricating temporal placement.
@@ -532,21 +608,6 @@ class NewsFetcher:
         if len(raw_clean) == 14:
             # Canonical GDELT seendate format: exactly YYYYMMDDHHMMSS (14 digits).
             dt_utc = datetime.datetime.strptime(raw_clean, "%Y%m%d%H%M%S").replace(tzinfo=self.tz_utc)
-            ist_dt = dt_utc.astimezone(self.tz_market)
-            seen_at_iso = ist_dt.isoformat()
-            return str(seendate_raw), seen_at_iso, ist_dt, False
-
-        if len(raw_clean) > 14:
-            # More than 14 numeric digits — not a known GDELT format.
-            # GDELT's canonical seendate is exactly YYYYMMDDHHMMSS (14 digits).
-            # Log a warning so the anomaly is visible, then use the first 14 digits
-            # defensively rather than silently discarding the article.
-            logger.warning(
-                "GDELT timestamp '%s' has %d digits after stripping non-numeric chars; "
-                "expected exactly 14 (YYYYMMDDHHMMSS). Using first 14 digits defensively.",
-                seendate_raw, len(raw_clean)
-            )
-            dt_utc = datetime.datetime.strptime(raw_clean[:14], "%Y%m%d%H%M%S").replace(tzinfo=self.tz_utc)
             ist_dt = dt_utc.astimezone(self.tz_market)
             seen_at_iso = ist_dt.isoformat()
             return str(seendate_raw), seen_at_iso, ist_dt, False
@@ -570,8 +631,11 @@ class NewsFetcher:
                 f"Date-only GDELT timestamp (insufficient precision): '{seendate_raw}'"
             )
 
-        # 9–13 digits: an intermediate length that does not map to any known GDELT format.
-        # This is not a valid date-only (8) nor a full timestamp (>=14); treat as malformed.
+        # Any other digit count (0–7, 9–13, or >14) does not map to a known GDELT format.
+        # >14 digits specifically arise when non-numeric corruption is stripped away by the
+        # re.sub() above, leaving more raw digits than the YYYYMMDDHHMMSS format expects.
+        # Silently truncating to the first 14 digits would accept corrupted data and fabricate
+        # temporal precision from an unknown source — this is explicitly rejected.
         raise ValueError(
             f"Malformed or unparseable GDELT timestamp (unexpected digit count "
             f"{len(raw_clean)}): '{seendate_raw}'"
@@ -699,7 +763,11 @@ class NewsFetcher:
         - Never silently truncates at 250 articles.
         - Bisection continues until sub-windows are below min_window_seconds,
           or until the shared budget is exhausted (raises RuntimeError).
-        - Non-overlapping boundaries: left = [start, mid-1s]; right = [mid, end).
+        - Non-overlapping boundaries (GDELT startdatetime/enddatetime are both inclusive):
+            Left  sub-request : startdatetime=start, enddatetime=mid − 1s  (inclusive on both ends)
+            Right sub-request : startdatetime=mid,   enddatetime=end        (inclusive on both ends)
+          An article at exactly mid belongs only to the right branch; an article at (mid − 1s)
+          belongs only to the left branch.  There is no overlap and no gap.
         - Sub-window failures raise RuntimeError immediately — never silently absorbed.
         - Complete windows (< 250 results) increment complete_windows.
         - Truncated windows (>= 250, unsplittable) increment truncated_windows and
@@ -817,7 +885,13 @@ class NewsFetcher:
                 continue
 
             title = (item.get("title") or "").strip()
-            if not title or not self.is_relevant_to_company(title, ticker):
+            if not title:
+                # Article has no headline at all — cannot filter or map safely.
+                # Count separately so operators can distinguish empty-title drops
+                # from genuine company-relevance rejections.
+                self._inc_stat("articles_rejected_company_match")
+                continue
+            if not self.is_relevant_to_company(title, ticker):
                 self._inc_stat("articles_rejected_company_match")
                 continue
 
@@ -844,7 +918,10 @@ class NewsFetcher:
                 continue
 
             if trading_date not in self.trading_calendar:
-                self._inc_stat("articles_skipped_no_trading_session")
+                # map_to_nse_trading_session returned a non-None date that is not in
+                # the calendar — this is the "out of range" boundary case (e.g. the
+                # mapped next-trading-day lies beyond the calendar's end).
+                self._inc_stat("articles_rejected_out_of_range")
                 continue
 
             self._inc_stat("articles_mapped_to_trading_sessions")
