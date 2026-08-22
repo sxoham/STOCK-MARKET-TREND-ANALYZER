@@ -91,16 +91,21 @@ def load_existing_macro_sentiment(root_csv: str) -> Dict[str, float]:
 
 
 def generate_month_ranges(start_date: str, end_date: str) -> List[Tuple[datetime.datetime, datetime.datetime, str, str]]:
-    """Generates month boundaries (start_dt, end_dt, start_str, end_str) covering the range."""
-    start_dt = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-    end_dt = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+    """Generates timezone-aware UTC month boundaries (start_dt, end_dt, start_str, end_str) covering the range."""
+    import zoneinfo
+    tz_utc = zoneinfo.ZoneInfo("UTC")
+    start_dt = datetime.datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=tz_utc)
+    end_dt = datetime.datetime.strptime(end_date, "%Y-%m-%d").replace(tzinfo=tz_utc)
     
     ranges = []
-    curr = datetime.datetime(start_dt.year, start_dt.month, 1)
+    curr = datetime.datetime(start_dt.year, start_dt.month, 1, tzinfo=tz_utc)
     while curr <= end_dt:
         last_day = calendar.monthrange(curr.year, curr.month)[1]
         m_start = max(curr, start_dt)
-        m_end = min(datetime.datetime(curr.year, curr.month, last_day, 23, 59, 59), end_dt.replace(hour=23, minute=59, second=59))
+        m_end = min(
+            datetime.datetime(curr.year, curr.month, last_day, 23, 59, 59, tzinfo=tz_utc),
+            end_dt.replace(hour=23, minute=59, second=59, tzinfo=tz_utc)
+        )
         
         start_s = m_start.strftime("%Y-%m-%d")
         end_s = m_end.strftime("%Y-%m-%d")
@@ -108,9 +113,9 @@ def generate_month_ranges(start_date: str, end_date: str) -> List[Tuple[datetime
         
         # Advance to next month
         if curr.month == 12:
-            curr = datetime.datetime(curr.year + 1, 1, 1)
+            curr = datetime.datetime(curr.year + 1, 1, 1, tzinfo=tz_utc)
         else:
-            curr = datetime.datetime(curr.year, curr.month + 1, 1)
+            curr = datetime.datetime(curr.year, curr.month + 1, 1, tzinfo=tz_utc)
     return ranges
 
 
@@ -195,9 +200,12 @@ def build_data_quality_report(
         add(f"    Failed Requests                : {fetcher_diagnostics.get('failed_requests', 0)}")
         add(f"    Query Failures                 : {fetcher_diagnostics.get('query_failures', 0)}")
         add(f"    Total Articles Retrieved       : {fetcher_diagnostics.get('articles_retrieved', 0)}")
+        add(f"    Rejected (Missing Title)       : {fetcher_diagnostics.get('articles_rejected_missing_title', 0)}")
         add(f"    Rejected (Company Match)       : {fetcher_diagnostics.get('articles_rejected_company_match', 0)}")
         add(f"    Rejected (Invalid Timestamp)   : {fetcher_diagnostics.get('articles_rejected_invalid_timestamp', 0)}")
         add(f"    Rejected (Low Precision TS)    : {fetcher_diagnostics.get('articles_rejected_low_precision_timestamp', 0)}")
+        add(f"    Missing Published Timestamp    : {fetcher_diagnostics.get('articles_missing_published_at', 0)}")
+        add(f"    Missing URL                    : {fetcher_diagnostics.get('articles_missing_url', 0)}")
         add(f"    Duplicates Removed             : {fetcher_diagnostics.get('duplicates_removed', 0)}")
         add(f"    Skipped (No Trading Day)       : {fetcher_diagnostics.get('articles_skipped_no_trading_session', 0)}")
         add(f"    Mapped to Trading Sessions     : {fetcher_diagnostics.get('articles_mapped_to_trading_sessions', 0)}")

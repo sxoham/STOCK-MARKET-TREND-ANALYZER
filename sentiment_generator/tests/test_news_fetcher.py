@@ -699,6 +699,45 @@ class TestNewsFetcher(unittest.TestCase):
         self.assertEqual(result, "2024-01-15",
                          "Sunday news must forward to the following Monday")
 
+    def test_gdelt_rate_limiter_monotonic_governor(self):
+        """GDELTRateLimiter must enforce spacing using Lock + monotonic time."""
+        from sentiment_generator.news_fetcher import GDELTRateLimiter
+        import time
+        limiter = GDELTRateLimiter(min_interval=0.05)
+        t0 = time.monotonic()
+        limiter.wait()
+        limiter.wait()
+        t1 = time.monotonic()
+        self.assertGreaterEqual(t1 - t0, 0.045, "Rate limiter must enforce minimum interval")
+
+    @patch("requests.Session.get")
+    def test_missing_title_and_url_telemetry(self, mock_get):
+        """Articles with empty title or missing URL must increment dedicated telemetry stats."""
+        mock_200 = MagicMock(status_code=200, text='{"articles": ['
+            '{"title": "", "url": "https://sample.com/1", "seendate": "20240115T100000Z"},'
+            '{"title": "   ", "url": "https://sample.com/2", "seendate": "20240115T100000Z"},'
+            '{"title": "Reliance Industries Q3 revenue up 10%", "url": "", "seendate": "20240115T100000Z"}'
+        ']}')
+        mock_200.json.return_value = {"articles": [
+            {"title": "", "url": "https://sample.com/1", "seendate": "20240115T100000Z"},
+            {"title": "   ", "url": "https://sample.com/2", "seendate": "20240115T100000Z"},
+            {"title": "Reliance Industries Q3 revenue up 10%", "url": "", "seendate": "20240115T100000Z"}
+        ]}
+        mock_get.return_value = mock_200
+        with patch("time.sleep"):
+            arts = self.fetcher.fetch_gdelt_window(
+                "RELIANCE.NS",
+                datetime.datetime(2024, 1, 15, 0, 0, 0, tzinfo=self.tz_utc),
+                datetime.datetime(2024, 1, 15, 23, 59, 59, tzinfo=self.tz_utc)
+            )
+        diag = self.fetcher.get_diagnostics()
+        self.assertEqual(diag["articles_rejected_missing_title"], 2,
+                         "Empty/whitespace titles must increment articles_rejected_missing_title")
+        self.assertEqual(diag["articles_missing_url"], 1,
+                         "Empty URL must increment articles_missing_url")
+        self.assertEqual(len(arts), 1, "Only the valid article with headline should be accepted")
+
 
 if __name__ == "__main__":
     unittest.main()
+

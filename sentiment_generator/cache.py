@@ -248,3 +248,28 @@ def export_articles_parquet(parquet_path: str = ARTICLES_PARQUET):
     os.makedirs(os.path.dirname(parquet_path), exist_ok=True)
     df.to_parquet(parquet_path, index=False)
     print(f"  [Audit] Exported {len(df)} immutable raw articles -> {parquet_path}")
+
+def get_unresolved_failed_periods() -> List[Dict[str, Any]]:
+    """Returns list of periods that are currently in 'failed' status in the cache."""
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("""
+        SELECT ticker, period_start, period_end, attempt_count, last_attempt, error_message
+        FROM fetch_periods
+        WHERE status = 'failed'
+        ORDER BY ticker, period_start
+    """)
+    rows = c.fetchall()
+    conn.close()
+    return [
+        {
+            "ticker": r[0],
+            "period_start": r[1],
+            "period_end": r[2],
+            "attempt_count": r[3],
+            "last_attempt": r[4],
+            "error_message": r[5]
+        }
+        for r in rows
+    ]
+

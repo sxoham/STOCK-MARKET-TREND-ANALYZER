@@ -54,37 +54,37 @@ def main():
     tickers = ["ITC.NS", "LT.NS", "TITAN.NS", "SBIN.NS", "TCS.NS"]
 
     for ticker in tickers:
-        print("\n" + "=" * 70)
-        print(f"  TESTING TICKER: {ticker}")
-        print("=" * 70)
+        print("\n" + "=" * 70, flush=True)
+        print(f"  TESTING TICKER: {ticker}", flush=True)
+        print("=" * 70, flush=True)
 
         try:
             articles = fetcher.fetch_gdelt_window(ticker, start_dt, end_dt)
         except RuntimeError as exc:
-            print(f"  *** ERROR fetching {ticker}: {exc}")
+            print(f"  *** ERROR fetching {ticker}: {exc}", flush=True)
             continue
 
-        print(f"  Accepted articles: {len(articles)}")
+        print(f"  Accepted articles: {len(articles)}", flush=True)
 
         td_counts = Counter(a.get("trading_date", "MISSING") for a in articles)
-        print(f"  Trading session breakdown: {dict(sorted(td_counts.items()))}")
+        print(f"  Trading session breakdown: {dict(sorted(td_counts.items()))}", flush=True)
 
-        print("\n  Sample accepted headlines (up to 8):")
+        print("\n  Sample accepted headlines (up to 8):", flush=True)
         for i, a in enumerate(articles[:8], 1):
             hl = str(a.get("headline", "")).encode("ascii", errors="replace").decode("ascii")[:90]
             td = a.get("trading_date")
             ts = a.get("seen_at", "")[11:19]
-            print(f"    [{i:02d}] ({td} {ts} IST) : {hl}")
+            print(f"    [{i:02d}] ({td} {ts} IST) : {hl}", flush=True)
 
-    print("\n" + "=" * 70)
-    print("  OVERALL MULTI-TICKER DIAGNOSTICS")
-    print("=" * 70)
+    print("\n" + "=" * 70, flush=True)
+    print("  OVERALL MULTI-TICKER DIAGNOSTICS", flush=True)
+    print("=" * 70, flush=True)
     diag = fetcher.get_diagnostics()
     for k, v in sorted(diag.items()):
         if k != "truncated_ranges":
-            print(f"    {k:<45} : {v}")
+            print(f"    {k:<45} : {v}", flush=True)
 
-    print("=" * 70)
+    print("=" * 70, flush=True)
 
 
 if __name__ == "__main__":

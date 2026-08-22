@@ -196,6 +196,23 @@ def validate_production_dataset(
         except Exception as e:
             errors.append(f"Failed to read Parquet audit trail: {e}")
 
+    # ──────────────────────────────────────────────────────────────────────────
+    # 4. SQLite Fetch Periods Completeness Validation
+    # ──────────────────────────────────────────────────────────────────────────
+    try:
+        from .cache import get_unresolved_failed_periods
+        failed_periods = get_unresolved_failed_periods()
+        if failed_periods:
+            warnings.append(
+                f"Found {len(failed_periods)} unresolved 'failed' period window(s) in SQLite cache. "
+                f"These periods must be retried before declaring full historical completeness."
+            )
+            metrics["unresolved_failed_periods"] = len(failed_periods)
+        else:
+            metrics["unresolved_failed_periods"] = 0
+    except Exception as e:
+        warnings.append(f"Could not inspect fetch_periods table: {e}")
+
     # Final summary metrics
     metrics["total_rows"] = len(df_sent)
     metrics["date_range"] = [df_sent["Date"].min() if "Date" in df_sent.columns else "N/A",
@@ -204,3 +221,4 @@ def validate_production_dataset(
 
     is_valid = (len(errors) == 0)
     return is_valid, errors, warnings, metrics
+

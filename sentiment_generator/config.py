@@ -118,7 +118,9 @@ SENTIMENT_COVERAGE_CSV = os.path.join(DATA_DIR, "sentiment_coverage.csv")
 ARTICLES_PARQUET = os.path.join(DATA_DIR, "news_articles.parquet")
 QUALITY_REPORT_TXT = os.path.join(DATA_DIR, "data_quality_report.txt")
 QUALITY_REPORT_CSV = os.path.join(DATA_DIR, "data_quality_report.csv")
-CACHE_DB_PATH = os.path.join(CACHE_DIR, "sentiment_cache.db")
+CACHE_VERSION = os.getenv("SENTIMENT_CACHE_VERSION", "v2")
+CACHE_DB_PATH = os.path.join(CACHE_DIR, f"sentiment_cache_{CACHE_VERSION}.db")
+LEGACY_FORENSIC_CACHE_DB_PATH = os.path.join(CACHE_DIR, "sentiment_cache.db")
 
 # Root Output Path for direct application usage (only updated after validation gate PASSES)
 ROOT_DAILY_SENTIMENT_CSV = os.path.abspath(os.path.join(BASE_DIR, "..", "daily_sentiment.csv"))
@@ -131,17 +133,11 @@ GDELT_MAX_RECORDS = 250
 # so 64 is generous while preventing runaway recursion on pathological inputs.
 GDELT_MAX_REQUESTS_PER_WINDOW = 64
 
-# Mandatory pre-request sleep before every GDELT DOC API call.
-# This is the PRIMARY rate-limit defence; the exponential back-off retry is the
-# safety net for transient spikes, not the routine throttle mechanism.
-#
-# GDELT strictly enforces a 5-second per-IP rate limit on the DOC 2.0 API:
-# "Please limit requests to one every 5 seconds".
-# At 5.0s per request with FETCH_WORKERS=1, the rate remains strictly compliant.
-GDELT_REQUEST_SLEEP_SECONDS = 5.0
+# Mandatory pre-request sleep interval between GDELT DOC API calls.
+# Managed by process-wide Lock + monotonic() governor.
+GDELT_REQUEST_SLEEP_SECONDS = 6.0
 
 # Number of concurrent worker threads for multi-ticker fetching.
-# Kept at 1 to prevent multiple threads from concurrently violating GDELT's 5-second IP limit.
 FETCH_WORKERS = 1
 
 LOW_COVERAGE_THRESHOLD = 0.10  # Flag years/tickers with <10% trading-day coverage

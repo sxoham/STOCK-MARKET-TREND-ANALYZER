@@ -24,6 +24,28 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 }
 
+class GDELTRateLimiter:
+    """
+    Process-wide thread-safe rate limiter for GDELT API requests.
+    Enforces a strict minimum spacing between consecutive outbound HTTP calls
+    across all worker threads, retry loops, and recursive bisection branches.
+    """
+    def __init__(self, min_interval: float = GDELT_REQUEST_SLEEP_SECONDS):
+        self.min_interval = min_interval
+        self._lock = threading.Lock()
+        self._last_request_time = 0.0
+
+    def wait(self):
+        with self._lock:
+            now = time.monotonic()
+            elapsed = now - self._last_request_time
+            if elapsed < self.min_interval:
+                sleep_time = self.min_interval - elapsed
+                time.sleep(sleep_time)
+            self._last_request_time = time.monotonic()
+
+_global_gdelt_rate_limiter = GDELTRateLimiter(GDELT_REQUEST_SLEEP_SECONDS)
+
 # Contextual financial & corporate keywords for verifying ambiguous short names/acronyms.
 #
 # IMPORTANT: only include tokens that are safe for plain substring matching (i.e. they are
@@ -173,6 +195,7 @@ class NewsFetcher:
             "failed_requests": 0,
             "rate_limit_responses": 0,
             "articles_retrieved": 0,
+            "articles_rejected_missing_title": 0,
             "articles_rejected_company_match": 0,
             "articles_rejected_invalid_timestamp": 0,
             "articles_rejected_low_precision_timestamp": 0,
@@ -181,6 +204,7 @@ class NewsFetcher:
             "articles_mapped_to_trading_sessions": 0,
             "duplicates_removed": 0,
             "articles_missing_published_at": 0,
+            "articles_missing_url": 0,
             # Pagination / window-level diagnostics
             "pagination_splits": 0,
             "truncated_windows": 0,
@@ -878,11 +902,10 @@ class NewsFetcher:
 
         for attempt in range(MAX_ATTEMPTS):
             try:
-                # Mandatory pre-request sleep: primary rate-limit defence.
-                # Keeps per-thread request rate at ~40 req/min (1.5s sleep),
-                # preventing GDELT throttling before it occurs.
-                # The 429 exponential back-off below is the safety net for bursts.
-                time.sleep(GDELT_REQUEST_SLEEP_SECONDS)
+                # Mandatory process-wide rate-limit governor (Lock + monotonic).
+                # Enforces minimum interval between consecutive HTTP requests across
+                # all worker threads, retry loops, and recursive branches.
+                _global_gdelt_rate_limiter.wait()
                 res = session.get(GDELT_DOC_API_URL, params=params, timeout=15)
                 if res.status_code == 200:
                     body = res.text.strip()
@@ -956,9 +979,8 @@ class NewsFetcher:
             title = (item.get("title") or "").strip()
             if not title:
                 # Article has no headline at all — cannot filter or map safely.
-                # Count separately so operators can distinguish empty-title drops
-                # from genuine company-relevance rejections.
-                self._inc_stat("articles_rejected_company_match")
+                # Tracked under dedicated telemetry counter.
+                self._inc_stat("articles_rejected_missing_title")
                 continue
             if not self.is_relevant_to_company(title, ticker):
                 self._inc_stat("articles_rejected_company_match")
@@ -1003,6 +1025,8 @@ class NewsFetcher:
             self._inc_stat("articles_missing_published_at")
 
             raw_url = (item.get("url") or "").strip()
+            if not raw_url:
+                self._inc_stat("articles_missing_url")
 
             articles.append({
                 "ticker": ticker,

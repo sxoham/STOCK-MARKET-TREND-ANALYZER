@@ -1,45 +1,60 @@
 ======================================================================
   STOCK MARKET TREND ANALYZER  -  DATA QUALITY REPORT
-  Generated: 2026-08-20 04:46:07
+  Generated: 2026-08-21 22:00:51
 ======================================================================
 
-  Trading Sessions in Scope : 20
-  Calendar Range            : 2024-01-01 to 2024-01-30
-  Total Raw Articles in DB  : 79
+  Trading Sessions in Scope : 22
+  Calendar Range            : 2025-01-01 to 2025-01-30
+  Total Raw Articles in DB  : 120
   FinBERT Inference Failures: 0
 
   --- GDELT Retrieval Diagnostics ---
-    API Requests Made         : 0
-    Successful Requests (200) : 0
-    Rate Limit Hits (429)     : 0
-    Failed Requests           : 0
-    Total Articles Retrieved  : 0
-    Rejected (Company Match)  : 0
-    Duplicates Removed        : 0
-    Skipped (No Trading Day)  : 0
-    Mapped to Trading Sessions: 0
+    API Requests Made              : 4
+    Successful Requests (200)      : 3
+    Rate Limit Hits (429)          : 12
+    Failed Requests                : 1
+    Query Failures                 : 1
+    Total Articles Retrieved       : 671
+    Rejected (Company Match)       : 379
+    Rejected (Invalid Timestamp)   : 0
+    Rejected (Low Precision TS)    : 0
+    Duplicates Removed             : 0
+    Skipped (No Trading Day)       : 4
+    Mapped to Trading Sessions     : 288
+  --- Pagination Window Statistics ---
+    Pagination Splits              : 2
+    Complete Windows               : 1
+    Truncated Windows              : 0
+    Incomplete Windows             : 0
+    Budget Exhausted Errors        : 0
+    Coverage Completeness          : All fetched windows complete (no truncation)
   Earliest Article Seen     : 2024-01-01
-  Latest Article Seen       : 2024-01-17
+  Latest Article Seen       : 2025-01-30
 
   --- Source Distribution ---
-    GDELT                          79  (100.0%)
+    GDELT                         120  (100.0%)
 
   --- Articles per Ticker ---
     RELIANCE.NS               79
+    ITC.NS                    41
 
   --- Articles per Year ---
     2024       79
+    2025       41
 
   --- Trading-Day Coverage per Ticker ---
   Ticker                Days w/ News  Coverage%  0.0 Sent% Flag
   ------------------------------------------------------------
-  RELIANCE.NS                     13      65.0%      55.0%  
+  RELIANCE.NS                      0       0.0%     100.0%  [LOW COVERAGE]
+  ITC.NS                          14      63.6%      77.3%  
 
   --- Yearly Coverage Reliability ---
-    2024  trading_days= 20  articles=   79  ticker_day_coverage= 65.0%
+    2025  trading_days= 22  articles=   41  ticker_day_coverage= 31.8%
 
 ======================================================================
   RELIABILITY & DATA INTEGRITY SUMMARY
 ======================================================================
   All years meet or exceed the coverage threshold.
+  [!] Tickers with <10% trading-day news coverage:
+      RELIANCE.NS
 ======================================================================
