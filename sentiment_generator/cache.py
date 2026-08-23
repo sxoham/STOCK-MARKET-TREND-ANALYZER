@@ -71,6 +71,16 @@ def init_db():
             )
         ''')
         
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS circuit_breaker_state (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                breaker_opened_at TEXT NOT NULL,
+                cooldown_until TEXT NOT NULL,
+                reason TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        ''')
+        
         conn.commit()
         conn.close()
 
@@ -272,4 +282,75 @@ def get_unresolved_failed_periods() -> List[Dict[str, Any]]:
         }
         for r in rows
     ]
+
+
+def set_circuit_breaker_state(
+    breaker_opened_at: str,
+    cooldown_until: str,
+    reason: str
+):
+    """
+    Persists the GDELT circuit breaker state and cooldown window in SQLite.
+    """
+    with _db_lock:
+        conn = get_connection()
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS circuit_breaker_state (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                breaker_opened_at TEXT NOT NULL,
+                cooldown_until TEXT NOT NULL,
+                reason TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        ''')
+        now_str = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        c.execute('''
+            INSERT OR REPLACE INTO circuit_breaker_state (id, breaker_opened_at, cooldown_until, reason, updated_at)
+            VALUES (1, ?, ?, ?, ?)
+        ''', (breaker_opened_at, cooldown_until, reason, now_str))
+        conn.commit()
+        conn.close()
+
+
+def get_circuit_breaker_state() -> Optional[Dict[str, Any]]:
+    """
+    Returns the active circuit breaker state if present, else None.
+    """
+    conn = get_connection()
+    c = conn.cursor()
+    try:
+        c.execute('''
+            SELECT breaker_opened_at, cooldown_until, reason, updated_at
+            FROM circuit_breaker_state
+            WHERE id = 1
+        ''')
+        row = c.fetchone()
+    except sqlite3.OperationalError:
+        row = None
+    conn.close()
+    if row:
+        return {
+            "breaker_opened_at": row[0],
+            "cooldown_until": row[1],
+            "reason": row[2],
+            "updated_at": row[3]
+        }
+    return None
+
+
+def clear_circuit_breaker_state():
+    """
+    Clears / resets the persisted circuit breaker state upon successful recovery.
+    """
+    with _db_lock:
+        conn = get_connection()
+        c = conn.cursor()
+        try:
+            c.execute("DELETE FROM circuit_breaker_state WHERE id = 1")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+        conn.close()
+
 

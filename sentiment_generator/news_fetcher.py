@@ -24,25 +24,51 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 }
 
+class GDELTRateLimitExhausted(RuntimeError):
+    """
+    Raised when all dedicated GDELT HTTP 429 rate-limit retries are exhausted.
+    Signals the pipeline to open the circuit breaker and pause crawling safely.
+    """
+    pass
+
 class GDELTRateLimiter:
     """
     Process-wide thread-safe rate limiter for GDELT API requests.
-    Enforces a strict minimum spacing between consecutive outbound HTTP calls
-    across all worker threads, retry loops, and recursive bisection branches.
+    Coordinates dispatch slots so only one GDELT HTTP request can begin
+    within the configured interval across all worker threads, retry loops,
+    and recursive bisection branches.
+
+    Crucially: does NOT hold the lock while waiting for HTTP response data or while sleeping.
+    The lock is held solely to atomically coordinate and allocate request start timestamps.
     """
     def __init__(self, min_interval: float = GDELT_REQUEST_SLEEP_SECONDS):
-        self.min_interval = min_interval
+        self.min_interval = float(min_interval)
         self._lock = threading.Lock()
-        self._last_request_time = 0.0
+        self._next_allowed_time = 0.0
 
-    def wait(self):
+    def wait(self) -> float:
+        """
+        Atomically reserves the next available request time slot under lock,
+        then sleeps OUTSIDE the lock until that time slot arrives.
+        Returns the duration slept (in seconds).
+        """
         with self._lock:
             now = time.monotonic()
-            elapsed = now - self._last_request_time
-            if elapsed < self.min_interval:
-                sleep_time = self.min_interval - elapsed
-                time.sleep(sleep_time)
-            self._last_request_time = time.monotonic()
+            # If the next allowed time is in the past (e.g. idle period), reset to now
+            target_time = max(now, self._next_allowed_time)
+            # Advance next allowed time by min_interval for subsequent callers
+            self._next_allowed_time = target_time + self.min_interval
+            sleep_duration = max(0.0, target_time - now)
+
+        if sleep_duration > 0:
+            time.sleep(sleep_duration)
+
+        return sleep_duration
+
+    def reset(self):
+        """Resets the rate limiter state (useful for test isolation)."""
+        with self._lock:
+            self._next_allowed_time = 0.0
 
 _global_gdelt_rate_limiter = GDELTRateLimiter(GDELT_REQUEST_SLEEP_SECONDS)
 
@@ -71,11 +97,12 @@ FINANCIAL_CONTEXT_KEYWORDS = {
     "energy", "pharma", "drug", "vehicle", "cars", "jewellery", "jewelry"
 }
 
-# Short tokens that require whole-word (\b-bounded) matching to avoid substring collisions.
-# 'it' matches inside 'schedule', 'distribution'; 'md' inside 'cmd'; 'npa' inside 'unpaid'.
-# 'tech' matches inside 'technical', 'technology'; 'auto' inside 'automatic', 'automation';
-# 'deal' matches inside 'ideal', 'ordeal'; 'power' inside 'empower', 'powerless';
-# 'tax' matches inside 'syntax'; 'bank' inside 'embankment'.
+# Short tokens that require whole-word (\b-bounded) matching to avoid substring collisions:
+# Without \b boundary matching, substring searches on 'it' would erroneously match inside
+# words like 'schedule' or 'distribution'; 'md' inside 'cmd'; 'npa' inside 'unpaid';
+# 'tech' inside 'technical'; 'auto' inside 'automatic'; 'deal' inside 'ideal';
+# 'power' inside 'empower'; 'tax' inside 'syntax'; 'bank' inside 'embankment'.
+# With \b boundaries, these tokens only match as standalone words.
 _FINANCIAL_CONTEXT_WORDBOUND = re.compile(
     r'\b(?:it|md|npa|tech|auto|deal|power|tax|bank)\b', re.IGNORECASE
 )
@@ -137,6 +164,22 @@ TRACKING_PARAMS = {
 _GDELT_ALIAS_MIN_LEN = 4
 
 
+def _is_gdelt_rate_limit_text(text: str) -> bool:
+    """
+    Checks if a response body contains GDELT rate-limit or service throttling text.
+    Handles non-standard HTTP 200 responses with rate limit messages.
+    """
+    if not text:
+        return False
+    lower = text.lower()
+    return (
+        "please limit requests" in lower
+        or "limit requests to one every" in lower
+        or "switch to our ngrams dataset" in lower
+        or "rate limit" in lower
+    )
+
+
 class LowPrecisionTimestampError(ValueError):
     """
     Raised by parse_gdelt_timestamp() when a GDELT timestamp carries only
@@ -194,6 +237,8 @@ class NewsFetcher:
             "successful_requests": 0,
             "failed_requests": 0,
             "rate_limit_responses": 0,
+            "global_rate_limit_waits": 0,
+            "global_rate_limit_wait_seconds": 0.0,
             "articles_retrieved": 0,
             "articles_rejected_missing_title": 0,
             "articles_rejected_company_match": 0,
@@ -890,12 +935,11 @@ class NewsFetcher:
         raw_items: List[Dict[str, Any]] = []
         fetch_success = False
         last_error = None
-        # 429s get their own retry budget so a throttling burst does not prematurely
-        # exhaust the general error retry pool.
+        # Rate-limiting retry policy:
         # - MAX_ATTEMPTS   : total loop iterations (7) — covers transient network flaps
-        # - MAX_RL_RETRIES : max 429 responses before giving up specifically on rate-limits
+        # - MAX_RL_RETRIES : max rate-limit responses before giving up (fail-fast: at most 1 retry)
         MAX_ATTEMPTS   = 7
-        MAX_RL_RETRIES = 5
+        MAX_RL_RETRIES = 1
         rate_limit_attempts = 0
 
         self._inc_stat("api_requests")
@@ -905,48 +949,69 @@ class NewsFetcher:
                 # Mandatory process-wide rate-limit governor (Lock + monotonic).
                 # Enforces minimum interval between consecutive HTTP requests across
                 # all worker threads, retry loops, and recursive branches.
-                _global_gdelt_rate_limiter.wait()
+                wait_sec = _global_gdelt_rate_limiter.wait()
+                if wait_sec > 0.0:
+                    self._inc_stat("global_rate_limit_waits")
+                    with self._stats_lock:
+                        self.stats["global_rate_limit_wait_seconds"] = round(
+                            self.stats.get("global_rate_limit_wait_seconds", 0.0) + wait_sec, 3
+                        )
                 res = session.get(GDELT_DOC_API_URL, params=params, timeout=15)
-                if res.status_code == 200:
+                
+                # Check for rate-limiting (HTTP 429 OR non-empty HTTP 200 containing rate-limit text)
+                is_rate_limited = False
+                rate_limit_reason = ""
+
+                if res.status_code == 429:
+                    is_rate_limited = True
+                    rate_limit_reason = "HTTP 429 Rate Limit"
+                elif res.status_code == 200:
                     body = res.text.strip()
                     if not body:
                         # GDELT returns HTTP 200 with an empty body when a query produces
-                        # zero results for the requested time window.  This is NOT a failure
-                        # — it simply means no articles were indexed in that interval.
-                        # Treat as zero results and stop retrying immediately.
+                        # zero results for the requested time window. Treat as zero results.
                         raw_items = []
                         fetch_success = True
                         self._inc_stat("successful_requests")
                         break
-                    try:
-                        data = res.json()
-                        if isinstance(data, dict):
-                            raw_items = data.get("articles", [])
-                            if not isinstance(raw_items, list):
+                    elif _is_gdelt_rate_limit_text(body):
+                        is_rate_limited = True
+                        rate_limit_reason = "GDELT Rate Limit (HTTP 200 text response)"
+                    else:
+                        try:
+                            data = res.json()
+                            if isinstance(data, dict):
+                                raw_items = data.get("articles", [])
+                                if not isinstance(raw_items, list):
+                                    raw_items = []
+                            else:
                                 raw_items = []
-                        else:
-                            raw_items = []
-                        fetch_success = True
-                        self._inc_stat("successful_requests")
-                        break
-                    except Exception as je:
-                        last_error = f"JSON parse error: {je}"
-                        time.sleep(2 + attempt * 2)
-                elif res.status_code == 429:
+                            fetch_success = True
+                            self._inc_stat("successful_requests")
+                            break
+                        except Exception as je:
+                            if _is_gdelt_rate_limit_text(res.text):
+                                is_rate_limited = True
+                                rate_limit_reason = "GDELT Rate Limit (non-JSON text response)"
+                            else:
+                                last_error = f"JSON parse error: {je}"
+                                time.sleep(2 + attempt * 2)
+
+                if is_rate_limited:
                     self._inc_stat("rate_limit_responses")
                     rate_limit_attempts += 1
                     if rate_limit_attempts > MAX_RL_RETRIES:
-                        last_error = f"HTTP 429 Rate Limit (exceeded {MAX_RL_RETRIES} retries)"
-                        break  # Give up — persistent throttle, not transient
+                        last_error = f"{rate_limit_reason} (exceeded {MAX_RL_RETRIES} retry)"
+                        break  # Fail-fast: give up immediately after 1 retry
                     retry_after = res.headers.get("Retry-After")
                     if retry_after and retry_after.isdigit():
                         sleep_sec = float(retry_after) + random.uniform(0.5, 1.5)
                     else:
-                        sleep_sec = (2 ** rate_limit_attempts) * 4 + random.uniform(0.5, 2.0)
-                    last_error = f"HTTP 429 Rate Limit (sleeping {sleep_sec:.1f}s, attempt {rate_limit_attempts}/{MAX_RL_RETRIES})"
+                        sleep_sec = 8.0 + random.uniform(0.5, 2.0)
+                    last_error = f"{rate_limit_reason} (sleeping {sleep_sec:.1f}s, attempt {rate_limit_attempts}/{MAX_RL_RETRIES})"
                     logger.warning(
-                        "GDELT 429 rate-limit for %s [%s to %s]; sleeping %.1fs (attempt %d/%d)",
-                        ticker, start_str, end_str, sleep_sec, rate_limit_attempts, MAX_RL_RETRIES
+                        "GDELT rate-limit for %s [%s to %s]: %s; sleeping %.1fs (attempt %d/%d)",
+                        ticker, start_str, end_str, rate_limit_reason, sleep_sec, rate_limit_attempts, MAX_RL_RETRIES
                     )
                     # Close the session connection pool so the next retry uses a fresh TCP connection
                     try:
@@ -954,7 +1019,7 @@ class NewsFetcher:
                     except Exception:
                         pass
                     time.sleep(sleep_sec)
-                else:
+                elif res.status_code != 200:
                     last_error = f"HTTP {res.status_code}"
                     time.sleep(2 + attempt * 2)
             except Exception as e:
@@ -964,9 +1029,10 @@ class NewsFetcher:
         if not fetch_success:
             self._inc_stat("failed_requests")
             self._inc_stat("query_failures")
-            raise RuntimeError(
-                f"GDELT API request failed for {ticker} ({start_str} to {end_str}): {last_error}"
-            )
+            err_msg = f"GDELT API request failed for {ticker} ({start_str} to {end_str}): {last_error}"
+            if rate_limit_attempts > MAX_RL_RETRIES or (last_error and ("HTTP 429" in last_error or "Rate Limit" in last_error)):
+                raise GDELTRateLimitExhausted(err_msg)
+            raise RuntimeError(err_msg)
 
         self._inc_stat("articles_retrieved", len(raw_items))
 

@@ -137,6 +137,9 @@ GDELT_MAX_REQUESTS_PER_WINDOW = 64
 # Managed by process-wide Lock + monotonic() governor.
 GDELT_REQUEST_SLEEP_SECONDS = 6.0
 
+# Persistent circuit-breaker cooldown window in minutes after exhausted 429 retries
+GDELT_CIRCUIT_BREAKER_COOLDOWN_MINUTES = int(os.getenv("GDELT_CIRCUIT_BREAKER_COOLDOWN_MINUTES", "60"))
+
 # Number of concurrent worker threads for multi-ticker fetching.
 FETCH_WORKERS = 1
 

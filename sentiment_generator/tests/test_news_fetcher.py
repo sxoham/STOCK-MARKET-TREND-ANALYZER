@@ -1,17 +1,19 @@
-"""
-Test suite for sentiment_generator/news_fetcher.py
+import os
+import sys
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+torch_lib_dir = os.path.join(sys.prefix, 'Lib', 'site-packages', 'torch', 'lib')
+if os.path.exists(torch_lib_dir):
+    os.environ['PATH'] = torch_lib_dir + os.pathsep + os.environ.get('PATH', '')
+    if hasattr(os, 'add_dll_directory'):
+        try:
+            os.add_dll_directory(torch_lib_dir)
+        except Exception:
+            pass
 
-Coverage:
-  A. Trading-date mapping  (7 cases)
-  B. Pagination            (4 cases)
-  C. Deduplication         (4 cases)
-  D. Entity matching       (6 cases)
-  + UTC->IST conversion, timestamp rejection, rate-limit retry, API failure,
-    URL normalisation, headline normalisation (preserved from original suite)
-"""
 import unittest
 import datetime
 import zoneinfo
+import threading
 from unittest.mock import MagicMock, patch, call
 
 from sentiment_generator.news_fetcher import NewsFetcher
@@ -710,6 +712,60 @@ class TestNewsFetcher(unittest.TestCase):
         t1 = time.monotonic()
         self.assertGreaterEqual(t1 - t0, 0.045, "Rate limiter must enforce minimum interval")
 
+    def test_concurrent_workers_strictly_spaced(self):
+        """Multiple concurrent threads calling GDELTRateLimiter.wait() must never fire within min_interval."""
+        from sentiment_generator.news_fetcher import GDELTRateLimiter
+        import concurrent.futures
+        import time
+
+        interval = 0.10
+        limiter = GDELTRateLimiter(min_interval=interval)
+        num_threads = 4
+        execution_times = []
+        lock = threading.Lock()
+
+        def worker_call():
+            limiter.wait()
+            ts = time.monotonic()
+            with lock:
+                execution_times.append(ts)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+            futures = [executor.submit(worker_call) for _ in range(num_threads)]
+            concurrent.futures.wait(futures)
+
+        sorted_times = sorted(execution_times)
+        self.assertEqual(len(sorted_times), num_threads)
+        for i in range(1, len(sorted_times)):
+            diff = sorted_times[i] - sorted_times[i - 1]
+            self.assertGreaterEqual(
+                diff, interval * 0.80,
+                f"Consecutive requests at index {i-1} and {i} were spaced by only {diff:.4f}s (< {interval*0.80:.4f}s)"
+            )
+
+    def test_rate_limiter_lock_released_during_sleep(self):
+        """Lock must be held only to reserve target timestamp slot, not during sleep duration."""
+        from sentiment_generator.news_fetcher import GDELTRateLimiter
+        import time
+
+        limiter = GDELTRateLimiter(min_interval=0.2)
+        # Thread 1 reserves slot and sleeps
+        t = threading.Thread(target=limiter.wait)
+        t.start()
+        time.sleep(0.01)
+
+        # Thread 2 should be able to acquire limiter._lock immediately (< 0.05s)
+        # because Thread 1 released the lock before sleeping.
+        t_acq_start = time.monotonic()
+        acquired = limiter._lock.acquire(timeout=0.05)
+        t_acq_end = time.monotonic()
+        if acquired:
+            limiter._lock.release()
+
+        t.join()
+        self.assertTrue(acquired, "Lock should not be held while a worker is sleeping")
+        self.assertLess(t_acq_end - t_acq_start, 0.05, "Lock acquisition must be near-instantaneous")
+
     @patch("requests.Session.get")
     def test_missing_title_and_url_telemetry(self, mock_get):
         """Articles with empty title or missing URL must increment dedicated telemetry stats."""
@@ -737,7 +793,404 @@ class TestNewsFetcher(unittest.TestCase):
                          "Empty URL must increment articles_missing_url")
         self.assertEqual(len(arts), 1, "Only the valid article with headline should be accepted")
 
+    @patch("requests.Session.get")
+    def test_first_429_retries_once_and_succeeds(self, mock_get):
+        """First 429 response retries once and successfully returns articles on second request."""
+        mock_429 = MagicMock(status_code=429, headers={}, text="Rate limit exceeded")
+        mock_200 = MagicMock(status_code=200, text='{"articles": [{"title": "Reliance Q3 profit jumps", "url": "https://et.com/ril", "seendate": "20240115T100000Z"}]}')
+        mock_200.json.return_value = {"articles": [{"title": "Reliance Q3 profit jumps", "url": "https://et.com/ril", "seendate": "20240115T100000Z"}]}
+        mock_get.side_effect = [mock_429, mock_200]
+
+        with patch("time.sleep"):
+            arts = self.fetcher.fetch_gdelt_window(
+                "RELIANCE.NS",
+                datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=self.tz_utc),
+                datetime.datetime(2024, 1, 31, 23, 59, 59, tzinfo=self.tz_utc)
+            )
+        self.assertEqual(len(arts), 1)
+        self.assertEqual(mock_get.call_count, 2, "First 429 must trigger exactly one retry request")
+
+    @patch("requests.Session.get")
+    def test_second_consecutive_429_raises_gdelt_rate_limit_exhausted_and_no_third_call(self, mock_get):
+        """Second consecutive 429 response raises GDELTRateLimitExhausted and executes no 3rd request."""
+        from sentiment_generator.news_fetcher import GDELTRateLimitExhausted
+        mock_429 = MagicMock(status_code=429, headers={}, text="Rate limit exceeded")
+        mock_get.side_effect = [mock_429, mock_429, mock_429]
+
+        with patch("time.sleep"):
+            with self.assertRaises(GDELTRateLimitExhausted) as ctx:
+                self.fetcher.fetch_gdelt_window(
+                    "RELIANCE.NS",
+                    datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=self.tz_utc),
+                    datetime.datetime(2024, 1, 31, 23, 59, 59, tzinfo=self.tz_utc)
+                )
+        self.assertIn("HTTP 429 Rate Limit", str(ctx.exception))
+        self.assertEqual(mock_get.call_count, 2, "Fail-fast must stop after exactly 2 requests (1 retry)")
+
+    @patch("requests.Session.get")
+    def test_http_200_textual_rate_limit_retries_once_and_succeeds(self, mock_get):
+        """HTTP-200 with textual rate limit message retries once and successfully returns on 2nd attempt."""
+        mock_200_rl = MagicMock(status_code=200, text="Please limit requests to one every 5 seconds, switch to our ngrams dataset, or contact kalev.leetaru5@gmail.com")
+        mock_200_ok = MagicMock(status_code=200, text='{"articles": [{"title": "TCS wins major deal", "url": "https://et.com/tcs", "seendate": "20240115T100000Z"}]}')
+        mock_200_ok.json.return_value = {"articles": [{"title": "TCS wins major deal", "url": "https://et.com/tcs", "seendate": "20240115T100000Z"}]}
+        mock_get.side_effect = [mock_200_rl, mock_200_ok]
+
+        with patch("time.sleep"):
+            arts = self.fetcher.fetch_gdelt_window(
+                "TCS.NS",
+                datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=self.tz_utc),
+                datetime.datetime(2024, 1, 31, 23, 59, 59, tzinfo=self.tz_utc)
+            )
+        self.assertEqual(len(arts), 1)
+        self.assertEqual(mock_get.call_count, 2, "HTTP-200 textual rate limit must trigger exactly one retry")
+
+    @patch("requests.Session.get")
+    def test_http_200_textual_rate_limit_exhaustion_raises_gdelt_rate_limit_exhausted(self, mock_get):
+        """Second consecutive HTTP-200 textual rate limit raises GDELTRateLimitExhausted and halts."""
+        from sentiment_generator.news_fetcher import GDELTRateLimitExhausted
+        mock_200_rl = MagicMock(status_code=200, text="Please limit requests to one every 5 seconds, switch to our ngrams dataset, or contact kalev.leetaru5@gmail.com")
+        mock_get.side_effect = [mock_200_rl, mock_200_rl, mock_200_rl]
+
+        with patch("time.sleep"):
+            with self.assertRaises(GDELTRateLimitExhausted) as ctx:
+                self.fetcher.fetch_gdelt_window(
+                    "TCS.NS",
+                    datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=self.tz_utc),
+                    datetime.datetime(2024, 1, 31, 23, 59, 59, tzinfo=self.tz_utc)
+                )
+        self.assertIn("Rate Limit", str(ctx.exception))
+        self.assertEqual(mock_get.call_count, 2, "Must stop after 2 attempts (1 initial + 1 retry)")
+
+    def test_is_gdelt_rate_limit_text_narrow_matching(self):
+        """_is_gdelt_rate_limit_text only matches specific GDELT throttle phrases, not generic service outages."""
+        from sentiment_generator.news_fetcher import _is_gdelt_rate_limit_text
+
+        # Valid GDELT throttle phrases
+        self.assertTrue(_is_gdelt_rate_limit_text("Please limit requests to one every 5 seconds, switch to our ngrams dataset"))
+        self.assertTrue(_is_gdelt_rate_limit_text("Limit requests to one every 5 seconds"))
+        self.assertTrue(_is_gdelt_rate_limit_text("Please switch to our ngrams dataset for bulk analysis"))
+        self.assertTrue(_is_gdelt_rate_limit_text("HTTP 429: Rate limit exceeded"))
+
+        # Generic upstream outages or errors must NOT be classified as rate limits
+        self.assertFalse(_is_gdelt_rate_limit_text("Service Unavailable"))
+        self.assertFalse(_is_gdelt_rate_limit_text("503 Service Temporarily Unavailable"))
+        self.assertFalse(_is_gdelt_rate_limit_text("Internal Server Error"))
+        self.assertFalse(_is_gdelt_rate_limit_text("Gateway Timeout"))
+        self.assertFalse(_is_gdelt_rate_limit_text("Database connection failed"))
+        self.assertFalse(_is_gdelt_rate_limit_text(""))
+        self.assertFalse(_is_gdelt_rate_limit_text(None))
+
+    @patch("requests.Session.get")
+    def test_generic_service_unavailable_text_routes_through_transient_error_path(self, mock_get):
+        """Generic 'Service Unavailable' text in HTTP 200/503 raises standard RuntimeError, NOT GDELTRateLimitExhausted."""
+        from sentiment_generator.news_fetcher import GDELTRateLimitExhausted
+        import json
+        mock_503 = MagicMock(status_code=200, text="Service Unavailable: upstream database reconnecting")
+        mock_503.json.side_effect = json.JSONDecodeError("Expecting value", "doc", 0)
+        mock_get.return_value = mock_503
+
+        with patch("time.sleep"):
+            with self.assertRaises(RuntimeError) as ctx:
+                self.fetcher.fetch_gdelt_window(
+                    "RELIANCE.NS",
+                    datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=self.tz_utc),
+                    datetime.datetime(2024, 1, 31, 23, 59, 59, tzinfo=self.tz_utc)
+                )
+            self.assertNotIsInstance(ctx.exception, GDELTRateLimitExhausted)
+            self.assertIn("JSON parse error", str(ctx.exception))
+
+    @patch("requests.Session.get")
+    def test_genuine_empty_http_200_returns_zero_articles(self, mock_get):
+        """Truly empty HTTP-200 response body immediately returns zero articles without retries."""
+        mock_200_empty = MagicMock(status_code=200, text="")
+        mock_get.return_value = mock_200_empty
+
+        with patch("time.sleep"):
+            arts = self.fetcher.fetch_gdelt_window(
+                "INFY.NS",
+                datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=self.tz_utc),
+                datetime.datetime(2024, 1, 31, 23, 59, 59, tzinfo=self.tz_utc)
+            )
+        self.assertEqual(len(arts), 0)
+        self.assertEqual(mock_get.call_count, 1, "Truly empty HTTP 200 must succeed immediately on first call")
+
+    @patch("requests.Session.get")
+    def test_exhausted_429_raises_gdelt_rate_limit_exhausted(self, mock_get):
+        """Exhausted 429 retries must raise GDELTRateLimitExhausted."""
+        from sentiment_generator.news_fetcher import GDELTRateLimitExhausted
+        mock_429 = MagicMock(status_code=429, headers={}, text="Rate limit exceeded")
+        mock_get.return_value = mock_429
+
+        with patch("time.sleep"):
+            with self.assertRaises(GDELTRateLimitExhausted) as ctx:
+                self.fetcher.fetch_gdelt_window(
+                    "RELIANCE.NS",
+                    datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=self.tz_utc),
+                    datetime.datetime(2024, 1, 31, 23, 59, 59, tzinfo=self.tz_utc)
+                )
+        self.assertIn("HTTP 429 Rate Limit", str(ctx.exception))
+        diag = self.fetcher.get_diagnostics()
+        self.assertGreater(diag["rate_limit_responses"], 0)
+        self.assertGreater(diag["failed_requests"], 0)
+
+    @patch("requests.Session.get")
+    def test_ordinary_500_raises_generic_runtime_error(self, mock_get):
+        """Ordinary non-429 failures must raise generic RuntimeError, NOT GDELTRateLimitExhausted."""
+        from sentiment_generator.news_fetcher import GDELTRateLimitExhausted
+        mock_500 = MagicMock(status_code=500, headers={}, text="Internal Server Error")
+        mock_get.return_value = mock_500
+
+        with patch("time.sleep"):
+            with self.assertRaises(RuntimeError) as ctx:
+                self.fetcher.fetch_gdelt_window(
+                    "RELIANCE.NS",
+                    datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=self.tz_utc),
+                    datetime.datetime(2024, 1, 31, 23, 59, 59, tzinfo=self.tz_utc)
+                )
+            # Ensure it is NOT a GDELTRateLimitExhausted instance
+            self.assertNotIsInstance(ctx.exception, GDELTRateLimitExhausted)
+            self.assertIn("HTTP 500", str(ctx.exception))
+
+    @patch("sentiment_generator.generate_sentiment.time.sleep")
+    @patch("sentiment_generator.generate_sentiment.save_raw_articles", return_value=0)
+    @patch("sentiment_generator.generate_sentiment.record_fetch_period")
+    @patch("sentiment_generator.generate_sentiment.get_period_status", return_value=None)
+    @patch("sentiment_generator.generate_sentiment.set_circuit_breaker_state")
+    @patch("sentiment_generator.generate_sentiment.get_circuit_breaker_state", return_value=None)
+    def test_circuit_breaker_halts_further_period_requests(self, mock_get_cb, mock_set_cb, mock_status, mock_record, mock_save, mock_sleep):
+        """When GDELTRateLimitExhausted occurs, the circuit breaker opens and stops later periods."""
+        from sentiment_generator.generate_sentiment import process_ticker_news_fetch
+        from sentiment_generator.news_fetcher import GDELTRateLimitExhausted
+
+        circuit_breaker = threading.Event()
+        mock_fetcher = MagicMock()
+        err_msg = "GDELT API request failed for TEST_CB.NS (20240201000000 to 20240229235959): HTTP 429 Rate Limit (exceeded 5 retries)"
+        err = GDELTRateLimitExhausted(err_msg)
+
+        # Month 1 succeeds, Month 2 exhausts 429, Month 3 should NEVER be called
+        mock_fetcher.fetch_gdelt_window.side_effect = [
+            [],   # Month 1: success (empty)
+            err,  # Month 2: 429 exhausted
+            []    # Month 3: should NOT be called
+        ]
+
+        m1 = (datetime.datetime(2024, 1, 1, tzinfo=self.tz_utc), datetime.datetime(2024, 1, 31, tzinfo=self.tz_utc), "2024-01-01", "2024-01-31")
+        m2 = (datetime.datetime(2024, 2, 1, tzinfo=self.tz_utc), datetime.datetime(2024, 2, 29, tzinfo=self.tz_utc), "2024-02-01", "2024-02-29")
+        m3 = (datetime.datetime(2024, 3, 1, tzinfo=self.tz_utc), datetime.datetime(2024, 3, 31, tzinfo=self.tz_utc), "2024-03-01", "2024-03-31")
+
+        res = process_ticker_news_fetch(
+            ticker="TEST_CB.NS",
+            month_ranges=[m1, m2, m3],
+            fetcher=mock_fetcher,
+            force_refetch=True,
+            circuit_breaker_event=circuit_breaker
+        )
+
+        self.assertTrue(circuit_breaker.is_set(), "Circuit breaker event must be set upon GDELTRateLimitExhausted")
+        self.assertEqual(mock_fetcher.fetch_gdelt_window.call_count, 2, "Month 3 must NOT be called after circuit breaker trips")
+        self.assertEqual(res["failed_periods"], 1)
+        self.assertEqual(res["periods_fetched"], 1)
+        mock_record.assert_any_call("TEST_CB.NS", "2024-02-01", "2024-02-29", status="failed", article_count=0, error_message=err_msg)
+
+    @patch("sentiment_generator.generate_sentiment.get_circuit_breaker_state")
+    def test_active_cooldown_prevents_all_http_calls(self, mock_get_cb):
+        """Active persistent cooldown prevents Phase 1 from executing any GDELT requests."""
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        cooldown_until = now_utc + datetime.timedelta(minutes=45)
+        mock_get_cb.return_value = {
+            "breaker_opened_at": now_utc.isoformat(),
+            "cooldown_until": cooldown_until.isoformat(),
+            "reason": "HTTP 429 Rate Limit",
+            "updated_at": now_utc.isoformat()
+        }
+
+        # Simulate pre-flight check in Phase 1
+        breaker_state = mock_get_cb()
+        cooldown_active = False
+        if breaker_state:
+            cooldown_until_dt = datetime.datetime.fromisoformat(breaker_state["cooldown_until"])
+            now_check = datetime.datetime.now(datetime.timezone.utc)
+            if now_check < cooldown_until_dt:
+                cooldown_active = True
+
+        self.assertTrue(cooldown_active, "Active cooldown must flag cooldown_active as True to skip crawl")
+
+    @patch("sentiment_generator.generate_sentiment.get_circuit_breaker_state")
+    def test_expired_cooldown_allows_request(self, mock_get_cb):
+        """Expired persistent cooldown allows Phase 1 to proceed with normal crawling."""
+        past_utc = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=70)
+        cooldown_until = past_utc + datetime.timedelta(minutes=60)  # Expired 10m ago
+        mock_get_cb.return_value = {
+            "breaker_opened_at": past_utc.isoformat(),
+            "cooldown_until": cooldown_until.isoformat(),
+            "reason": "HTTP 429 Rate Limit",
+            "updated_at": past_utc.isoformat()
+        }
+
+        breaker_state = mock_get_cb()
+        cooldown_active = False
+        if breaker_state:
+            cooldown_until_dt = datetime.datetime.fromisoformat(breaker_state["cooldown_until"])
+            now_check = datetime.datetime.now(datetime.timezone.utc)
+            if now_check < cooldown_until_dt:
+                cooldown_active = True
+
+        self.assertFalse(cooldown_active, "Expired cooldown must allow normal resume")
+
+    @patch("sentiment_generator.generate_sentiment.time.sleep")
+    @patch("sentiment_generator.generate_sentiment.save_raw_articles", return_value=0)
+    @patch("sentiment_generator.generate_sentiment.record_fetch_period")
+    @patch("sentiment_generator.generate_sentiment.get_period_status")
+    def test_resume_skips_success_and_empty_and_retries_failed(self, mock_status, mock_record, mock_save, mock_sleep):
+        """Normal resume skips 'success' and 'empty' periods and retries 'failed' periods."""
+        from sentiment_generator.generate_sentiment import process_ticker_news_fetch
+
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_gdelt_window.return_value = []
+
+        m_success = (datetime.datetime(2024, 1, 1, tzinfo=self.tz_utc), datetime.datetime(2024, 1, 31, tzinfo=self.tz_utc), "2024-01-01", "2024-01-31")
+        m_empty   = (datetime.datetime(2024, 2, 1, tzinfo=self.tz_utc), datetime.datetime(2024, 2, 29, tzinfo=self.tz_utc), "2024-02-01", "2024-02-29")
+        m_failed  = (datetime.datetime(2024, 3, 1, tzinfo=self.tz_utc), datetime.datetime(2024, 3, 31, tzinfo=self.tz_utc), "2024-03-01", "2024-03-31")
+
+        def fake_status(ticker, start, end):
+            if start == "2024-01-01":
+                return {"status": "success", "article_count": 50}
+            elif start == "2024-02-01":
+                return {"status": "empty", "article_count": 0}
+            elif start == "2024-03-01":
+                return {"status": "failed", "article_count": 0}
+            return None
+
+        mock_status.side_effect = fake_status
+
+        res = process_ticker_news_fetch(
+            ticker="TEST_RESUME.NS",
+            month_ranges=[m_success, m_empty, m_failed],
+            fetcher=mock_fetcher,
+            force_refetch=False
+        )
+
+        self.assertEqual(res["periods_skipped"], 2, "Success and empty periods must be skipped")
+        self.assertEqual(res["periods_fetched"], 1, "Failed period must be retried and fetched")
+        self.assertEqual(mock_fetcher.fetch_gdelt_window.call_count, 1, "Only 1 fetch call should be made for the failed period")
+
+    def test_persistent_circuit_breaker_db_roundtrip(self):
+        """set_circuit_breaker_state, get_circuit_breaker_state, and clear_circuit_breaker_state roundtrip."""
+        from sentiment_generator.cache import (
+            init_db, set_circuit_breaker_state, get_circuit_breaker_state, clear_circuit_breaker_state
+        )
+        init_db()
+        clear_circuit_breaker_state()
+        self.assertIsNone(get_circuit_breaker_state())
+
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        cooldown_until = now_utc + datetime.timedelta(minutes=60)
+        set_circuit_breaker_state(
+            breaker_opened_at=now_utc.isoformat(),
+            cooldown_until=cooldown_until.isoformat(),
+            reason="Test 429 exhaustion"
+        )
+
+        state = get_circuit_breaker_state()
+        self.assertIsNotNone(state)
+        self.assertEqual(state["reason"], "Test 429 exhaustion")
+        self.assertEqual(state["cooldown_until"], cooldown_until.isoformat())
+
+        clear_circuit_breaker_state()
+        self.assertIsNone(get_circuit_breaker_state())
+
+    @patch("sentiment_generator.generate_sentiment.time.sleep")
+    @patch("sentiment_generator.generate_sentiment.save_raw_articles", return_value=0)
+    @patch("sentiment_generator.generate_sentiment.record_fetch_period")
+    @patch("sentiment_generator.generate_sentiment.get_period_status", return_value=None)
+    @patch("sentiment_generator.generate_sentiment.set_circuit_breaker_state")
+    def test_exhaustion_persists_circuit_breaker_cooldown(self, mock_set_cb, mock_status, mock_record, mock_save, mock_sleep):
+        """When 429 retries are exhausted, the persistent circuit breaker cooldown is written."""
+        from sentiment_generator.generate_sentiment import process_ticker_news_fetch
+        from sentiment_generator.news_fetcher import GDELTRateLimitExhausted
+
+        circuit_breaker = threading.Event()
+        mock_fetcher = MagicMock()
+        err = GDELTRateLimitExhausted("HTTP 429 Rate Limit (exceeded 5 retries)")
+        mock_fetcher.fetch_gdelt_window.side_effect = err
+
+        m1 = (datetime.datetime(2024, 1, 1, tzinfo=self.tz_utc), datetime.datetime(2024, 1, 31, tzinfo=self.tz_utc), "2024-01-01", "2024-01-31")
+
+        res = process_ticker_news_fetch(
+            ticker="TEST_PERSIST.NS",
+            month_ranges=[m1],
+            fetcher=mock_fetcher,
+            force_refetch=True,
+            circuit_breaker_event=circuit_breaker
+        )
+
+        self.assertTrue(circuit_breaker.is_set())
+        mock_set_cb.assert_called_once()
+        call_kwargs = mock_set_cb.call_args.kwargs
+        self.assertIn("breaker_opened_at", call_kwargs)
+        self.assertIn("cooldown_until", call_kwargs)
+        self.assertIn("reason", call_kwargs)
+
+    @patch("sentiment_generator.generate_sentiment.time.sleep")
+    @patch("sentiment_generator.generate_sentiment.save_raw_articles", return_value=0)
+    @patch("sentiment_generator.generate_sentiment.record_fetch_period")
+    @patch("sentiment_generator.generate_sentiment.get_period_status", return_value=None)
+    @patch("sentiment_generator.generate_sentiment.get_circuit_breaker_state", return_value={"reason": "429"})
+    @patch("sentiment_generator.generate_sentiment.clear_circuit_breaker_state")
+    def test_successful_request_clears_expired_breaker(self, mock_clear_cb, mock_get_cb, mock_status, mock_record, mock_save, mock_sleep):
+        """Successful fetch after an expired breaker clears the persisted circuit breaker state."""
+        from sentiment_generator.generate_sentiment import process_ticker_news_fetch
+
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_gdelt_window.return_value = [{"title": "Good News"}]
+
+        m1 = (datetime.datetime(2024, 1, 1, tzinfo=self.tz_utc), datetime.datetime(2024, 1, 31, tzinfo=self.tz_utc), "2024-01-01", "2024-01-31")
+
+        res = process_ticker_news_fetch(
+            ticker="TEST_RECOVER.NS",
+            month_ranges=[m1],
+            fetcher=mock_fetcher,
+            force_refetch=True
+        )
+
+        mock_clear_cb.assert_called_once()
+        self.assertEqual(res["periods_fetched"], 1)
+
+    @patch("sentiment_generator.generate_sentiment.time.sleep")
+    @patch("sentiment_generator.generate_sentiment.save_raw_articles", return_value=0)
+    @patch("sentiment_generator.generate_sentiment.record_fetch_period")
+    @patch("sentiment_generator.generate_sentiment.get_period_status", return_value=None)
+    def test_unattempted_periods_after_breaker_remain_absent(self, mock_status, mock_record, mock_save, mock_sleep):
+        """Periods never attempted after the circuit breaker trips are NOT recorded as failed."""
+        from sentiment_generator.generate_sentiment import process_ticker_news_fetch
+        from sentiment_generator.news_fetcher import GDELTRateLimitExhausted
+
+        circuit_breaker = threading.Event()
+        mock_fetcher = MagicMock()
+        err = GDELTRateLimitExhausted("HTTP 429 Rate Limit (exceeded 5 retries)")
+
+        # Period 1 fails with 429, Periods 2 & 3 must never be touched
+        mock_fetcher.fetch_gdelt_window.side_effect = [err, [], []]
+
+        m1 = (datetime.datetime(2024, 1, 1, tzinfo=self.tz_utc), datetime.datetime(2024, 1, 31, tzinfo=self.tz_utc), "2024-01-01", "2024-01-31")
+        m2 = (datetime.datetime(2024, 2, 1, tzinfo=self.tz_utc), datetime.datetime(2024, 2, 29, tzinfo=self.tz_utc), "2024-02-01", "2024-02-29")
+        m3 = (datetime.datetime(2024, 3, 1, tzinfo=self.tz_utc), datetime.datetime(2024, 3, 31, tzinfo=self.tz_utc), "2024-03-01", "2024-03-31")
+
+        res = process_ticker_news_fetch(
+            ticker="TEST_ABSENT.NS",
+            month_ranges=[m1, m2, m3],
+            fetcher=mock_fetcher,
+            force_refetch=True,
+            circuit_breaker_event=circuit_breaker
+        )
+
+        # Only Period 1 should be recorded as failed; Periods 2 & 3 must NOT be recorded at all
+        self.assertEqual(mock_record.call_count, 1)
+        mock_record.assert_called_once_with("TEST_ABSENT.NS", "2024-01-01", "2024-01-31", status="failed", article_count=0, error_message=str(err))
+
 
 if __name__ == "__main__":
     unittest.main()
+
+
 

@@ -16,9 +16,14 @@ import datetime
 import calendar
 import shutil
 import logging
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+except Exception:
+    pass
 from typing import List, Dict, Any, Optional, Tuple
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 import torch
 from tqdm import tqdm
 import pandas as pd
@@ -30,14 +35,16 @@ from .config import (
     DATA_DIR, CACHE_DIR, CACHE_DB_PATH,
     DAILY_SENTIMENT_CSV, SENTIMENT_METADATA_CSV, SENTIMENT_COVERAGE_CSV,
     ARTICLES_PARQUET, QUALITY_REPORT_TXT, QUALITY_REPORT_CSV,
-    ROOT_DAILY_SENTIMENT_CSV, FETCH_WORKERS, LOW_COVERAGE_THRESHOLD
+    ROOT_DAILY_SENTIMENT_CSV, FETCH_WORKERS, LOW_COVERAGE_THRESHOLD,
+    GDELT_CIRCUIT_BREAKER_COOLDOWN_MINUTES
 )
 from .cache import (
     init_db, get_period_status, record_fetch_period,
     save_raw_articles, get_unscored_articles, update_article_sentiments,
-    load_all_articles_df, export_articles_parquet
+    load_all_articles_df, export_articles_parquet,
+    set_circuit_breaker_state, get_circuit_breaker_state, clear_circuit_breaker_state
 )
-from .news_fetcher import NewsFetcher
+from .news_fetcher import NewsFetcher, GDELTRateLimitExhausted
 from .finbert_sentiment import FinBertAnalyzer
 from .aggregation import aggregate_daily_sentiment, generate_coverage_report
 from .validation import validate_production_dataset
@@ -123,7 +130,8 @@ def process_ticker_news_fetch(
     ticker: str,
     month_ranges: List[Tuple[datetime.datetime, datetime.datetime, str, str]],
     fetcher: NewsFetcher,
-    force_refetch: bool = False
+    force_refetch: bool = False,
+    circuit_breaker_event: Optional[threading.Event] = None
 ) -> Dict[str, Any]:
     """Fetches all period windows for a single ticker."""
     new_articles_count = 0
@@ -132,6 +140,9 @@ def process_ticker_news_fetch(
     failed_periods = 0
 
     for m_start_dt, m_end_dt, p_start, p_end in month_ranges:
+        if circuit_breaker_event and circuit_breaker_event.is_set():
+            break
+
         if not force_refetch:
             status_rec = get_period_status(ticker, p_start, p_end)
             if status_rec and status_rec["status"] in ("success", "empty"):
@@ -140,6 +151,10 @@ def process_ticker_news_fetch(
 
         try:
             articles = fetcher.fetch_gdelt_window(ticker, m_start_dt, m_end_dt)
+            # If a persisted breaker was present and expired, this first successful fetch recovers it
+            if get_circuit_breaker_state() is not None:
+                clear_circuit_breaker_state()
+
             inserted = save_raw_articles(articles)
             new_articles_count += inserted
             periods_fetched += 1
@@ -151,6 +166,23 @@ def process_ticker_news_fetch(
                 
             # Polite rate-limiting between period queries
             time.sleep(0.3)
+        except GDELTRateLimitExhausted as rle:
+            failed_periods += 1
+            record_fetch_period(ticker, p_start, p_end, status="failed", article_count=0, error_message=str(rle))
+            logger.warning(f"Fetch failed for {ticker} ({p_start} to {p_end}): {rle}")
+
+            # Persist circuit breaker cooldown state
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            cooldown_until = now_utc + datetime.timedelta(minutes=GDELT_CIRCUIT_BREAKER_COOLDOWN_MINUTES)
+            set_circuit_breaker_state(
+                breaker_opened_at=now_utc.isoformat(),
+                cooldown_until=cooldown_until.isoformat(),
+                reason=str(rle)
+            )
+
+            if circuit_breaker_event:
+                circuit_breaker_event.set()
+            break
         except Exception as e:
             failed_periods += 1
             record_fetch_period(ticker, p_start, p_end, status="failed", article_count=0, error_message=str(e))
@@ -197,6 +229,8 @@ def build_data_quality_report(
         add(f"    API Requests Made              : {fetcher_diagnostics.get('api_requests', 0)}")
         add(f"    Successful Requests (200)      : {fetcher_diagnostics.get('successful_requests', 0)}")
         add(f"    Rate Limit Hits (429)          : {fetcher_diagnostics.get('rate_limit_responses', 0)}")
+        add(f"    Global Rate Limit Waits        : {fetcher_diagnostics.get('global_rate_limit_waits', 0)}")
+        add(f"    Global Rate Limit Wait Time    : {fetcher_diagnostics.get('global_rate_limit_wait_seconds', 0.0):.1f}s")
         add(f"    Failed Requests                : {fetcher_diagnostics.get('failed_requests', 0)}")
         add(f"    Query Failures                 : {fetcher_diagnostics.get('query_failures', 0)}")
         add(f"    Total Articles Retrieved       : {fetcher_diagnostics.get('articles_retrieved', 0)}")
@@ -337,14 +371,39 @@ def run_pipeline(
 
     # Step 2: Phase 1 -- Parallel News Fetching
     print("\n-- Phase 1: Parallel News Fetching (GDELT + Contextual Filtering) --")
-    with ThreadPoolExecutor(max_workers=FETCH_WORKERS) as pool:
-        futures = {
-            pool.submit(process_ticker_news_fetch, t, month_ranges, fetcher, force_refetch): t
-            for t in target_tickers
-        }
-        for fut in tqdm(as_completed(futures), total=len(futures), desc="  Fetching news"):
-            res = fut.result()
-            print(f"    {res['ticker']:<18} new_articles={res['new_articles']:>4}  periods_fetched={res['periods_fetched']:>3}  skipped={res['periods_skipped']:>3}")
+    
+    # Pre-flight check: Persistent circuit breaker cooldown guard
+    breaker_state = get_circuit_breaker_state()
+    cooldown_active = False
+    if breaker_state:
+        try:
+            cooldown_until_dt = datetime.datetime.fromisoformat(breaker_state["cooldown_until"])
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            if now_utc < cooldown_until_dt:
+                remaining_sec = (cooldown_until_dt - now_utc).total_seconds()
+                remaining_min = remaining_sec / 60.0
+                print(
+                    f"\n  [Circuit Breaker] Persistent cooldown active until {breaker_state['cooldown_until']} "
+                    f"({remaining_min:.1f} minutes remaining). Reason: {breaker_state['reason']}.\n"
+                    "  Crawl skipped safely. Resume later without --force-refetch."
+                )
+                cooldown_active = True
+        except Exception as e:
+            logger.warning(f"Error parsing circuit breaker cooldown timestamp: {e}")
+
+    if not cooldown_active:
+        circuit_breaker_event = threading.Event()
+        with ThreadPoolExecutor(max_workers=FETCH_WORKERS) as pool:
+            futures = {
+                pool.submit(process_ticker_news_fetch, t, month_ranges, fetcher, force_refetch, circuit_breaker_event): t
+                for t in target_tickers
+            }
+            for fut in tqdm(as_completed(futures), total=len(futures), desc="  Fetching news"):
+                res = fut.result()
+                print(f"    {res['ticker']:<18} new_articles={res['new_articles']:>4}  periods_fetched={res['periods_fetched']:>3}  skipped={res['periods_skipped']:>3}")
+
+        if circuit_breaker_event.is_set():
+            print("\n  [Circuit Breaker] GDELT rate limit remained active after all retries. Crawl paused safely. Resume later without --force-refetch.")
 
     # Step 3: Phase 2 -- Batch FinBERT Sentiment Inference
     print("\n-- Phase 2: Batch FinBERT Sentiment Inference (ProsusAI/finbert) --")
