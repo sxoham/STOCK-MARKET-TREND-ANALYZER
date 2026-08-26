@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Optional, Tuple, Set
 import pandas as pd
 
 from .config import (
-    MARKET_TIMEZONE, STOCKS, COMPANY_ALIASES, DATA_DIR
+    MARKET_TIMEZONE, STOCKS, COMPANY_ALIASES, BIGQUERY_CANDIDATE_TERMS, DATA_DIR
 )
 from .cache import generate_article_id
 from .news_fetcher import NewsFetcher
@@ -60,13 +60,18 @@ class BigQueryGKGExtractor:
         ticker: str,
         start_date: str,
         end_date: str,
-        project_table: str = "gdelt-bq.gdeltv2.gkg_partitioned"
+        project_table: str = "gdelt-bq.gdeltv2.gkg_partitioned",
+        xml_column: str = "Extras"
     ) -> str:
         """
         Constructs an optimized, partition-pruned BigQuery SQL query for a specific ticker and date range.
         Selects only the required columns and filters candidates as early as practical.
         """
-        aliases = COMPANY_ALIASES.get(ticker, [STOCKS.get(ticker, "")])
+        if ticker in BIGQUERY_CANDIDATE_TERMS:
+            aliases = BIGQUERY_CANDIDATE_TERMS[ticker]
+        else:
+            aliases = COMPANY_ALIASES.get(ticker, [STOCKS.get(ticker, "")])
+
         # Build regex patterns for organizations, persons, and page title
         escaped_aliases = [re.escape(a) for a in aliases if len(a.strip()) > 0]
         alias_pattern = "|".join(escaped_aliases)
@@ -79,8 +84,8 @@ SELECT
   DocumentIdentifier,
   V2Organizations,
   V2Persons,
-  REGEXP_EXTRACT(XMLExtras, r'<PAGE_TITLE>(.*?)</PAGE_TITLE>') AS page_title,
-  REGEXP_EXTRACT(XMLExtras, r'<PAGE_PRECISEPUBTIMESTAMP>(.*?)</PAGE_PRECISEPUBTIMESTAMP>') AS precise_pub_time
+  REGEXP_EXTRACT({xml_column}, r'<PAGE_TITLE>(.*?)</PAGE_TITLE>') AS page_title,
+  REGEXP_EXTRACT({xml_column}, r'<PAGE_PRECISEPUBTIMESTAMP>(.*?)</PAGE_PRECISEPUBTIMESTAMP>') AS precise_pub_time
 FROM
   `{project_table}`
 WHERE
@@ -88,9 +93,9 @@ WHERE
   AND (
     REGEXP_CONTAINS(V2Organizations, r'(?i)\\b({alias_pattern})\\b')
     OR REGEXP_CONTAINS(V2Persons, r'(?i)\\b({alias_pattern})\\b')
-    OR REGEXP_CONTAINS(XMLExtras, r'(?i)<PAGE_TITLE>.*?\\b({alias_pattern})\\b.*?</PAGE_TITLE>')
+    OR REGEXP_CONTAINS({xml_column}, r'(?i)<PAGE_TITLE>.*?\\b({alias_pattern})\\b.*?</PAGE_TITLE>')
   )
-  AND REGEXP_CONTAINS(XMLExtras, r'<PAGE_TITLE>.+?</PAGE_TITLE>')
+  AND REGEXP_CONTAINS({xml_column}, r'<PAGE_TITLE>.+?</PAGE_TITLE>')
 ORDER BY
   DATE ASC
 """.strip()
@@ -121,18 +126,11 @@ ORDER BY
             self.stats["rejected_missing_title"] += 1
             return None
 
-        # 2. Company / Entity Relevance Verification
+        # 2. Company / Entity Relevance Verification (Headline is authoritative)
         if not self.news_fetcher.is_relevant_to_company(headline, ticker):
-            # Also check if company name was confirmed in organizations/persons
-            orgs = record.get("V2Organizations") or ""
-            persons = record.get("V2Persons") or ""
-            context_text = f"{headline} {orgs} {persons}"
-            if not self.news_fetcher.is_relevant_to_company(context_text, ticker):
-                self.stats["rejected_company_match"] += 1
-                return None
-            match_reason = "Entity confirmed in V2Organizations/V2Persons context"
-        else:
-            match_reason = "Direct headline match with company alias"
+            self.stats["rejected_company_match"] += 1
+            return None
+        match_reason = "Direct headline match with company alias"
 
         # 3. Timestamp Parsing (UTC -> Asia/Kolkata IST)
         date_raw = record.get("DATE")

@@ -103,6 +103,16 @@ COMPANY_ALIASES = {
     ]
 }
 
+# ─── BigQuery Candidate Retrieval Terms ──────────────────────────────────────
+# Explicit candidate retrieval terms for BigQuery SQL.
+# Keeps broad SQL candidate discovery separated from the final Python entity acceptance aliases.
+# Tickers not specified here fallback to COMPANY_ALIASES.
+BIGQUERY_CANDIDATE_TERMS = {
+    "ITC.NS": [
+        "ITC", "ITC Ltd", "ITC Limited", "ITC Hotels", "Imperial Tobacco", "Sanjiv Puri"
+    ]
+}
+
 # ─── Directory Paths ──────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")

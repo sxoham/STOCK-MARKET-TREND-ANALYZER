@@ -223,6 +223,79 @@ class TestBigQueryGKGExtractor(unittest.TestCase):
         self.assertEqual(period_counts.get("failed"), 66)
         self.assertEqual(period_counts.get("success"), 23)
 
+    # 10. Candidate Retrieval Configuration Separation
+    def test_candidate_retrieval_configuration_separation(self):
+        from sentiment_generator.config import BIGQUERY_CANDIDATE_TERMS, COMPANY_ALIASES
+        # Retrieval terms for ITC.NS must contain standalone ITC
+        self.assertIn("ITC", BIGQUERY_CANDIDATE_TERMS["ITC.NS"])
+        # Acceptance aliases in COMPANY_ALIASES for ITC.NS must remain multi-word only
+        self.assertNotIn("ITC", COMPANY_ALIASES["ITC.NS"])
+        self.assertIn("ITC Ltd", COMPANY_ALIASES["ITC.NS"])
+        self.assertIn("ITC Limited", COMPANY_ALIASES["ITC.NS"])
+
+    # 11. ITC BigQuery SQL Generation
+    def test_itc_bigquery_sql_generation(self):
+        sql = BigQueryGKGExtractor.generate_query("ITC.NS", "2024-01-01", "2024-01-31")
+        self.assertIn("ITC", sql)
+        self.assertIn(r"ITC\ Ltd", sql)
+        self.assertIn(r"Sanjiv\ Puri", sql)
+        self.assertIn("_PARTITIONDATE BETWEEN '2024-01-01' AND '2024-01-31'", sql)
+
+    # 12. Reliance and HDFCBANK Candidate SQL No-Regression
+    def test_reliance_and_hdfc_candidate_sql_no_regression(self):
+        rel_sql = BigQueryGKGExtractor.generate_query("RELIANCE.NS", "2024-01-01", "2024-01-31")
+        self.assertIn(r"Reliance\ Industries", rel_sql)
+        self.assertIn(r"Mukesh\ Ambani", rel_sql)
+
+        hdfc_sql = BigQueryGKGExtractor.generate_query("HDFCBANK.NS", "2024-01-01", "2024-01-31")
+        self.assertIn(r"HDFC\ Bank", hdfc_sql)
+
+    # 13. ITC False Candidates Rejected by Python Matcher
+    def test_itc_false_candidate_rejection_in_pipeline(self):
+        # US ITC patent dispute
+        row_usitc = {
+            "GKGRECORDID": "20240115000000-1",
+            "DATE": "20240115043000",
+            "SourceCommonName": "phonearena.com",
+            "DocumentIdentifier": "https://phonearena.com/apple-watch-itc-ban",
+            "V2Organizations": "ITC;Apple",
+            "V2Persons": "",
+            "page_title": "Apple has big dates coming as it seeks to quash ITC ban on blood oxygen sensor",
+            "precise_pub_time": None
+        }
+        res_usitc = self.extractor.parse_gkg_record(row_usitc, "ITC.NS")
+        self.assertIsNone(res_usitc)
+
+        # GST fake Input Tax Credit
+        row_gst = {
+            "GKGRECORDID": "20240115000000-2",
+            "DATE": "20240115043000",
+            "SourceCommonName": "devdiscourse.com",
+            "DocumentIdentifier": "https://devdiscourse.com/gst-fake-itc",
+            "V2Organizations": "GST;ITC",
+            "V2Persons": "",
+            "page_title": "GST officers detect over 29,000 bogus firms involved in fake ITC claims",
+            "precise_pub_time": None
+        }
+        res_gst = self.extractor.parse_gkg_record(row_gst, "ITC.NS")
+        self.assertIsNone(res_gst)
+
+        # Genuine ITC Q3 results accepted
+        row_genuine = {
+            "GKGRECORDID": "20240115000000-3",
+            "DATE": "20240115043000",
+            "SourceCommonName": "businesstoday.in",
+            "DocumentIdentifier": "https://businesstoday.in/itc-q3-profit",
+            "V2Organizations": "ITC",
+            "V2Persons": "",
+            "page_title": "ITC Q3 net profit rises 6.5% to Rs 5,335 cr, dividend declared",
+            "precise_pub_time": None
+        }
+        res_genuine = self.extractor.parse_gkg_record(row_genuine, "ITC.NS")
+        self.assertIsNotNone(res_genuine)
+        self.assertEqual(res_genuine["ticker"], "ITC.NS")
+
 
 if __name__ == "__main__":
     unittest.main()
+

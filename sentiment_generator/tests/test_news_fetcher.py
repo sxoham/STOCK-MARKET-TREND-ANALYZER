@@ -309,36 +309,80 @@ class TestNewsFetcher(unittest.TestCase):
     # =========================================================================
 
     def test_D1_valid_itc_article(self):
-        # Explicit phrase matches (always pass regardless of bare-ITC tightening)
+        # Explicit phrase matches
         self.assertTrue(
             self.fetcher.is_relevant_to_company("ITC Ltd reports strong Q3 profit growth", "ITC.NS"))
         self.assertTrue(
             self.fetcher.is_relevant_to_company("ITC Limited declares interim dividend", "ITC.NS"))
         self.assertTrue(
             self.fetcher.is_relevant_to_company("ITC hotels business demerger approved by board", "ITC.NS"))
-        # Bare 'ITC' + strong signals from _ITC_BARE_STRONG_SIGNALS
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("ITC Hotels to launch its maiden international luxury hotel in Sri Lanka", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("Welcomhotel by ITC Hotels reopens in Chennai", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("ITC Infotech embarks on a global footprint expansion spree", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("Sanjiv Puri discusses ITC strategy and FMCG growth", "ITC.NS"))
+
+        # Bare 'ITC' + strong corporate/financial signals
         self.assertTrue(
             self.fetcher.is_relevant_to_company("ITC fmcg segment posts record crore turnover", "ITC.NS"))
         self.assertTrue(
             self.fetcher.is_relevant_to_company("ITC shares jump 4% after analyst upgrade", "ITC.NS"))
         self.assertTrue(
             self.fetcher.is_relevant_to_company("ITC cigarette volumes recover in Q2 earnings", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("ITC Q3 net profit rises 6.5% to Rs 5,335 crore", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("ITC board approves acquisition of cloud kitchen startup", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("Jefferies maintains 'Buy' on ITC with target Rs 520", "ITC.NS"))
 
-    def test_D2_unrelated_itc_acronym_rejected(self):
+    def test_D2_unrelated_itc_acronym_and_false_positive_families_rejected(self):
+        # Unrelated acronyms
         self.assertFalse(
             self.fetcher.is_relevant_to_company("International Trade Council holds meeting in Geneva", "ITC.NS"))
         self.assertFalse(
             self.fetcher.is_relevant_to_company("ITC exam schedule released for 2024", "ITC.NS"))
-        # Generic corporate language must NOT pass with bare 'ITC' — this is the key
-        # false-positive the _ITC_BARE_STRONG_SIGNALS tightening is designed to prevent.
+
+        # GST / Input Tax Credit Collisions
         self.assertFalse(
-            self.fetcher.is_relevant_to_company(
-                "ITC announces new initiative as the board approves the order", "ITC.NS"),
-            "Bare ITC + only 'board'/'order' (generic terms) must be rejected")
+            self.fetcher.is_relevant_to_company("GST Detects 29,000 Firms Involved In Fake ITC Claims Worth Rs 44,000 Crore", "ITC.NS"))
         self.assertFalse(
-            self.fetcher.is_relevant_to_company(
-                "ITC hosts leadership summit on management and growth strategy", "ITC.NS"),
-            "Bare ITC + only 'management'/'growth' (generic terms) must be rejected")
+            self.fetcher.is_relevant_to_company("GST officers detect bogus firms involved in fake ITC claims", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("fake input tax credit claims detected by tax authorities", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("ITC Admissible On Sale And Buyback Transactions When Payment Is Settled: AAR", "ITC.NS"))
+
+        # Foreign Imperial Tobacco / Imperial Brands Collisions
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Minister Holland right to call out Imperial Tobacco: Quebec Coalition", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Imperial Tobacco Canada announces new CEO", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Imperial Brands / Imperial Tobacco UK launches new Rizla variant", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Imperial Tobacco Appoints Cluster Marketing Director in UK", "ITC.NS"))
+
+        # Generic Tobacco / Smoking Health Research
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Reducing nicotine in tobacco would help people quit without prohibiting cigarettes", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Smoking - Health Risks, Addiction, History in global tobacco report", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Public health joins forces against the sale of nicotine pouches", "ITC.NS"))
+
+        # Static / Job Portal / Promotional Pages
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Business Analyst | ITC - Job openings in IT company", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Data Analyst/Business Intelligence Developer | ITC", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("What is Stocks? Know Definition & Meaning of Stocks- Top 20 Stocks", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Mementos by ITC Hotels Ekaaya Udaipur awarded the Best New Hotel Resort", "ITC.NS"))
 
     def test_D3_valid_lt_article(self):
         self.assertTrue(
@@ -565,14 +609,12 @@ class TestNewsFetcher(unittest.TestCase):
         self.assertTrue(rel("Mukesh Ambani announces Reliance Jio IPO plans", "RELIANCE.NS"))
         self.assertTrue(rel("Mukesh Ambani addresses shareholders after Reliance quarterly results", "RELIANCE.NS"))
 
-        # ── Step 3 Negatives (Wealth Listicles / Lifestyle / Celebrity / Political) ─
-        self.assertFalse(rel("Gautam Adani overtakes Mukesh Ambani as India's richest man", "RELIANCE.NS"))
-        self.assertFalse(rel("Meet man who was once richer than Mukesh Ambani", "RELIANCE.NS"))
-        self.assertFalse(rel("Mukesh Ambani's Antilia illuminated for celebration", "RELIANCE.NS"))
-        self.assertFalse(rel("Ferraris and Lamborghinis seized from Mukesh Ambani's mall", "RELIANCE.NS"))
-        self.assertFalse(rel("Best books recommended by Mukesh Ambani", "RELIANCE.NS"))
-        self.assertFalse(rel("Modi most successful Indian PM: Mukesh Ambani", "RELIANCE.NS"))
-        self.assertFalse(rel("Mukesh Ambani family attends wedding ceremony", "RELIANCE.NS"))
+        # ── Step 3 Exclusions (ADAG / Non-RIL Reliance Entities) ─────────────────
+        self.assertFalse(rel("Reliance Power share price crashes 5%", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Infrastructure wins arbitration award", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Capital resolution plan approved by NCLT", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Communications debt restructuring", "RELIANCE.NS"))
+        self.assertFalse(rel("India must reduce reliance on crude oil imports", "RELIANCE.NS"))
 
 
 

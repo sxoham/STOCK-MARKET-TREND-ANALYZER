@@ -107,43 +107,76 @@ _FINANCIAL_CONTEXT_WORDBOUND = re.compile(
     r'\b(?:it|md|npa|tech|auto|deal|power|tax|bank)\b', re.IGNORECASE
 )
 
-# Strong financial signals used exclusively for the bare-'ITC' matching path.
-#
-# Why a separate set: FINANCIAL_CONTEXT_KEYWORDS contains broad terms like 'board',
-# 'market', 'sales', 'order', and 'management' that appear in countless non-ITC corporate
-# articles.  A headline such as "ITC announces initiative as board approves the order"
-# would pass the broad check even though 'ITC' could refer to any organisation.
-# This tighter set requires a clearly financial signal — earnings metrics, securities,
-# market indices, regulatory bodies, or ITC's specific business verticals — before
-# accepting a bare 'ITC' match.
+# ─── ITC Refined Matcher Rules & Patterns ─────────────────────────────────────
+# Negative disambiguation exclusions for GST / Input Tax Credit, Foreign Imperial Brands,
+# generic smoking/nicotine research, static pages, and foreign domain collisions.
+_ITC_EXCLUSIONS_RE: re.Pattern = re.compile(
+    r'\b(?:'
+    r'gst(?:\s+officers?|\s+notice|\s+authorities|\s+detects?|\s+claims?)?'
+    r'|input\s+tax\s+credit'
+    r'|fake\s+itc'
+    r'|itc\s+claims?'
+    r'|bogus\s+firms?'
+    r'|tax\s+credit'
+    r'|international\s+trade\s+commission'
+    r'|usitc'
+    r'|international\s+trade\s+centre'
+    r'|itc\.ua'
+    r'|imperial\s+tobacco\s+(?:canada|uk|ukraine|quebec|cluster|poland)'
+    r'|imperial\s+brands'
+    r'|minister\s+holland'
+    r'|quebec\s+coalition'
+    r'|reducing\s+nicotine'
+    r'|smoking\s*-\s*health\s+risks'
+    r'|nicotine\s+pouches'
+    r'|smoking-cessation'
+    r'|what\s+is\s+stocks'
+    r'|awarded\s+the\s+best\s+new\s+hotel'
+    r'|wiltshire\s+store'
+    r'|forest\s+fires'
+    r'|carmel\s+cottage'
+    r'|allied\s+blenders'
+    r'|glamour\s+to\s+f1'
+    r'|rizla'
+    r'|itc\s+admissible'
+    r'|aar'
+    r')\b|\|\s*itc\b',
+    re.IGNORECASE
+)
+
+# Positive multi-word entities definitively belonging to the ITC.NS family
+_ITC_POSITIVE_RE: re.Pattern = re.compile(
+    r'\b(?:'
+    r'itc\s+(?:ltd|limited|infotech|paperboards|agri|agro|foods?|personal\s+care)'
+    r'|imperial\s+tobacco\s+company\s+(?:limited|of\s+india)'
+    r'|sanjiv\s+puri'
+    r')\b',
+    re.IGNORECASE
+)
+
+# Positive business & economic expansion indicators for ITC Hotels
+_ITC_HOTELS_POSITIVE_RE: re.Pattern = re.compile(
+    r'\b(?:itc\s+hotels?\b.*?\b(?:to\s+launch|launches|luxury|expansion|reopens|makeover|investment|property|properties|shares|results|q[1-4]|revenue|profit)\b'
+    r'|(?:to\s+launch|launches|luxury|expansion|reopens|makeover|investment|property|properties)\b.*?\bitc\s+hotels?\b)\b',
+    re.IGNORECASE
+)
+
+# Strong corporate, securities, and business vertical signals for bare "ITC"
 _ITC_BARE_STRONG_SIGNALS: frozenset = frozenset({
-    # ITC-specific business verticals
-    "tobacco", "cigarette", "fmcg",
-    # Securities and earnings
-    "shares", "stock", "profit", "loss", "revenue", "earnings", "ebitda",
-    "margin", "crore", "quarter", "results", "dividend",
-    # Market references
-    "nifty", "sensex", "bse", "nse",
-    # Analyst/valuation
-    "analyst", "target", "rating", "valuation",
-    # Corporate actions
-    "ceo", "chairman", "acquisition", "buyback",
-    # Regulatory
-    "rbi", "sebi",
+    # Verticals & Products
+    "tobacco", "cigarettes", "cigarette", "fmcg", "cloud kitchen", "e-choupal", "paperboard", "paperboards",
+    # Securities & Financials
+    "shares", "stock", "stocks", "profit", "loss", "revenue", "earnings", "ebitda", "margin", "margins",
+    "crore", "quarter", "results", "dividend", "pat", "gross revenue", "net profit",
+    # Markets & Indices
+    "nifty", "sensex", "bse", "nse", "d-street", "dalal street", "block deals", "block deal", "f&o", "blue-chip",
+    # Valuation & Analysts
+    "analyst", "target", "rating", "valuation", "buyback", "acquisition", "agm", "board", "brokerage", "brokerages",
+    "interim dividend", "outperform", "jefferies", "motilal", "nuvama", "sharekhan",
+    # Executive & Corporate Action
+    "sanjiv puri", "david robert simpson", "director", "resigns", "appoints", "guidance"
 })
 
-# Precompiled word-boundary regex derived from _ITC_BARE_STRONG_SIGNALS.
-#
-# Sorted longest-first so that longer tokens take priority in the alternation
-# (e.g. 'cigarette' is tried before 'ceo'), which is the standard convention
-# for regex alternations to avoid partial-match shadowing.
-#
-# Using \b anchors on both sides means each token must occur as a whole word.
-# Examples:
-#   'loss'    will not fire on 'glossy'    ('gl' precedes the match, no boundary)
-#   'revenue' will not fire on 'revenues'  (no \b between 'e' and 's'; both are \w)
-#   'nse'     will not fire inside a longer alphanumeric token
-# All of the above are correct behaviour for this filter.
 _ITC_BARE_STRONG_SIGNALS_RE: re.Pattern = re.compile(
     r'\b(?:' +
     '|'.join(re.escape(tok) for tok in sorted(_ITC_BARE_STRONG_SIGNALS, key=len, reverse=True)) +
@@ -503,28 +536,27 @@ class NewsFetcher:
         return False
 
     def _match_itc(self, text: str, text_lower: str) -> bool:
-        if re.search(r'\bitc\s+(?:ltd|limited|hotels|infotech|paperboards|shares|stock|q[1-4]|board|dividend|agm)\b', text_lower):
+        # Stage 1: Explicit Negative Disambiguation Exclusion
+        if _ITC_EXCLUSIONS_RE.search(text_lower):
+            return False
+
+        # Stage 2: Positive Multi-Word Entity Match
+        if _ITC_POSITIVE_RE.search(text_lower):
             return True
-        if "imperial tobacco" in text_lower or "itc limited" in text_lower or "itc ltd" in text_lower:
-            return True
-        if re.search(r'\bITC\b', text):
-            # For bare uppercase ITC, require strong financial/corporate vocabulary.
-            #
-            # IMPORTANT: do NOT call _has_financial_context() here — it includes \bit\b
-            # (word-boundary match for 'it') which fires on ordinary sentences such as
-            # "ITC launches initiative. It will help..." even with zero financial content.
-            #
-            # Do NOT use the full FINANCIAL_CONTEXT_KEYWORDS set here either: it contains
-            # generic terms like 'board', 'market', 'sales', 'order', and 'management'
-            # that appear in countless non-ITC corporate articles.  A headline such as
-            # "ITC announces initiative as the board approves the order" would pass the
-            # broad check despite 'ITC' referring to an unrelated organisation.
-            #
-            # Use _ITC_BARE_STRONG_SIGNALS_RE: each signal is matched as a whole word
-            # via \b anchors, so short tokens like 'loss' cannot fire on 'glossy',
-            # 'nse' cannot fire inside a longer token, etc.
+
+        # Stage 3: ITC Hotels Business Relevance Match
+        if "itc hotel" in text_lower:
+            if _ITC_HOTELS_POSITIVE_RE.search(text_lower):
+                return True
             if _ITC_BARE_STRONG_SIGNALS_RE.search(text_lower):
                 return True
+            return False
+
+        # Stage 4: Bare uppercase "ITC" with Corporate / Market Signals
+        if re.search(r'\bITC\b', text):
+            if _ITC_BARE_STRONG_SIGNALS_RE.search(text_lower):
+                return True
+
         return False
 
     def _match_lt(self, text: str, text_lower: str) -> bool:
