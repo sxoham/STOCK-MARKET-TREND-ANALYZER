@@ -10,6 +10,11 @@ if os.path.exists(torch_lib_dir):
         except Exception:
             pass
 
+try:
+    import torch
+except Exception:
+    pass
+
 import unittest
 import datetime
 import zoneinfo
@@ -504,6 +509,72 @@ class TestNewsFetcher(unittest.TestCase):
             "India seeks to reduce reliance on imported crude oil", "RELIANCE.NS"))
         self.assertFalse(self.fetcher.is_relevant_to_company(
             "TCS test center announced for graduate admissions", "TCS.NS"))
+
+    def test_reliance_disambiguation_positive_and_negative_matrix(self):
+        """
+        Validates the hardened RELIANCE.NS disambiguation rules:
+        - True: Reliance Industries, Retail, Jio, Mukesh Ambani, RIL
+        - False: ADAG entities (Power, Infra, Capital, Comms, Naval), Bank, generic grammatical 'reliance on'
+        - False: Collision tests where negative entities contain strong financial keywords (profit, shares, loan)
+        """
+        rel = self.fetcher.is_relevant_to_company
+
+        # ── Expected TRUE (RIL Entity Family) ─────────────────────────────────
+        self.assertTrue(rel("Reliance Industries reports quarterly profit growth", "RELIANCE.NS"))
+        self.assertTrue(rel("Reliance Industries Ltd announces Q3 results", "RELIANCE.NS"))
+        self.assertTrue(rel("RIL shares rise after earnings beat estimates", "RELIANCE.NS"))
+        self.assertTrue(rel("Reliance Jio expands 5G network", "RELIANCE.NS"))
+        self.assertTrue(rel("Jio Platforms reports subscriber growth", "RELIANCE.NS"))
+        self.assertTrue(rel("Reliance Retail Ventures raises capital", "RELIANCE.NS"))
+        self.assertTrue(rel("Mukesh Ambani addresses Reliance AGM", "RELIANCE.NS"))
+
+        # ── Expected FALSE (ADAG / Unrelated Entities / Grammatical) ─────────
+        self.assertFalse(rel("Reliance Power reports quarterly results", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Power shares surge 12%", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Infrastructure wins metro contract", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Infra bags new infrastructure order", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Capital insolvency proceedings continue", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Communications lenders meet", "RELIANCE.NS"))
+        self.assertFalse(rel("RCom lenders approve resolution plan", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Bank Pace wins race", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Home Finance resolution approved", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Nippon Life announces new fund", "RELIANCE.NS"))
+        self.assertFalse(rel("India's reliance on coal remains high", "RELIANCE.NS"))
+        self.assertFalse(rel("Europe reduces reliance on Russian gas", "RELIANCE.NS"))
+        self.assertFalse(rel("Growing reliance on AI raises concerns", "RELIANCE.NS"))
+
+        # ── Financial Keyword Collision Tests (Must remain False) ─────────────
+        self.assertFalse(rel("Reliance Power profit rises 30%", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Infrastructure shares rally", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Capital quarterly results", "RELIANCE.NS"))
+        self.assertFalse(rel("Reliance Bank reports loan growth", "RELIANCE.NS"))
+
+    def test_mukesh_ambani_policy_corporate_positives_and_listicle_negatives(self):
+        """
+        Validates the refined Mukesh Ambani policy:
+        - Positives: Requires co-occurring RIL/Jio/Retail/capex/earnings/business context.
+        - Negatives: Explicitly rejects wealth listicles, celebrity, lifestyle, and political praise.
+        """
+        rel = self.fetcher.is_relevant_to_company
+
+        # ── Step 4 Positives (Corporate / Economic Context) ───────────────────
+        self.assertTrue(rel("Mukesh Ambani outlines Reliance Industries capex plans", "RELIANCE.NS"))
+        self.assertTrue(rel("Mukesh Ambani announces Jio expansion at Reliance AGM", "RELIANCE.NS"))
+        self.assertTrue(rel("Mukesh Ambani says Reliance Retail growth remains strong", "RELIANCE.NS"))
+        self.assertTrue(rel("RIL chairman Mukesh Ambani discusses new energy investment", "RELIANCE.NS"))
+        self.assertTrue(rel("Mukesh Ambani announces Reliance Jio IPO plans", "RELIANCE.NS"))
+        self.assertTrue(rel("Mukesh Ambani addresses shareholders after Reliance quarterly results", "RELIANCE.NS"))
+
+        # ── Step 3 Negatives (Wealth Listicles / Lifestyle / Celebrity / Political) ─
+        self.assertFalse(rel("Gautam Adani overtakes Mukesh Ambani as India's richest man", "RELIANCE.NS"))
+        self.assertFalse(rel("Meet man who was once richer than Mukesh Ambani", "RELIANCE.NS"))
+        self.assertFalse(rel("Mukesh Ambani's Antilia illuminated for celebration", "RELIANCE.NS"))
+        self.assertFalse(rel("Ferraris and Lamborghinis seized from Mukesh Ambani's mall", "RELIANCE.NS"))
+        self.assertFalse(rel("Best books recommended by Mukesh Ambani", "RELIANCE.NS"))
+        self.assertFalse(rel("Modi most successful Indian PM: Mukesh Ambani", "RELIANCE.NS"))
+        self.assertFalse(rel("Mukesh Ambani family attends wedding ceremony", "RELIANCE.NS"))
+
+
 
     def test_utc_to_ist_conversion(self):
         # 2024-01-15 09:30:00 UTC == 2024-01-15 15:00:00 IST (+5:30)

@@ -151,6 +151,25 @@ _ITC_BARE_STRONG_SIGNALS_RE: re.Pattern = re.compile(
     re.IGNORECASE,
 )
 
+# Disambiguation exclusions for unrelated Reliance / ADAG entities (e.g. Reliance Power, Infrastructure, Capital, etc.)
+_RELIANCE_EXCLUSIONS_RE: re.Pattern = re.compile(
+    r'\b(?:reliance\s+(?:power|infrastructure|infra|capital|communications?|com|naval|defence|defense|home\s+finance|commercial\s+finance|general\s+insurance|nippon(?:\s+life)?|bank(?:\s+pace)?|money|securities|broadcast|media|entertainment|health|life\s+insurance)|rcom|r-com)\b',
+    re.IGNORECASE
+)
+
+# Positive entities definitively belonging to the RELIANCE.NS entity family
+_RELIANCE_POSITIVE_RE: re.Pattern = re.compile(
+    r'\b(?:reliance\s+(?:industries(?:\s+(?:ltd|limited))?|retail(?:\s+ventures)?|jio(?:\s+infocomm)?|petroleum|oil|bp|new\s+energy|greens)|jio\s+platforms|mukesh\s+ambani|ril)\b',
+    re.IGNORECASE
+)
+
+# Strong RIL-specific contextual indicators for bare "Reliance" mentions (verticals, key assets, core business)
+_RELIANCE_RIL_SPECIFIC_CONTEXT_RE: re.Pattern = re.compile(
+    r'\b(?:jamnagar|hazira|kg-d6|kg\s+d6|refinery|petrochemicals?|oil-to-chemicals|o2c|polyester|telecom|retail|jio|greens?|new\s+energy|giga\s+factory|agm|q[1-4]|annual\s+general\s+meeting)\b',
+    re.IGNORECASE
+)
+
+
 # Tracking query parameters to strip during canonical URL normalization
 TRACKING_PARAMS = {
     "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
@@ -232,7 +251,7 @@ class NewsFetcher:
 
         # Thread-safe diagnostic telemetry counters
         self._stats_lock = threading.Lock()
-        self.stats = {
+        self.stats: Dict[str, Any] = {
             "api_requests": 0,
             "successful_requests": 0,
             "failed_requests": 0,
@@ -283,7 +302,7 @@ class NewsFetcher:
     def _inc_stat(self, key: str, count: int = 1):
         """Thread-safe increment of diagnostic counters."""
         with self._stats_lock:
-            if key in self.stats:
+            if key in self.stats:   
                 self.stats[key] += count
 
     def get_diagnostics(self) -> Dict[str, Any]:
@@ -295,7 +314,7 @@ class NewsFetcher:
           further. These represent potentially incomplete coverage periods.
         """
         with self._stats_lock:
-            snapshot = dict(self.stats)
+            snapshot: Dict[str, Any] = dict(self.stats)
         with self._truncated_ranges_lock:
             snapshot["truncated_ranges"] = list(self._truncated_ranges)
         return snapshot
@@ -577,14 +596,32 @@ class NewsFetcher:
         return False
 
     def _match_reliance(self, text: str, text_lower: str) -> bool:
-        if re.search(
-            r'\b(?:reliance\s+(?:industries|retail|jio|oil|telecom|digital|power|petroleum|bp|greens|ent)|mukesh\s+ambani|ril)\b',
-            text_lower
-        ):
+        """
+        Determines whether a headline/text is genuinely relevant to RELIANCE.NS (Reliance Industries Limited).
+        Enforces strict deterministic precedence:
+        1. Explicit exclusions for unrelated ADAG / non-RIL Reliance entities (e.g. Power, Infra, Capital, Bank).
+        2. Definitive positive matches for Reliance Industries, Retail, Jio, Mukesh Ambani, RIL.
+        3. Bare 'Reliance' requiring strict RIL-specific vertical/asset/corporate context (never generic financial keywords).
+        """
+        # Stage 1: Explicit Negative / Unrelated ADAG Exclusion
+        if _RELIANCE_EXCLUSIONS_RE.search(text_lower):
+            # Strict override ONLY if text also explicitly names Reliance Industries / RIL / Mukesh Ambani
+            if not re.search(r'\b(?:reliance\s+industries(?:\s+(?:ltd|limited))?|mukesh\s+ambani|ril)\b', text_lower):
+                return False
+
+        # Stage 2: Strong Positive Multi-Word / Entity Match
+        if _RELIANCE_POSITIVE_RE.search(text_lower):
             return True
+
+        # Stage 3: Bare "Reliance" with Strict RIL-Specific Identifiers
         if re.search(r'\bReliance\b', text):
-            if self._has_financial_context(text_lower):
+            # Reject grammatical 'reliance on'
+            if re.search(r'\breliance\s+on\b', text_lower):
+                return False
+            # Require RIL-specific vertical, asset, subsidiary, or corporate action
+            if _RELIANCE_RIL_SPECIFIC_CONTEXT_RE.search(text_lower):
                 return True
+
         return False
 
     # ─── URL Normalization & Article Deduplication ────────────────────────────

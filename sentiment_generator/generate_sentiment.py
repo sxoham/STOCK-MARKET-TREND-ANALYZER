@@ -42,6 +42,7 @@ from .cache import (
     init_db, get_period_status, record_fetch_period,
     save_raw_articles, get_unscored_articles, update_article_sentiments,
     load_all_articles_df, export_articles_parquet,
+    get_unresolved_failed_periods, get_failed_period_diagnostics,
     set_circuit_breaker_state, get_circuit_breaker_state, clear_circuit_breaker_state
 )
 from .news_fetcher import NewsFetcher, GDELTRateLimitExhausted
@@ -204,7 +205,8 @@ def build_data_quality_report(
     ticker_keys: List[str],
     trading_dates: List[str],
     finbert_failures: int,
-    fetcher_diagnostics: Optional[Dict[str, int]] = None
+    fetcher_diagnostics: Optional[Dict[str, int]] = None,
+    failed_period_diagnostics: Optional[Dict[str, int]] = None
 ) -> str:
     """Constructs the comprehensive Data Quality Report."""
     lines = []
@@ -223,6 +225,14 @@ def build_data_quality_report(
     total_articles = len(df_articles)
     add(f"  Total Raw Articles in DB  : {total_articles}")
     add(f"  FinBERT Inference Failures: {finbert_failures}")
+
+    if failed_period_diagnostics:
+        ftotal   = failed_period_diagnostics.get("failed_total", 0)
+        fpartial = failed_period_diagnostics.get("failed_with_partial_data", 0)
+        fnodata  = failed_period_diagnostics.get("failed_without_cached_data", 0)
+        add(f"  Failed Periods (total)    : {ftotal}")
+        add(f"    w/ partial cached data  : {fpartial}  (articles exist; fetch completeness unproven — will retry)")
+        add(f"    w/ no cached data       : {fnodata}  (will retry)")
 
     if fetcher_diagnostics:
         add("\n  --- GDELT Retrieval Diagnostics ---")
@@ -502,6 +512,18 @@ def run_pipeline(
 
     # Step 6: Phase 5 -- Data Quality Report
     print("\n-- Phase 5: Generating Data Quality Report --")
+
+    # Collect failed-period diagnostics for the quality report.
+    # Wrapped defensively: a diagnostic query failure must never abort the pipeline.
+    try:
+        _failed_diag = get_failed_period_diagnostics()
+        if "error" in _failed_diag:
+            logger.warning(f"  [Diagnostics] get_failed_period_diagnostics skipped: {_failed_diag['error']}")
+            _failed_diag = None
+    except Exception as _diag_exc:  # pragma: no cover
+        logger.warning(f"  [Diagnostics] get_failed_period_diagnostics raised unexpectedly: {_diag_exc}")
+        _failed_diag = None
+
     quality_report = build_data_quality_report(
         df_articles=df_all_articles,
         df_sent=df_sent,
@@ -509,7 +531,8 @@ def run_pipeline(
         ticker_keys=target_tickers,
         trading_dates=trading_dates,
         finbert_failures=analyzer.inference_failures,
-        fetcher_diagnostics=fetcher.get_diagnostics()
+        fetcher_diagnostics=fetcher.get_diagnostics(),
+        failed_period_diagnostics=_failed_diag
     )
     print(quality_report)
     with open(QUALITY_REPORT_TXT, "w", encoding="utf-8") as f:

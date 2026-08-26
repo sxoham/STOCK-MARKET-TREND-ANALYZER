@@ -135,7 +135,7 @@ GDELT_MAX_REQUESTS_PER_WINDOW = 64
 
 # Mandatory pre-request sleep interval between GDELT DOC API calls.
 # Managed by process-wide Lock + monotonic() governor.
-GDELT_REQUEST_SLEEP_SECONDS = 6.0
+GDELT_REQUEST_SLEEP_SECONDS = 8.0
 
 # Persistent circuit-breaker cooldown window in minutes after exhausted 429 retries
 GDELT_CIRCUIT_BREAKER_COOLDOWN_MINUTES = int(os.getenv("GDELT_CIRCUIT_BREAKER_COOLDOWN_MINUTES", "60"))

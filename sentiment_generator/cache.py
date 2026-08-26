@@ -284,6 +284,67 @@ def get_unresolved_failed_periods() -> List[Dict[str, Any]]:
     ]
 
 
+def get_failed_period_diagnostics() -> Dict[str, int]:
+    """
+    Returns a read-only diagnostic breakdown of failed fetch periods.
+
+    Counts how many failed periods have at least one article in raw_articles
+    within their window (i.e. partial cached data exists) versus those that
+    have no cached data at all.
+
+    Guarantees:
+    - Strictly read-only: no INSERT / UPDATE / DELETE is issued.
+    - Never raises: any SQLite error is caught and a zero-value dict is
+      returned so a diagnostic failure can never abort the pipeline.
+    - Connection is always closed via finally, even if the query errors.
+
+    Returns a dict with keys:
+      'failed_total'              - total rows with status='failed'
+      'failed_with_partial_data'  - failed rows that have >=1 article in cache
+      'failed_without_cached_data'- failed rows with zero cached articles
+    On error all values are 0 and an 'error' key carries the exception string.
+    """
+    _ZERO: Dict[str, int] = {
+        "failed_total":               0,
+        "failed_with_partial_data":   0,
+        "failed_without_cached_data": 0,
+    }
+    conn = None
+    try:
+        conn = get_connection()
+        c = conn.cursor()
+        c.execute("""
+            SELECT
+                COUNT(*) AS total_failed,
+                SUM(CASE WHEN article_count_in_db > 0 THEN 1 ELSE 0 END) AS with_partial,
+                SUM(CASE WHEN article_count_in_db = 0 THEN 1 ELSE 0 END) AS without_data
+            FROM (
+                SELECT fp.ticker,
+                       fp.period_start,
+                       fp.period_end,
+                       COUNT(ra.article_id) AS article_count_in_db
+                FROM fetch_periods fp
+                LEFT JOIN raw_articles ra
+                    ON  ra.ticker        = fp.ticker
+                    AND ra.trading_date >= fp.period_start
+                    AND ra.trading_date <= fp.period_end
+                WHERE fp.status = 'failed'
+                GROUP BY fp.ticker, fp.period_start, fp.period_end
+            )
+        """)
+        row = c.fetchone()
+        return {
+            "failed_total":               (row[0] or 0) if row else 0,
+            "failed_with_partial_data":   (row[1] or 0) if row else 0,
+            "failed_without_cached_data": (row[2] or 0) if row else 0,
+        }
+    except Exception as exc:  # pragma: no cover
+        return {**_ZERO, "error": str(exc)}
+    finally:
+        if conn is not None:
+            conn.close()
+
+
 def set_circuit_breaker_state(
     breaker_opened_at: str,
     cooldown_until: str,

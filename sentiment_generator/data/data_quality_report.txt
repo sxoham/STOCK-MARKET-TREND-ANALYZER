@@ -1,60 +1,119 @@
 ======================================================================
   STOCK MARKET TREND ANALYZER  -  DATA QUALITY REPORT
-  Generated: 2026-08-21 22:00:51
+  Generated: 2026-08-25 22:12:35
 ======================================================================
 
-  Trading Sessions in Scope : 22
-  Calendar Range            : 2025-01-01 to 2025-01-30
-  Total Raw Articles in DB  : 120
+  Trading Sessions in Scope : 245
+  Calendar Range            : 2024-01-01 to 2024-12-30
+  Total Raw Articles in DB  : 634
   FinBERT Inference Failures: 0
+  Failed Periods (total)    : 66
+    w/ partial cached data  : 5  (articles exist; fetch completeness unproven — will retry)
+    w/ no cached data       : 61  (will retry)
 
   --- GDELT Retrieval Diagnostics ---
-    API Requests Made              : 4
-    Successful Requests (200)      : 3
-    Rate Limit Hits (429)          : 12
-    Failed Requests                : 1
-    Query Failures                 : 1
-    Total Articles Retrieved       : 671
-    Rejected (Company Match)       : 379
+    API Requests Made              : 50
+    Successful Requests (200)      : 7
+    Rate Limit Hits (429)          : 5
+    Global Rate Limit Waits        : 2
+    Global Rate Limit Wait Time    : 7.3s
+    Failed Requests                : 43
+    Query Failures                 : 43
+    Total Articles Retrieved       : 1750
+    Rejected (Missing Title)       : 0
+    Rejected (Company Match)       : 1143
     Rejected (Invalid Timestamp)   : 0
     Rejected (Low Precision TS)    : 0
+    Missing Published Timestamp    : 607
+    Missing URL                    : 0
     Duplicates Removed             : 0
-    Skipped (No Trading Day)       : 4
-    Mapped to Trading Sessions     : 288
+    Skipped (No Trading Day)       : 0
+    Mapped to Trading Sessions     : 607
   --- Pagination Window Statistics ---
-    Pagination Splits              : 2
-    Complete Windows               : 1
+    Pagination Splits              : 7
+    Complete Windows               : 0
     Truncated Windows              : 0
     Incomplete Windows             : 0
     Budget Exhausted Errors        : 0
     Coverage Completeness          : All fetched windows complete (no truncation)
-  Earliest Article Seen     : 2024-01-01
-  Latest Article Seen       : 2025-01-30
+  Earliest Article Seen     : 2024-01-02
+  Latest Article Seen       : 2024-12-30
 
   --- Source Distribution ---
-    GDELT                         120  (100.0%)
+    GDELT                         634  (100.0%)
 
   --- Articles per Ticker ---
-    RELIANCE.NS               79
-    ITC.NS                    41
+    RELIANCE.NS                0
+    TCS.NS                   249
+    HDFCBANK.NS                0
+    ICICIBANK.NS             115
+    INFY.NS                   78
+    HINDUNILVR.NS            121
+    ITC.NS                    71
+    SBIN.NS                    0
+    BHARTIARTL.NS              0
+    KOTAKBANK.NS               0
+    LT.NS                      0
+    AXISBANK.NS                0
+    ASIANPAINT.NS              0
+    MARUTI.NS                  0
+    TITAN.NS                   0
+    BAJFINANCE.NS              0
+    SUNPHARMA.NS               0
+    HCLTECH.NS                 0
+    TATASTEEL.NS               0
+    NTPC.NS                    0
 
   --- Articles per Year ---
-    2024       79
-    2025       41
+    2024      634
 
   --- Trading-Day Coverage per Ticker ---
   Ticker                Days w/ News  Coverage%  0.0 Sent% Flag
   ------------------------------------------------------------
   RELIANCE.NS                      0       0.0%     100.0%  [LOW COVERAGE]
-  ITC.NS                          14      63.6%      77.3%  
+  TCS.NS                          79      32.2%      77.1%  
+  HDFCBANK.NS                      0       0.0%     100.0%  [LOW COVERAGE]
+  ICICIBANK.NS                    34      13.9%      91.8%  
+  INFY.NS                         23       9.4%      92.7%  [LOW COVERAGE]
+  HINDUNILVR.NS                   39      15.9%      91.4%  
+  ITC.NS                          36      14.7%      93.1%  
+  SBIN.NS                          0       0.0%     100.0%  [LOW COVERAGE]
+  BHARTIARTL.NS                    0       0.0%     100.0%  [LOW COVERAGE]
+  KOTAKBANK.NS                     0       0.0%     100.0%  [LOW COVERAGE]
+  LT.NS                            0       0.0%     100.0%  [LOW COVERAGE]
+  AXISBANK.NS                      0       0.0%     100.0%  [LOW COVERAGE]
+  ASIANPAINT.NS                    0       0.0%     100.0%  [LOW COVERAGE]
+  MARUTI.NS                        0       0.0%     100.0%  [LOW COVERAGE]
+  TITAN.NS                         0       0.0%     100.0%  [LOW COVERAGE]
+  BAJFINANCE.NS                    0       0.0%     100.0%  [LOW COVERAGE]
+  SUNPHARMA.NS                     0       0.0%     100.0%  [LOW COVERAGE]
+  HCLTECH.NS                       0       0.0%     100.0%  [LOW COVERAGE]
+  TATASTEEL.NS                     0       0.0%     100.0%  [LOW COVERAGE]
+  NTPC.NS                          0       0.0%     100.0%  [LOW COVERAGE]
 
   --- Yearly Coverage Reliability ---
-    2025  trading_days= 22  articles=   41  ticker_day_coverage= 31.8%
+    2024  trading_days=245  articles=  634  ticker_day_coverage=  4.3% [!] LOW COVERAGE YEAR
 
 ======================================================================
   RELIABILITY & DATA INTEGRITY SUMMARY
 ======================================================================
-  All years meet or exceed the coverage threshold.
+  [!] Flagged Low-Coverage Years (treat as sparse news):
+      Year 2024
   [!] Tickers with <10% trading-day news coverage:
       RELIANCE.NS
+      HDFCBANK.NS
+      INFY.NS
+      SBIN.NS
+      BHARTIARTL.NS
+      KOTAKBANK.NS
+      LT.NS
+      AXISBANK.NS
+      ASIANPAINT.NS
+      MARUTI.NS
+      TITAN.NS
+      BAJFINANCE.NS
+      SUNPHARMA.NS
+      HCLTECH.NS
+      TATASTEEL.NS
+      NTPC.NS
 ======================================================================
