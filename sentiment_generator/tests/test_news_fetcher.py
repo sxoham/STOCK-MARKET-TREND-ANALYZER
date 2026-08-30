@@ -319,6 +319,10 @@ class TestNewsFetcher(unittest.TestCase):
         self.assertTrue(
             self.fetcher.is_relevant_to_company("ITC Hotels to launch its maiden international luxury hotel in Sri Lanka", "ITC.NS"))
         self.assertTrue(
+            self.fetcher.is_relevant_to_company("President to open ITC Ratnadipa Colombo next week", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("ITC expands global presence via subsidiary Fortune Hotels", "ITC.NS"))
+        self.assertTrue(
             self.fetcher.is_relevant_to_company("Welcomhotel by ITC Hotels reopens in Chennai", "ITC.NS"))
         self.assertTrue(
             self.fetcher.is_relevant_to_company("ITC Infotech embarks on a global footprint expansion spree", "ITC.NS"))
@@ -338,15 +342,63 @@ class TestNewsFetcher(unittest.TestCase):
             self.fetcher.is_relevant_to_company("ITC board approves acquisition of cloud kitchen startup", "ITC.NS"))
         self.assertTrue(
             self.fetcher.is_relevant_to_company("Jefferies maintains 'Buy' on ITC with target Rs 520", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("ITC, Piramal Enterprises, Navin Fluorine may deliver up to 14% return in short term", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("ITC, Kellogg's spinoff firm eye stake in another PE-backed healthy snacks brand", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("ITC's 'Krishi Mitra' uses Microsoft Copilot to help farmers", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("Viksit Bharat Budget 2024: ITC jumps 5% as govt keeps sin tax unchanged", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("Titan, ITC seen benefitting most from consumption thrust in Budget 2024", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("Trade Spotlight: How should you trade LIC, HUL, ITC, DMart, Orient Cement, and others ahead of budget day?", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("HUL, ITC, Hero Moto among 14 picks Axis Securities is positive on post Budget 2024", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("ITC Hotels demerger approved", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("ITC Ratnadipa expands hospitality footprint", "ITC.NS"))
+        self.assertTrue(
+            self.fetcher.is_relevant_to_company("ITC seen benefitting from Budget consumption push", "ITC.NS"))
 
     def test_D2_unrelated_itc_acronym_and_false_positive_families_rejected(self):
-        # Unrelated acronyms
+        # US International Trade Commission / Legal Proceedings
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Chief Administrative Law Judge issues ITC report", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Navigating the post-Loper Bright world at the ITC", "ITC.NS"))
         self.assertFalse(
             self.fetcher.is_relevant_to_company("International Trade Council holds meeting in Geneva", "ITC.NS"))
         self.assertFalse(
-            self.fetcher.is_relevant_to_company("ITC exam schedule released for 2024", "ITC.NS"))
+            self.fetcher.is_relevant_to_company("WIT ITC Report: Chief Administrative Law Judge Clark Cheney - International Trade & Investment", "ITC.NS"))
 
-        # GST / Input Tax Credit Collisions
+        # San Antonio Institute of Texan Cultures / Landmark Status
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("ITC building gains landmark status in San Antonio", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Institute of Texan Cultures receives landmark status", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("San Antonio's ITC building gains landmark status amid Spurs arena talks", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Elected leaders rally for Prop D; ITC gets landmark status; Castro slams Trump comedian", "ITC.NS"))
+
+        # SAICA Board Exams
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("ITC exam schedule released for 2024", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Over 1,700 candidates now one SAICA board exam away from becoming CA(SA) as they pass their ITC exams", "ITC.NS"))
+
+        # GST / VAT / Input Tax Credit Collisions
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Bombay HC hears Maharashtra ITC rule challenge", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Bombay HC seeks response from revenue dept in Maharashtra ITC rule case", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("VAT dealer claims ITC entitlement", "ITC.NS"))
+        self.assertFalse(
+            self.fetcher.is_relevant_to_company("Flair Writing receives tax notice for excess ITC claims", "ITC.NS"))
         self.assertFalse(
             self.fetcher.is_relevant_to_company("GST Detects 29,000 Firms Involved In Fake ITC Claims Worth Rs 44,000 Crore", "ITC.NS"))
         self.assertFalse(
@@ -380,25 +432,214 @@ class TestNewsFetcher(unittest.TestCase):
         self.assertFalse(
             self.fetcher.is_relevant_to_company("Data Analyst/Business Intelligence Developer | ITC", "ITC.NS"))
         self.assertFalse(
-            self.fetcher.is_relevant_to_company("What is Stocks? Know Definition & Meaning of Stocks- Top 20 Stocks", "ITC.NS"))
-        self.assertFalse(
             self.fetcher.is_relevant_to_company("Mementos by ITC Hotels Ekaaya Udaipur awarded the Best New Hotel Resort", "ITC.NS"))
 
+    def test_D2b_itc_lifecycle_and_transition_boundary_tests(self):
+        """
+        Validates entity lifecycle boundaries for ITC.NS vs standalone ITC Hotels Limited:
+        1. PAIRED TEMPORAL TESTS (Identical headline, opposite result based on timestamp):
+           - "ITC Hotels reports strong quarterly profit"
+             * 2024 timestamp -> True (pre-separation subsidiary)
+             * 2025 post-listing timestamp -> False (standalone company)
+           - "ITC Hotels opens new luxury property"
+             * 2024-04-15 (pre-separation) -> True
+             * 2025-02-01 (post-listing) -> False
+        2. BOUNDARY DATE TESTS (Immediately before / on / after 2025-01-29 listing date):
+           - "ITC Hotels opens new luxury property"
+             * 2025-01-28 (1 day before listing) -> True
+             * 2025-01-29 (on listing date) -> False
+             * 2025-01-30 (1 day after listing) -> False
+           - "ITC Hotels reports quarterly results"
+             * 2025-01-28 -> True
+             * 2025-01-30 -> False
+        3. TRANSITION / DEMERGER AFFECTING PARENT ITC.NS:
+           - "ITC Hotels lists after demerger from ITC" -> True
+           - "ITC shares rise after ITC Hotels listing" -> True (parent ITC explicitly affected)
+           - "ITC trades sans hotels division at Rs 455 apiece" -> True
+           - "Indian conglomerate ITC's value adjusts 5% lower after hotels business spin-off" -> True
+           - "ITC Hotels will list tomorrow- 10 things that shareholders need to know NOW" -> True
+           - "ITC Hotels demerger: Everything that you need to know about ITC's hotel business" -> True
+        4. POST-SEPARATION STANDALONE COMPANY (ITCHOTELS.NS ONLY):
+           - "ITC Hotels share down 5 percent" (post-listing) -> False
+           - "What price will ITC Hotels list at? Here's what analysts predict" -> False
+           - "ITC Hotels to see $190 million of fund outflows" -> False
+           - "ITC Hotels Closes at a 33 per cent Discount to the Discovered Price. What Should Investors Do?" -> False
+           - "Heartwarming! ITC Delhi's Former Watchman Dines Inside Luxury Hotel" -> False
+        """
+        rel = self.fetcher.is_relevant_to_company
+
+        # ── 1. PAIRED TEMPORAL TESTS ──────────────────────────────────────────
+        # Same headline: "ITC Hotels reports strong quarterly profit"
+        self.assertTrue(
+            rel("ITC Hotels reports strong quarterly profit", "ITC.NS", article_datetime="2024-05-15"),
+            "Pre-separation hotel segment profit must belong to parent ITC.NS"
+        )
+        self.assertFalse(
+            rel("ITC Hotels reports strong quarterly profit", "ITC.NS", article_datetime="2025-02-15"),
+            "Post-listing standalone hotel profit must NOT belong to parent ITC.NS"
+        )
+
+        # Same headline: "ITC Hotels opens new luxury property"
+        self.assertTrue(
+            rel("ITC Hotels opens new luxury property", "ITC.NS", article_datetime="2024-04-15"),
+            "Pre-separation luxury hotel opening belongs to parent ITC.NS"
+        )
+        self.assertFalse(
+            rel("ITC Hotels opens new luxury property", "ITC.NS", article_datetime="2025-02-01"),
+            "Post-listing standalone luxury hotel opening must NOT belong to parent ITC.NS"
+        )
+
+        # ── 2. EXACT BOUNDARY DATES (Listing date: 2025-01-29) ────────────────
+        # Immediately BEFORE listing date (2025-01-28)
+        self.assertTrue(
+            rel("ITC Hotels opens new luxury property", "ITC.NS", article_datetime="2025-01-28"),
+            "Day before listing must still evaluate as pre-separation"
+        )
+        self.assertTrue(
+            rel("ITC Hotels reports quarterly results", "ITC.NS", article_datetime="2025-01-28"),
+            "Day before listing must still evaluate as pre-separation"
+        )
+
+        # ON listing date (2025-01-29) - Transition demerger event
+        self.assertTrue(
+            rel("ITC Hotels lists after demerger from ITC", "ITC.NS", article_datetime="2025-01-29"),
+            "Listing of demerged entity is a transition event for ITC.NS"
+        )
+
+        # Immediately AFTER listing date (2025-01-30) - Standalone ITCHOTELS.NS only
+        self.assertFalse(
+            rel("ITC Hotels opens new luxury property", "ITC.NS", article_datetime="2025-01-30"),
+            "Day after listing must evaluate as standalone post-separation"
+        )
+        self.assertFalse(
+            rel("ITC Hotels reports quarterly results", "ITC.NS", article_datetime="2025-01-30"),
+            "Day after listing standalone results must not belong to parent ITC.NS"
+        )
+
+        # ── 3. TRANSITION / DEMERGER AFFECTING PARENT ITC.NS ───────────────────
+        self.assertTrue(
+            rel("ITC Hotels lists after demerger from ITC", "ITC.NS", article_datetime="2025-01-28"),
+            "Demerger transition story must belong to ITC.NS"
+        )
+        self.assertTrue(
+            rel("ITC shares rise after ITC Hotels listing", "ITC.NS", article_datetime="2025-01-30"),
+            "Post-listing headline where parent ITC is explicitly affected must pass"
+        )
+        self.assertTrue(
+            rel("ITC trades sans hotels division at Rs 455 apiece", "ITC.NS", article_datetime="2025-01-06"))
+        self.assertTrue(
+            rel("Indian conglomerate ITC's value adjusts 5% lower after hotels business spin-off", "ITC.NS", article_datetime="2025-01-06"))
+        self.assertTrue(
+            rel("ITC Hotels will list tomorrow- 10 things that shareholders need to know NOW", "ITC.NS", article_datetime="2025-01-28"))
+        self.assertTrue(
+            rel("ITC Hotels demerger: Everything that you need to know about ITC's hotel business", "ITC.NS", article_datetime="2025-01-29"))
+
+        # ── 4. POST-SEPARATION STANDALONE (ITCHOTELS.NS ONLY) ─────────────────
+        self.assertFalse(
+            rel("ITC Hotels share down 5 percent", "ITC.NS", article_datetime="2025-01-30"))
+        self.assertFalse(
+            rel("What price will ITC Hotels list at? Here's what analysts predict", "ITC.NS", article_datetime="2025-01-30"))
+        self.assertFalse(
+            rel("ITC Hotels to see $190 million of fund outflows", "ITC.NS", article_datetime="2025-01-30"))
+        self.assertFalse(
+            rel("ITC Hotels Closes at a 33 per cent Discount to the Discovered Price. What Should Investors Do?", "ITC.NS", article_datetime="2025-01-30"))
+        self.assertFalse(
+            rel("Heartwarming! ITC Delhi's Former Watchman Dines Inside Luxury Hotel", "ITC.NS", article_datetime="2025-01-24"))
+
     def test_D3_valid_lt_article(self):
-        self.assertTrue(
-            self.fetcher.is_relevant_to_company("Larsen & Toubro bags mega infrastructure contract", "LT.NS"))
-        self.assertTrue(
-            self.fetcher.is_relevant_to_company("L&T construction arm secures Rs 4000 cr order", "LT.NS"))
-        self.assertTrue(
-            self.fetcher.is_relevant_to_company("LT shares rise after strong quarterly results", "LT.NS"))
+        # Full corporate entity
+        self.assertTrue(self.fetcher.is_relevant_to_company("Larsen & Toubro bags mega infrastructure contract in Middle East", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("Larsen and Toubro wins Rs 7,000 crore order from bullet train project", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("Larsen Toubro Limited reports robust revenue growth", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("Larsen & Toubro wins Rs 5,000 crore order", "LT.NS"))
+        # L&T entity & subsidiaries
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T construction arm secures Rs 4000 cr order", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T secures major hydrocarbons contract from Saudi Aramco", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T Q3 profit rises 15% to Rs 2,947 crore; declares dividend", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T Heavy Engineering bags key equipment orders", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T Realty launches luxury residential project in Mumbai", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T semiconductor chip design unit announced", "LT.NS"))
+        # Infrastructure & Projects (Airport construction, Bypass projects)
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T wins major airport construction contract", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T awarded highway bypass construction project", "LT.NS"))
+        # Workforce Expansion
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T plans to hire 10,000 engineers", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T announces major workforce expansion", "LT.NS"))
+        # Leadership
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T Chairman SN Subrahmanyan sees robust order pipeline", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("AM Naik steps down as L&T Group Chairman", "LT.NS"))
+        # Market / Brokerage roundups
+        self.assertTrue(self.fetcher.is_relevant_to_company("LT shares rise after strong quarterly results", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("L&T shares rise after strong quarterly results", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("Trade Spotlight: How to trade Tata Motors, L&T, Infosys today", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("Top stock picks: Brokerages bullish on Reliance, L&T, HDFC Bank", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("लार्सन एंड टुब्रो को मिला 5000 करोड़ का बड़ा ऑर्डर", "LT.NS"))
 
     def test_D4_unrelated_lt_acronym_rejected(self):
-        self.assertFalse(
-            self.fetcher.is_relevant_to_company("Lt Governor visits flood-affected villages", "LT.NS"))
-        self.assertFalse(
-            self.fetcher.is_relevant_to_company("Long-term interest rate outlook remains uncertain", "LT.NS"))
+        # Military / Police ranks
+        self.assertFalse(self.fetcher.is_relevant_to_company("Lt Governor visits flood-affected villages in Jammu", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Lt Gen Upendra Dwivedi reviews security situation along LoC", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Lt Col MS Dhoni visits Army camp in Kashmir", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("US Navy Lt Commander faces disciplinary action", "LT.NS"))
+        # Technical / Electrical / Finance terms
+        self.assertFalse(self.fetcher.is_relevant_to_company("Long-term interest rate outlook remains uncertain", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Long-term (LT) capital gains tax rules explained", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("MSEDCL upgrades LT line and distribution transformers in Pune", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("LT consumer power tariffs to increase by 5% in Tamil Nadu", "LT.NS"))
+        # Automotive trims
+        self.assertFalse(self.fetcher.is_relevant_to_company("Chevrolet reveals new 2024 Silverado LT Trail Boss edition", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Chevrolet Tahoe LT review: Is it worth the upgrade?", "LT.NS"))
+        # Sports abbreviations
+        self.assertFalse(self.fetcher.is_relevant_to_company("Giants sign star LT Andrew Thomas to massive contract extension", "LT.NS"))
+        # Foreign organizations & geography & medicine
+        self.assertFalse(self.fetcher.is_relevant_to_company("Philippine conglomerate LT Group reports full-year net income", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Massive iceberg breaks off Larsen C ice shelf in Antarctica", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Clinical trial investigates LT receptor antagonists in asthma patients", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Postoperative outcomes in adult liver transplantation (LT) recipients", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Bare lt without any corporate context", "LT.NS"))
+        # Airport retail / Liquor & Tobacco
+        self.assertFalse(self.fetcher.is_relevant_to_company("S Korea retail giants ignite L&T contest at Gimpo duty-free", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Liquor & Tobacco L&T category tender at airport", "LT.NS"))
+        # Geographical bypass road
+        self.assertFalse(self.fetcher.is_relevant_to_company("Police register case after protest on L&T bypass", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Accident near L&T bypass leaves traffic disrupted", "LT.NS"))
+        # Routine job postings / vacancies
+        self.assertFalse(self.fetcher.is_relevant_to_company("L&T Infotech recruits for Test Specialist", "LT.NS"))
+        # Finnish Lassila & Tikanoja (LAT1V)
+        self.assertFalse(self.fetcher.is_relevant_to_company("L&T:llä vastatuulta monesta suunnasta - Tulos painui", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Lassila & Tikanoja Q1 tulos ja näkymät", "LT.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("LAT1V osakekurssi laskee Helsingin pörssissä", "LT.NS"))
+        # Malformed publisher concatenated token (documented regression case, left rejected for now)
+        self.assertFalse(self.fetcher.is_relevant_to_company("Sensex reclaims 72,000-levels, Nifty above 21,700; Adani Ports and L&Trises 3%", "LT.NS"))
 
-    def test_D5_valid_titan_article(self):
+    def test_D4B_is_article_url_quality_filtering(self):
+        # Static CMS taxonomy, category, tag, author, search URLs must be rejected
+        self.assertFalse(self.fetcher.is_article_url("https://udaipurkiran.com/tag/lt-finance-holdings"))
+        self.assertFalse(self.fetcher.is_article_url("https://udaipurkiran.com/tag/lt-finance-holdings/"))
+        self.assertFalse(self.fetcher.is_article_url("https://udaipurkiran.com/tags/reliance-industries"))
+        self.assertFalse(self.fetcher.is_article_url("https://moneycontrol.com/category/markets"))
+        self.assertFalse(self.fetcher.is_article_url("https://economictimes.indiatimes.com/author/example-writer"))
+        self.assertFalse(self.fetcher.is_article_url("https://example.com/search/?q=larsen"))
+        self.assertFalse(self.fetcher.is_article_url("https://example.com/topic/infrastructure"))
+        self.assertFalse(self.fetcher.is_article_url("https://example.com/archive/2024/04"))
+        self.assertFalse(self.fetcher.is_article_url("https://example.com/?q=larsen"))
+        self.assertFalse(self.fetcher.is_article_url("https://example.com/"))
+        self.assertFalse(self.fetcher.is_article_url(""))
+        self.assertFalse(self.fetcher.is_article_url(None))
+
+        # Legitimate article URLs must pass
+        self.assertTrue(self.fetcher.is_article_url(
+            "https://economictimes.indiatimes.com/markets/stocks/news/stock-radar-lt-breaks-out-from-cup-handle-pattern-stock-likely-to-hit-4000-levels/articleshow/108941845.cms"))
+        self.assertTrue(self.fetcher.is_article_url(
+            "https://www.moneycontrol.com/news/business/markets/mc-interview-rs-1-lakh-cr-hydrocarbon-order-book-gives-revenue-visibility-not-worried-about-saudi-project-deferment-lt-energy-head-12567441.html"))
+        self.assertTrue(self.fetcher.is_article_url(
+            "https://www.livemint.com/companies/news/kandla-port-l-t-ril-to-invest-rs-1-lakh-crore-in-green-energy-deendayal-port-authority-allots-14-land-parcels-11712722353305.html"))
+        self.assertTrue(self.fetcher.is_article_url(
+            "https://idrw.org/lt-arm-flags-off-crucial-component-for-indias-1st-domestically-built-700-mw-nuclear-reactor"))
+        self.assertTrue(self.fetcher.is_article_url(
+            "https://www.thehindubusinessline.com/markets/stock-markets/lt-sells-stake-in-lt-infrastructure-development-projects/article68053125.ece"))
+        self.assertTrue(self.fetcher.is_article_url(
+            "https://udaipurkiran.com/lt-finance-holdings-trades-higher-on-reporting-33-rise-in-retail-disbursements-during-q4fy24"))
         self.assertTrue(
             self.fetcher.is_relevant_to_company(
                 "Titan Company jewellery revenue jumps 20% in festive season", "TITAN.NS"))
@@ -511,6 +752,221 @@ class TestNewsFetcher(unittest.TestCase):
         self.assertTrue(
             rel("State Bank of India cuts home loan rates by 25 basis points", "SBIN.NS"),
             "Explicit 'State Bank of India' phrase must always trigger SBI match")
+
+        # ─── SBIN.NS Adversarial Validation Suite ─────────────────────────────
+        # Strong Positives
+        self.assertTrue(rel("State Bank of India reports record quarterly profit", "SBIN.NS"))
+        self.assertTrue(rel("State Bank of India raises Rs 10,000 crore through infrastructure bonds", "SBIN.NS"))
+        self.assertTrue(rel("SBI shares rise 4% after strong quarterly results", "SBIN.NS"))
+        self.assertTrue(rel("SBI reports improvement in gross NPA ratio", "SBIN.NS"))
+        self.assertTrue(rel("SBI board approves fundraising plan", "SBIN.NS"))
+        self.assertTrue(rel("SBI loan growth remains strong", "SBIN.NS"))
+        self.assertTrue(rel("SBI chairman Dinesh Khara discusses credit growth", "SBIN.NS"))
+        self.assertTrue(rel("Supreme Court directs SBI to disclose electoral bond serial numbers", "SBIN.NS"))
+        self.assertTrue(rel("CS Setty takes charge as new SBI chairman", "SBIN.NS"))
+        self.assertTrue(rel("SBI hikes fixed deposit interest rates by 25 bps", "SBIN.NS"))
+        self.assertTrue(rel("RBI imposes monetary penalty on State Bank of India", "SBIN.NS"))
+
+        # Foreign / Generic State Bank Negatives (EXPECT FALSE)
+        self.assertFalse(rel("State Bank of Pakistan raises policy rate to 22%", "SBIN.NS"))
+        self.assertFalse(rel("State Bank of Vietnam cuts lending rates", "SBIN.NS"))
+        self.assertFalse(rel("State Bank of Texas opens new branch", "SBIN.NS"))
+        self.assertFalse(rel("Chinese state banks intervene to support yuan", "SBIN.NS"))
+        self.assertFalse(rel("Several state banks reported stronger lending", "SBIN.NS"))
+        self.assertFalse(rel("Central bank and state banks discuss liquidity", "SBIN.NS"))
+        self.assertFalse(rel("State Bank of Cross Plains announces quarterly dividend", "SBIN.NS"))
+
+        # Standalone Separately-Listed Subsidiaries (EXPECT FALSE without parent context)
+        self.assertFalse(rel("SBI Life shares fall after quarterly results", "SBIN.NS"))
+        self.assertFalse(rel("SBI Cards reports quarterly profit", "SBIN.NS"))
+        self.assertFalse(rel("Brokerage upgrades SBI Life with target of Rs 1,800", "SBIN.NS"))
+        self.assertFalse(rel("SBI Cards stock rises 5% on festive spending surge", "SBIN.NS"))
+
+        # Material Subsidiary / Parent Corporate Transactions (EXPECT TRUE)
+        self.assertTrue(rel("State Bank of India plans to sell stake in SBI Life", "SBIN.NS"))
+        self.assertTrue(rel("SBI board considers stake sale in SBI Cards", "SBIN.NS"))
+
+        # ─── Step 4 Adversarial Precision Tests ──────────────────────────────
+        # EXPECT FALSE: Foreign SBI & Pure Macroeconomic Authorship Reports
+        self.assertFalse(rel("SBI Holdings stock rises in Tokyo", "SBIN.NS"))
+        self.assertFalse(rel("SBI Shinsei Bank reports earnings", "SBIN.NS"))
+        self.assertFalse(rel("SBI VC Trade expands crypto service", "SBIN.NS"))
+        self.assertFalse(rel("SBI Research forecasts India's GDP growth at 7%", "SBIN.NS"))
+        self.assertFalse(rel("SBI Ecowrap expects inflation to moderate", "SBIN.NS"))
+        self.assertFalse(rel("SBI Research analyses RBI monetary policy", "SBIN.NS"))
+        self.assertFalse(rel("SBI Mutual Fund launches a new ETF", "SBIN.NS"))
+        self.assertFalse(rel("SBI General Insurance launches a travel policy", "SBIN.NS"))
+
+        # EXPECT TRUE: Core Corporate Actions & Material Events
+        self.assertTrue(rel("SBI raises $250 million through green bonds", "SBIN.NS"))
+        self.assertTrue(rel("SBI removes company from fraud list", "SBIN.NS"))
+        self.assertTrue(rel("HC restrains SBI from acting on SARFAESI debt notice", "SBIN.NS"))
+        self.assertTrue(rel("SBI among Motilal Oswal's top banking picks", "SBIN.NS"))
+        self.assertTrue(rel("Company raises funding from SBI and HDFC Bank", "SBIN.NS"))
+        self.assertTrue(rel("SBI Research report says bank credit growth supports SBI loan outlook", "SBIN.NS"))
+        self.assertTrue(rel("SBI considers listing SBI General Insurance", "SBIN.NS"))
+        self.assertTrue(rel("State Bank of India sells stake in SBI Mutual Fund", "SBIN.NS"))
+
+        # Acronym Negatives (EXPECT FALSE)
+        self.assertFalse(rel("Small Business Index (SBI) shows growth in manufacturing", "SBIN.NS"))
+        self.assertFalse(rel("Study analyzes sterol biosynthesis inhibitor (SBI) resistance", "SBIN.NS"))
+
+    def test_tcs_matching(self):
+        """
+        Validates contextual disambiguation for TCS.NS (Tata Consultancy Services Limited).
+        Enforces:
+        - Exclusion of Tax Collected at Source (TCS) in tax/remittance context
+        - Exclusion of foreign tickers (The Container Store NYSE: TCS, Tecsys TSE: TCS, TCS Group Holding/Tinkoff)
+        - Exclusion of foreign sports/auto clubs (Touring Club Suisse, Four Hills Ski Jumping 72. TCS)
+        - Strict separation from other standalone Tata companies (Motors, Steel, Power, Tech, Elxsi)
+        - Inclusion of genuine full-name, leadership, earnings, deals, disputes, workforce, and governance signals.
+        """
+        rel = self.fetcher.is_relevant_to_company
+
+        # ─── 1. Tax Collected at Source Exclusions (EXPECT FALSE) ─────────────
+        self.assertFalse(rel("TDS and TCS rules updated for FY24 foreign remittances", "TCS.NS"))
+        self.assertFalse(rel("Govt collects Rs 25,000 crore via TCS on foreign remittances", "TCS.NS"))
+        self.assertFalse(rel("Understanding TCS on overseas tour packages and credit cards", "TCS.NS"))
+        self.assertFalse(rel("Higher TCS rate on LRS transactions to take effect from October", "TCS.NS"))
+        self.assertFalse(rel("Buying US Bitcoin ETF in India: Understand all about TDS, TCS, capital gains tax", "TCS.NS"))
+        self.assertFalse(rel("Will the Budget bring credit card international spends under TCS?", "TCS.NS"))
+
+        # ─── 2. Foreign Tickers & Acronym Collisions (EXPECT FALSE) ───────────
+        self.assertFalse(rel("The Container Store Group reports decline in quarterly retail sales", "TCS.NS"))
+        self.assertFalse(rel("Analyzing Bed Bath & Beyond and The Container Store Group (NYSE:TCS)", "TCS.NS"))
+        self.assertFalse(rel("Tecsys (TSE:TCS) Sets New 12-Month High at $35.48", "TCS.NS"))
+        self.assertFalse(rel("Touring Club Suisse assists over 300,000 motorists in 2023", "TCS.NS"))
+        self.assertFalse(rel("TCS leistet 2023 mehr Einsatze im Pannendienst", "TCS.NS"))
+        self.assertFalse(rel("TCS Group Holding PLC files for delisting from London Stock Exchange", "TCS.NS"))
+        self.assertFalse(rel("Tinkoff parent TCS Group shareholders approve redomiciliation", "TCS.NS"))
+        self.assertFalse(rel("Trussville City Schools board reviews annual budget", "TCS.NS"))
+        self.assertFalse(rel("72. TCS: Ryoyu Kobayashi wins qualification in Bischofshofen", "TCS.NS"))
+        self.assertFalse(rel("Western Railway TCs nab commuter with fake AC pass", "TCS.NS"))
+        self.assertFalse(rel("Copper concentrate TCs index falls amid smelter curbs", "TCS.NS"))
+
+        # ─── 3. Other Standalone Tata Group Entities (EXPECT FALSE) ───────────
+        self.assertFalse(rel("Tata Motors global wholesales rise 9% in third quarter", "TCS.NS"))
+        self.assertFalse(rel("Tata Steel completes furnace overhaul at Jamshedpur plant", "TCS.NS"))
+        self.assertFalse(rel("Tata Power signs agreement for 500MW solar project", "TCS.NS"))
+        self.assertFalse(rel("Tata Technologies shares jump on EV engineering contract", "TCS.NS"))
+        self.assertFalse(rel("Tata Elxsi reports 3% sequential revenue growth in Q3", "TCS.NS"))
+        self.assertFalse(rel("Tata Consumer Products acquires Capital Foods for Rs 5,100 crore", "TCS.NS"))
+        self.assertFalse(rel("Tata Communications expands enterprise cloud cybersecurity portfolio", "TCS.NS"))
+
+        # ─── 4. Positive Full Name & Leadership Context (EXPECT TRUE) ─────────
+        self.assertTrue(rel("Tata Consultancy Services reports 2% rise in net profit", "TCS.NS"))
+        self.assertTrue(rel("Tata Consultancy Services wins multi-million dollar cloud deal with UK retailer", "TCS.NS"))
+        self.assertTrue(rel("टाटा कंसल्टेंसी सर्विसेज ने अंतरिम डिविडेंड की घोषणा की", "TCS.NS"))
+        self.assertTrue(rel("TCS CEO K Krithivasan sees revival in BFSI tech spending", "TCS.NS"))
+        self.assertTrue(rel("Krithivasan says TCS is positioning for generative AI leadership", "TCS.NS"))
+
+        # ─── 5. Positive Bare TCS with Contextual Families (EXPECT TRUE) ──────
+        # A. Earnings & Market Identity
+        self.assertTrue(rel("TCS Q3 net profit rises to Rs 11,058 crore", "TCS.NS"))
+        self.assertTrue(rel("TCS shares gain 3% after strong quarterly earnings", "TCS.NS"))
+        self.assertTrue(rel("TCS declares interim dividend of Rs 9 per share, sets record date", "TCS.NS"))
+        self.assertTrue(rel("Brokerage upgrades TCS to buy with target price of Rs 4,200", "TCS.NS"))
+        self.assertTrue(rel("Mcap of top-10 firms declines; TCS and HDFC Bank major laggards", "TCS.NS"))
+        self.assertTrue(rel("experts predict muted results for tcs in q3", "TCS.NS"))
+        self.assertTrue(rel("Stocks to watch today: L&T, Voltas, TCS, PNB in focus", "TCS.NS"))
+
+        # B. IT Services Deals & Enterprise Partnerships
+        self.assertTrue(rel("TCS signs 15-year strategic partnership extension with Aviva in UK", "TCS.NS"))
+        self.assertTrue(rel("TCS and Finland partner to build modern post-trade platform", "TCS.NS"))
+        self.assertTrue(rel("TCS partners with AWS to roll out enterprise generative AI solutions", "TCS.NS"))
+        self.assertTrue(rel("TCS bags $1 billion deal from UK client", "TCS.NS"))
+        self.assertTrue(rel("TCS Ranked No. 1 in Customer Satisfaction in France", "TCS.NS"))
+
+        # C. Contract Disputes & Technical Glitches
+        self.assertTrue(rel("Oxford University ends ties with TCS citing technical glitches in admission tests", "TCS.NS"))
+        self.assertTrue(rel("University severs ties with TCS following entrance test debacle", "TCS.NS"))
+        self.assertTrue(rel("Oxford Gave A Big Blow To TCS, Broke Partnership Over Online Entrance Exams", "TCS.NS"))
+
+        # D. Workforce, Labour & Office Policies
+        self.assertTrue(rel("Maharashtra labour ministry issues notice to TCS over forced transfers", "TCS.NS"))
+        self.assertTrue(rel("TCS stopped pay of 900 employees, forced transfers of 2000 workers", "TCS.NS"))
+        self.assertTrue(rel("TCS looks to double staff in France over next three years", "TCS.NS"))
+        self.assertTrue(rel("TCS links employee promotions to return-to-office mandate", "TCS.NS"))
+        self.assertTrue(rel("TCS headcount drops by 5,600 in third quarter", "TCS.NS"))
+
+        # E. Governance & Leadership Transitions
+        self.assertTrue(rel("Former TCS executive director Phiroz Vandrevala passes away at 70", "TCS.NS"))
+        self.assertTrue(rel("TCS independent director Daniel Hughes Callahan term ends", "TCS.NS"))
+        self.assertTrue(rel("TCS SVP Dinanath Kholkar resigns", "TCS.NS"))
+        self.assertTrue(rel("JNTU confers honorary doctorate on V. Rajanna, TCS President", "TCS.NS"))
+
+        # G. Physical Corporate Facilities & Regional Expansion (EXPECT TRUE)
+        self.assertTrue(rel("TCS Opens New Delivery Centre in France", "TCS.NS"))
+        self.assertTrue(rel("TCS Inaugurates Oman Office: Expanding Middle East Presence", "TCS.NS"))
+        self.assertTrue(rel("TCS planning to inaugurate its Vizag office within three months", "TCS.NS"))
+        self.assertTrue(rel("TCS setting up 37-acre campus in Kochi", "TCS.NS"))
+
+        # H. Telecom & BSNL Tender Decisions (EXPECT TRUE)
+        self.assertTrue(rel("TCS skips BSNL 5G tender; Tejas, Lekha, Galore only bidders", "TCS.NS"))
+        self.assertTrue(rel("TCS-CDoT consortium skips BSNL's 5G tender for Delhi-NCR", "TCS.NS"))
+        self.assertTrue(rel("TCS wins contract for BSNL 4G sites rollout across India", "TCS.NS"))
+
+        # I. Workforce Policy & Compensation (EXPECT TRUE)
+        self.assertTrue(rel("TCS rolls out new guidelines for WFO exceptions", "TCS.NS"))
+        self.assertTrue(rel("TCS ties variable pay to office attendance policy", "TCS.NS"))
+        self.assertTrue(rel("TCS further tightens its work from office policy", "TCS.NS"))
+
+        # J. Corporate & Regulatory Exposure (EXPECT TRUE)
+        self.assertTrue(rel("Our dependence on H-1B visa is limited: TCS chief", "TCS.NS"))
+        self.assertTrue(rel("TCS, Infosys set to gain from sliding rupee: Moody's", "TCS.NS"))
+
+        # K. Strategic Alliances & AI Business Units (EXPECT TRUE)
+        self.assertTrue(rel("TCS partners with NVIDIA to build AI solutions for telcos", "TCS.NS"))
+        self.assertTrue(rel("FICO Partners with TCS to Deliver Major Efficiency Gains", "TCS.NS"))
+
+        # ─── 6. Additional Adversarial Negative Exclusions (EXPECT FALSE) ────
+        self.assertFalse(rel("Interview with musician ahead of TCS Ruhaniyat 2025 in Bengaluru", "TCS.NS"))
+        self.assertFalse(rel("TCS Group Berhad bags RM100m construction contract in Malaysia", "TCS.NS"))
+        self.assertFalse(rel("Town Centre Securities PLC announces half-year financial results", "TCS.NS"))
+        self.assertFalse(rel("73. TCS: Stefan Kraft wins ski jumping event in Oberstdorf", "TCS.NS"))
+        self.assertFalse(rel("Local NGO announces TCS free meal program for underprivileged", "TCS.NS"))
+
+    def test_infy_matching(self):
+        rel = self.fetcher.is_relevant_to_company
+
+        # ─── 1. Definitive Positive Corporate Multi-Word & Executive Cases ───
+        self.assertTrue(rel("Infosys Limited reports 7.3% decline in Q3 profit to Rs 6,106 crore", "INFY.NS"))
+        self.assertTrue(rel("Infosys Ltd signs multi-year deal with global enterprise client", "INFY.NS"))
+        self.assertTrue(rel("Infosys BPM expands delivery operations in Europe", "INFY.NS"))
+        self.assertTrue(rel("Infosys Finacle selected by major Australian bank for digital banking", "INFY.NS"))
+        self.assertTrue(rel("Infosys CEO Salil Parekh sees accelerating traction in GenAI pipeline", "INFY.NS"))
+        self.assertTrue(rel("Nandan Nilekani highlights Infosys AI transformation and cloud strategy", "INFY.NS"))
+
+        # ─── 2. Financial Shorthand Infy / INFY with Market Context ──────────
+        self.assertTrue(rel("Sensex nears 73k as Infy, TCS stocks rally post earnings", "INFY.NS"))
+        self.assertTrue(rel("Street unaffected by Infy's guidance cut; tech stocks charge up", "INFY.NS"))
+        self.assertTrue(rel("Selling pressure in IT stocks ahead of Infy, TCS Q3 results", "INFY.NS"))
+        self.assertTrue(rel("Short Call: Perils of buying expensive stocks, Infy Q3 preview", "INFY.NS"))
+        self.assertTrue(rel("MC Pro Inside Edge: Last-minute mystery buyer in Infy", "INFY.NS"))
+        self.assertTrue(rel("Infy soars 7%, TCS up 5% post Q3 results announcement", "INFY.NS"))
+
+        # ─── 3. Vernacular Devanagari Corporate Headlines ─────────────────────
+        self.assertTrue(rel("इंफोसिस का मुनाफा 7.3 फीसदी गिरकर 6,106 करोड़ रुपये रहा", "INFY.NS"))
+        self.assertTrue(rel("जेपी मॉर्गन ने इंफोसिस की रेटिंग बढ़ाई, टारगेट प्राइस में इजाफा", "INFY.NS"))
+
+        # ─── 4. Founder Narayana Murthy with Corporate Performance / Earnings ───
+        self.assertTrue(rel("Narayana Murthy on Infosys corporate governance and Q3 earnings performance", "INFY.NS"))
+        self.assertTrue(rel("Narayana Murthy comments on Infosys quarterly profit growth and revenue", "INFY.NS"))
+
+        # ─── 5. Adversarial Negative Non-Corporate Founder & Lifestyle Cases ──
+        self.assertFalse(rel("Narayana Murthy gifts Rs 240 crore Infosys shares to four-month-old grandson", "INFY.NS"))
+        self.assertFalse(rel("Narayana Murthy defends 70-hour work week remark: 'Lot of western friends called...'", "INFY.NS"))
+        self.assertFalse(rel("Narayana Murthy regrets not letting Sudha Murty join Infosys: 'I was wrongly idealistic'", "INFY.NS"))
+        self.assertFalse(rel("Rohan Murty: Sudha Murty and Narayana Murthy's son carving path beyond shadows of Infosys", "INFY.NS"))
+        self.assertFalse(rel("Sudha Murty reveals why she spells her surname differently from Narayana Murthy", "INFY.NS"))
+        self.assertFalse(rel("Narayana Murthy again defends 70-hr work week advice for Indian youth", "INFY.NS"))
+        self.assertFalse(rel("Infosys Co-founder Narayana Murthy Flies Economy Class To Bengaluru; Co-passenger's Post Goes Viral", "INFY.NS"))
+        self.assertFalse(rel("Startup CEO shares meeting with Infosys co-founder Narayana Murthy on a flight; shares his gem advice", "INFY.NS"))
+        self.assertFalse(rel("Chitra Banerjee profiles power couple Sudha and Narayana Murthy in 'An Uncommon Love'", "INFY.NS"))
+
+        # ─── 6. Adversarial Negative Generic Campus & Sector Noise ────────────
+        self.assertFalse(rel("Top 10 colleges announce Infosys campus recruitment drive for freshers", "INFY.NS"))
+        self.assertFalse(rel("Tech Money For Social Good: From Kris Gopalakrishnan To K Dinesh, Azim Premji, Nandan Nilekani", "INFY.NS"))
 
     # =========================================================================
     # Original tests (preserved)
@@ -1302,8 +1758,538 @@ class TestNewsFetcher(unittest.TestCase):
         mock_record.assert_called_once_with("TEST_ABSENT.NS", "2024-01-01", "2024-01-31", status="failed", article_count=0, error_message=str(err))
 
 
+class TestICICIBankMatcherValidation(unittest.TestCase):
+    """
+    Adversarial and boundary test suite for ICICIBANK.NS (ICICI Bank Limited) entity matcher.
+    Covers:
+    - Positive parent-bank financial/earnings/operational/governance coverage.
+    - Positive bare ICICI disambiguation with banking/market/peer signals.
+    - Positive subsidiary corporate actions connecting back to parent bank (delisting/merger).
+    - Positive leadership governance (Sandeep Bakhshi, Chanda Kochhar bank cases).
+    - Negative standalone subsidiary products/earnings (ICICI Prudential Life, AMC, Lombard, Securities, Venture, Foundation).
+    - Negative automated 13F/SEC portfolio filing notices.
+    - Negative third-party stock recommendations from ICICI Securities / Direct.
+    - Negative multi-bank retail rate aggregator/SEO lists.
+    - Negative unrelated historical executive commentary.
+    """
+
+    def setUp(self):
+        self.fetcher = NewsFetcher(trading_calendar=["2024-01-01", "2024-01-02", "2024-01-03"])
+
+    # ─── Positive Tests ──────────────────────────────────────────────────────
+    def test_icicibank_positive_earnings_and_financials(self):
+        """Explicit ICICI Bank financial results, NIM, NII, asset quality, and shares."""
+        self.assertTrue(self.fetcher.is_relevant_to_company("ICICI Bank Q3 net profit rises 23.6% to Rs 10,272 crore", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("ICICI Bank reports record NII and improved asset quality in Q3", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("ICICI Bank Limited deposit growth outpaces loan growth in Q3 FY24", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("ICICI Bank shares gain 2% following strong quarterly earnings and margin expansion", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("Brokerage upgrades ICICI Bank target price to Rs 1250 on robust balance sheet", "ICICIBANK.NS"))
+
+    def test_icicibank_positive_regulatory_and_operations(self):
+        """ICICI Bank regulatory, governance, digital banking, and operational developments."""
+        self.assertTrue(self.fetcher.is_relevant_to_company("RBI approves appointment of Executive Director at ICICI Bank", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("ICICI Bank launches new digital banking features on iMobile app", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("ICICI Bank revises fixed deposit interest rates across select tenures", "ICICIBANK.NS"))
+
+    def test_icicibank_positive_subsidiary_parent_materiality_override(self):
+        """Subsidiary actions materially involving parent bank (merger, delisting, parent stake)."""
+        self.assertTrue(self.fetcher.is_relevant_to_company("NCLT clears ICICI Bank-ICICI Securities merger scheme; EGM set for March 27", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("ICICI Bank to delist ICICI Securities via share swap arrangement", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("ICICI Bank increases stake in ICICI Lombard General Insurance", "ICICIBANK.NS"))
+
+    def test_icicibank_positive_bare_icici_contextual(self):
+        """Bare ICICI references with strong banking, market mover, or peer signals."""
+        self.assertTrue(self.fetcher.is_relevant_to_company("Paytm, SBI, Axis, ICICI, Kotak Bank, HDFC Bank shares: Bernstein sees up to 47% upside", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("Stock markets recover after 3 days of loss; ICICI, Airtel major movers", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("Union, IDBI, ICICI & IDFC stocks rise on strong Q3 FY24 profits", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("HDFC Bank, Tata Steel, RIL, ICICI, JSW Steel to drive Q3 Nifty results, says Motilal", "ICICIBANK.NS"))
+
+    def test_icicibank_positive_leadership_governance(self):
+        """Current and former leadership in corporate/legal/governance contexts."""
+        self.assertTrue(self.fetcher.is_relevant_to_company("ICICI Bank CEO Sandeep Bakhshi on digital lending growth and risk management", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company("Bombay HC quashes arrest of Chanda Kochhar in ICICI Bank-Videocon loan case", "ICICIBANK.NS"))
+
+    # ─── Negative Tests ──────────────────────────────────────────────────────
+    def test_icicibank_negative_standalone_subsidiaries(self):
+        """Standalone subsidiary products, earnings, and operations without parent bank materiality."""
+        self.assertFalse(self.fetcher.is_relevant_to_company("ICICI Prudential Life Q3 results: Net profit flat at Rs 227 crore", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("ICICI Prudential Life introduces ICICI Pru Guaranteed Pension Plan Flexi with benefit enhancer", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("ICICI Prudential Mutual Fund launches ICICI Prudential Nifty50 Value 20 Index Fund", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("ICICI Lombard Share Price: ICICI Lombard shares down 0.78% as Sensex falls", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("ICICI Venture exits logistics firm via secondary market transaction", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("ICICI Foundation opens new rural vocational skill development centre in Gujarat", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("ICICI Pru Sensex ETF completes 21 years, delivers 17% CAGR", "ICICIBANK.NS"))
+
+    def test_icicibank_negative_13f_foreign_fund_filings(self):
+        """Automated 13F and SEC foreign portfolio filing notices."""
+        self.assertFalse(self.fetcher.is_relevant_to_company("ICICI Prudential Asset Management Co Ltd Purchases 3,140 Shares of Equifax Inc. (NYSE:EFX)", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("ICICI Prudential Asset Management Co Ltd Sells 1,600 Shares of Salesforce, Inc. (NYSE:CRM)", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Tesla, Inc. (NASDAQ:TSLA) Shares Sold by ICICI Prudential Asset Management Co Ltd", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("ICICI Prudential Asset Management Co Ltd Has $7.32 Million Holdings in Pfizer Inc. (NYSE:PFE)", "ICICIBANK.NS"))
+
+    def test_icicibank_negative_third_party_brokerage_recos(self):
+        """Third-party stock recommendations issued by ICICI Securities or ICICI Direct."""
+        self.assertFalse(self.fetcher.is_relevant_to_company("Buy Delhivery; target of Rs 500: ICICI Securities", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Reduce Gujarat Gas; target of Rs 385: ICICI Securities", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Buy Shipping Corporation of India, target price Rs 185: ICICI Direct", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Market Strategy: ICICI Securities suggests these themes, stocks for wealth creation in 2024", "ICICIBANK.NS"))
+
+    def test_icicibank_negative_generic_retail_seo_lists(self):
+        """Generic personal loan, credit card rules, and multi-bank comparison tables."""
+        self.assertFalse(self.fetcher.is_relevant_to_company("provident fund loan interest rate emi of personal loan calculator sbi pnb icici hdfc mdn", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("New credit card rules: SBI, HDFC, ICICI and Axis Bank announce changes for customers", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("SBI vs HDFC vs ICICI vs PNB vs BoB vs Kotak vs Axis: Which bank is offering the highest interest rate on fixed deposits?", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Senior Citizen 5-Year FDs Of SBI, HDFC, ICICI, PNB vs SCSS: Where Should You Park Your Savings?", "ICICIBANK.NS"))
+
+    def test_icicibank_negative_unrelated_executive_and_recruitment(self):
+        """Unrelated historical executive speeches and generic recruitment listings."""
+        self.assertFalse(self.fetcher.is_relevant_to_company("India will become a $10 trillion economy by 2035, says KV Kamath", "ICICIBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company("Freshers apply for Software Engineer | ICICI Bank recruitment drive 2024", "ICICIBANK.NS"))
+
+
+class TestAxisBankMatcherValidation(unittest.TestCase):
+    """
+    Adversarial and boundary test suite for AXISBANK.NS (Axis Bank Limited) entity matcher.
+    Covers:
+    - Positive: explicit Axis Bank financial/earnings/operational/regulatory coverage.
+    - Positive: brokerage analyst calls, target price, upgrade/downgrade.
+    - Positive: contextual bare 'Axis' with strong banking-peer or corporate signals.
+    - Positive: subsidiary corporate actions with parent-materiality override.
+    - Negative: standalone subsidiary activities (Securities, AMC, Finance, Foundation, etc.).
+    - Negative: formulaic peer-bank FD/interest-rate/credit-card comparison tables.
+    - Negative: generic multi-stock watchlists, "stocks to watch", market roundups.
+    - Negative: bare Axis in clearly non-bank contexts (x-axis, geopolitical, optics, Axis Corp).
+    - Negative: minor incidental financing participations.
+    """
+
+    def setUp(self):
+        self.fetcher = NewsFetcher(trading_calendar=["2024-01-01", "2024-01-02", "2024-01-03"])
+
+    # ─── Positive: Explicit Parent Bank Corporate Identity ───────────────────
+    def test_axisbank_positive_q3_earnings_and_financials(self):
+        """Q3/quarterly results and key financial metrics explicitly about Axis Bank."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank reports Q3 profit growth of 4% YoY to Rs 6,071 crore", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank Q3 FY24: NII rises 9%, NIM contracts slightly to 4.01%", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank Q3 Results: Net profit rises 4%, asset quality stays healthy", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank Q3 net profit up 4% at Rs 6,071 cr, net interest income rises 9%", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank balance sheet growth not powering profits yet: analyst note", "AXISBANK.NS"))
+
+    def test_axisbank_positive_shares_and_brokerage_calls(self):
+        """Analyst recommendations and share price movements directly on Axis Bank."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Buy Axis Bank; target of Rs 1250: Prabhudas Lilladher", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank shares fall 5% post Q3 earnings. Should you buy, sell or hold?", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank raises deposit rates; analysts see margin pressure easing in H2", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Brokerage upgrades Axis Bank to Buy with target price Rs 1350", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Neutral on Axis Bank, target price Rs 1175: Motilal Oswal", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Technical Analysis: Axis Bank shows bullish breakout above 200-DMA", "AXISBANK.NS"))
+
+    def test_axisbank_positive_regulatory_and_governance(self):
+        """RBI actions, SEBI/legal matters, and governance events involving Axis Bank."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "RBI takes action against Axis Bank for KYC non-compliance", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "SAT rejects Axis Bank's plea on invoking pledged shares in Karvy case", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Consumer forum orders Axis Bank to pay Rs 1 lakh compensation for deficiency in service", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Cheque fraud victims to get Rs 74 lakh from Axis Bank after 15-year legal fight", "AXISBANK.NS"))
+
+    def test_axisbank_positive_operations_and_products(self):
+        """Axis Bank product launches, partnerships, credit cards, and operational news."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank My Zone Credit Card: rewards, benefits and more", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank GuarantCo Enable INR 1 Billion Loan for Everest Fleet electric taxis", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank CEO Amitabh Chaudhry says India in a better place for economic growth", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "HDFC Bank, Axis Bank to be closed on Jan 22 on account of Ram Mandir inauguration", "AXISBANK.NS"))
+
+    def test_axisbank_positive_bare_axis_with_peer_banks(self):
+        """Bare 'Axis' shorthand recoverable when co-occurring with named banking peers."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis, ICICI go slow on hiring, HDFC Bank pushing ahead", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "SBI, HDFC Bank and Axis hiring trends diverge in FY24, says report", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis shares rebound sharply as ICICI Bank and Kotak Bank also recover from losses", "AXISBANK.NS"))
+
+    def test_axisbank_positive_historical_name_uti_bank(self):
+        """UTI Bank (historical name before 2007 rebranding) maps to Axis Bank."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "UTI Bank rebranded as Axis Bank in 2007: revisiting the transformation", "AXISBANK.NS"))
+
+    # ─── Positive: Subsidiary With Parent-Materiality Override ───────────────
+    def test_axisbank_positive_subsidiary_parent_override(self):
+        """Subsidiary activity that materially involves the parent bank (stake, merger, etc.)."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank to acquire stake in Axis Finance to consolidate lending vertical", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank announces merger of Axis Capital with parent entity", "AXISBANK.NS"))
+
+    # ─── Negative: Standalone Subsidiary Activities ───────────────────────────
+    def test_axisbank_negative_axis_securities_standalone(self):
+        """Axis Securities brokerage recommendations targeting other companies."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis Securities recommends buying Tata Motors on strong EV outlook", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis Securities के 3 एफएंडओ कॉल्स निवेशकों को करेंगे मालामाल, Sun Pharma का सस्ता ऑप्शन", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis Direct initiates coverage on Reliance Industries with Buy, target Rs 3200", "AXISBANK.NS"))
+
+    def test_axisbank_negative_axis_mutual_fund_standalone(self):
+        """Axis Mutual Fund NAV, portfolio, and product launches without parent bank nexus."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis Mutual Fund increases stake in Infosys in latest portfolio reshuffle", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis AMC launches new Nifty 50 Index Fund; NFO opens next Monday", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis Asset Management Company reports AUM crosses Rs 1 lakh crore milestone", "AXISBANK.NS"))
+
+    def test_axisbank_negative_axis_finance_standalone(self):
+        """Axis Finance lending activity without parent bank being a material party."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis Finance lends Rs 500 crore to real estate developer for township project", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Bombay HC asks Zee promoter to deposit Rs 61.6 crore over default to Axis Finance", "AXISBANK.NS"))
+
+    def test_axisbank_negative_axis_foundation_csr(self):
+        """Axis Bank Foundation CSR activities are NOT parent bank financial operations."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis Bank Foundation marks a decade of creating inclusive work opportunities for over 24,000 youths", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis Foundation launches CSR initiative for rural skilling in Rajasthan", "AXISBANK.NS"))
+
+    def test_axisbank_negative_axis_capital_standalone(self):
+        """Axis Capital investment banking deals without parent bank material nexus."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis Capital manages QIP of Rs 2,500 crore for hospitality major", "AXISBANK.NS"))
+
+    # ─── Negative: Peer-Bank Comparison / FD Rate Tables ─────────────────────
+    def test_axisbank_negative_fd_comparison_tables(self):
+        """Formulaic FD/interest-rate comparison tables listing multiple banks."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Fixed deposit interest rates: SBI vs ICICI Bank vs HDFC Bank vs Axis Bank vs PNB compared", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "SCSS vs senior citizen FDs of SBI, HDFC Bank, ICICI Bank, Axis Bank, PNB: Which offers highest interest?", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "SBI vs HDFC vs ICICI vs PNB vs BoB vs Kotak vs Axis: Which bank is offering the highest interest rate on fixed deposits?", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Senior Citizen Saving Scheme vs SBI, HDFC Bank, ICICI Bank, Axis Bank, and PNB fixed deposits: Which is better?", "AXISBANK.NS"))
+
+    def test_axisbank_negative_credit_card_rule_comparisons(self):
+        """Multi-bank credit card rule comparisons without Axis-specific material analysis."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "New credit card rules: Know major changes in HDFC Bank SBI Card, ICICI Bank and Axis Bank credit cards", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "New credit card rules: SBI, HDFC, ICICI और Axis Bank के ग्राहक ध्यान दें, क्रेडिट कार्ड को लेकर बदल गए हैं नियम", "AXISBANK.NS"))
+
+    # ─── Negative: Generic Market Roundup / Watchlist ────────────────────────
+    def test_axisbank_negative_market_roundup_lists(self):
+        """Generic 'Stocks to watch', 'Stocks in news', and market index roundups."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Stocks to watch: Tata Motors, Axis Bank, Infosys, Reliance on Tuesday", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Stocks To Watch On January 24: Pidilite, Axis Bank, Tata Elxsi, Bharti Airtel & Others", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Stocks in news: ZEE, Cipla, Axis Bank, IndiGo, Kotak Bank, ICICI Bank, Persistent Systems", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "India Movers: Axis Bank, Karnataka Bank, REC, Zee Entertainment", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Stocks To Watch On 24 January: Axis Bank, L&T Finance, JSW Energy, Others In News", "AXISBANK.NS"))
+
+    # ─── Negative: Bare Axis in Non-Banking Contexts ─────────────────────────
+    def test_axisbank_negative_bare_axis_unrelated_contexts(self):
+        """Bare 'Axis' in clearly non-banking contexts must be rejected."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Earth's rotational axis shifts by 80 cm due to groundwater extraction", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "x-axis and y-axis explained: plotting data in two dimensions", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "New geopolitical axis emerges as China, Russia and Iran deepen ties", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis Communications launches AI-powered security camera for airports", "AXISBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Understanding the axis of symmetry in quadratic equations", "AXISBANK.NS"))
+
+    # ─── Negative: Incidental / Minor Financing Participation ─────────────────
+    def test_axisbank_negative_minor_startup_investment(self):
+        """Minor bridge round participation by Axis Bank in a startup is NOT material."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "VRO Hospitality raises $10M in bridge round led by Axis Bank and Nikhil Kamath's Gruhas", "AXISBANK.NS"))
+
+    # ─── Regression: Eight Previously GREEN Tickers Unaffected ──────────────
+    def test_axisbank_no_regression_on_frozen_tickers(self):
+        """AXISBANK matcher must not interfere with the 8 frozen tickers."""
+        # ICICIBANK.NS positive — must still pass
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "ICICI Bank Q3 net profit rises 23.6% to Rs 10,272 crore", "ICICIBANK.NS"))
+        # TCS.NS positive — must still pass
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "TCS Q3 results: Net profit at Rs 11,058 crore, above estimate", "TCS.NS"))
+        # INFY.NS positive — must still pass
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Infosys Q3 revenue misses estimates; FY24 guidance narrowed", "INFY.NS"))
+        # AXISBANK pattern must NOT match for ICICIBANK ticker
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Axis Bank Q3 results: Net profit rises 4%", "ICICIBANK.NS"))
+
+
+class TestKotakBankMatcherValidation(unittest.TestCase):
+    """
+    Comprehensive adversarial test suite for Kotak Mahindra Bank Limited (KOTAKBANK.NS) entity matching.
+    Tests positive parent bank events, regulatory actions, leadership governance,
+    and exclusions for subsidiaries, peer FD tables, roundups, and personal biography.
+    """
+
+    def setUp(self):
+        self.fetcher = NewsFetcher(trading_calendar=[])
+
+    # ─── Positive: Explicit Parent Bank Earnings & Financials ─────────────────
+    def test_kotakbank_positive_earnings_and_financials(self):
+        """Quarterly profit, NII, NIM, PAT, asset quality for Kotak Mahindra Bank."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Kotak Mahindra Bank Q3 net profit rises 7.6% to Rs 3,005 crore", "KOTAKBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Kotak Bank shares rise 2% after Q3 results beat Street estimates", "KOTAKBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Kotak Mahindra logs Rs 3,005 crore PAT for Q3; asset quality stable", "KOTAKBANK.NS"))
+
+    # ─── Positive: Stock, Analyst Coverage, Brokerage Targets ─────────────────
+    def test_kotakbank_positive_stock_and_analyst_coverage(self):
+        """Brokerage upgrades, target prices, analyst recommendations."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Brokerage retains 'Buy' on Kotak Mahindra Bank with target price of Rs 2,150", "KOTAKBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Kotak Bank share price drops 3% as deposit growth lags advances", "KOTAKBANK.NS"))
+
+    # ─── Positive: RBI Regulatory & Governance Actions ────────────────────────
+    def test_kotakbank_positive_regulatory_and_governance(self):
+        """RBI supervisory directives, approvals, and penalties."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "RBI approves appointment of Ashok Vaswani as MD & CEO of Kotak Mahindra Bank", "KOTAKBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Kotak Mahindra, HDFC, and RBL Banks Make Provisions on AIF Investments Following RBI Norms", "KOTAKBANK.NS"))
+
+    # ─── Positive: Uday Kotak Bank Governance Context ─────────────────────────
+    def test_kotakbank_positive_uday_kotak_governance(self):
+        """Uday Kotak in bank governance, succession, leadership, and promoter context."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Kotak Mahindra Bank को मिला नया एमडी और सीईओ, Uday Kotak के इस्तीफे के बाद अशोक वासवानी ने संभाला पद", "KOTAKBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Uday Kotak steps down as MD & CEO of Kotak Mahindra Bank", "KOTAKBANK.NS"))
+
+    # ─── Positive: Parent Materiality Overrides for Subsidiaries ──────────────
+    def test_kotakbank_positive_parent_materiality_override(self):
+        """Parent bank stake sales, acquisitions, or Zurich deal involving insurance subsidiary."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "CCI approves Zurich Insurance's acquisition of 51% stake in Kotak General Insurance", "KOTAKBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Kotak Mahindra Bank to sell 70% stake in Kotak General Insurance to Zurich Insurance", "KOTAKBANK.NS"))
+
+    # ─── Negative: Uday Kotak Personal / Biography / Lifestyle ────────────────
+    def test_kotakbank_negative_uday_kotak_personal_bio(self):
+        """Personal biography, net worth, family, wedding, lifestyle articles are NOT bank relevant."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Uday Kotak: History, Biography, Net Worth, Education & Family", "KOTAKBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Inside billionaire Uday Kotak's lavish lifestyle and net worth", "KOTAKBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Uday Kotak's son Jay Kotak ties the knot in grand wedding ceremony", "KOTAKBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "At Davos, Uday Kotak speaks on Indian entrepreneurship and global economic outlook", "KOTAKBANK.NS"))
+
+    # ─── Negative: Standalone Subsidiary Brokerage Recommendations ───────────
+    def test_kotakbank_negative_standalone_subsidiary_brokerage(self):
+        """Kotak Securities third-party stock recommendations are NOT parent bank relevant."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Kotak Securities recommends Buy on Tata Motors with target price of Rs 950", "KOTAKBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Kotak Institutional Equities downgrades Infosys to reduce", "KOTAKBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Kotak Securities moves Bombay High Court against NSE directive", "KOTAKBANK.NS"))
+
+    # ─── Negative: Standalone Mutual Fund / AMC Products ──────────────────────
+    def test_kotakbank_negative_standalone_amc_products(self):
+        """Kotak Mutual Fund / AMC NFOs and portfolio updates are NOT parent bank relevant."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Kotak Mutual Fund launches Kotak Multi Asset Allocation Fund NFO", "KOTAKBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Kotak Mahindra AMC adds HDFC Bank, trims Reliance in latest portfolio rebalance", "KOTAKBANK.NS"))
+
+    # ─── Negative: Formulaic Multi-Bank FD & Personal Loan Rate Tables ────────
+    def test_kotakbank_negative_formulaic_peer_comparisons(self):
+        """Formulaic comparison tables of FD and loan rates across multiple banks."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "After SBI And Kotak Mahindra, PNB Raises Interest Rates On Fixed Deposits, Details", "KOTAKBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "SBI vs HDFC vs ICICI vs Kotak vs Axis: Which bank offers highest FD interest rate?", "KOTAKBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Personal loan from banks with lowest interest rates: ICICI, HDFC, SBI, Kotak Mahindra", "KOTAKBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Credit card rules changing from Feb 1: SBI, HDFC, ICICI, Kotak Bank revise reward points", "KOTAKBANK.NS"))
+
+    # ─── Negative: Generic Multi-Stock Watchlists / Roundups ──────────────────
+    def test_kotakbank_negative_generic_roundups_and_watchlists(self):
+        """Generic multi-stock listicles where Kotak is merely an incidental member."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Stocks in news: RIL, ICICI Bank, Kotak Bank, ZEE, Paytm, Fortis", "KOTAKBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Stocks in news: ZEE, Cipla, Axis Bank, IndiGo, Kotak Bank, ICICI Bank, Persistent", "KOTAKBANK.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Stocks to watch on January 23: Axis Bank, Kotak Mahindra Bank, Havells, Tata Steel", "KOTAKBANK.NS"))
+
+    # ─── Regression: Nine Previously GREEN Tickers Unaffected ────────────────
+    def test_kotakbank_no_regression_on_nine_frozen_tickers(self):
+        """KOTAKBANK matcher must not interfere with the 9 frozen matchers."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Reliance Industries Q3 net profit rises 11% to Rs 17,265 crore", "RELIANCE.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "HDFC Bank Q3 net profit surges 33% to Rs 16,372 crore", "HDFCBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "ITC reports 10.75% rise in Q3 net profit at Rs 5,572 crore", "ITC.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "L&T bags mega order worth over Rs 15,000 crore for hydrocarbon business", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "State Bank of India reports net profit of Rs 9,164 crore for Q3", "SBIN.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "TCS Q3 results: Net profit at Rs 11,058 crore, above estimate", "TCS.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Infosys Q3 revenue misses estimates; FY24 guidance narrowed", "INFY.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "ICICI Bank Q3 net profit rises 23.6% to Rs 10,272 crore", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank Q3 net profit rises 4% to Rs 6,071 crore", "AXISBANK.NS"))
+        # Negative cross-ticker check
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Kotak Mahindra Bank Q3 net profit rises 7%", "AXISBANK.NS"))
+
+
+class TestBajajFinanceMatcherValidation(unittest.TestCase):
+    """
+    Focused adversarial test suite for Bajaj Finance Limited (BAJFINANCE.NS)
+    precedence entity matcher.
+    """
+
+    def setUp(self):
+        self.fetcher = NewsFetcher(trading_calendar=[])
+
+    def test_bajfinance_positive_earnings_and_financials(self):
+        """Quarterly profit, AUM growth, loan additions, and asset quality."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bajaj Finance Q3 net profit jumps 22% to Rs 3,639 crore, AUM up 35%", "BAJFINANCE.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bajaj Finance reports robust customer franchise addition of 3.85 million in Q3", "BAJFINANCE.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bajaj Finance Q3 results: Net interest income rises 29% YoY", "BAJFINANCE.NS"))
+
+    def test_bajfinance_positive_stock_and_analyst_coverage(self):
+        """Brokerage ratings, target prices, stock movements."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Morgan Stanley maintains Overweight on Bajaj Finance with target price of Rs 9,000", "BAJFINANCE.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bajaj Finance shares fall 5% on margin compression worries", "BAJFINANCE.NS"))
+
+    def test_bajfinance_positive_regulatory_and_fundraising(self):
+        """RBI regulatory directives and corporate NCD fundraising."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bajaj Finance works with RBI on lifting curbs on eCOM and Insta EMI cards", "BAJFINANCE.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bajaj Finance to raise up to Rs 10,000 crore via non-convertible debentures", "BAJFINANCE.NS"))
+
+    def test_bajfinance_positive_parent_materiality_override(self):
+        """Holding company stake changes or subsidiary IPO plans involving Bajaj Finance."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bajaj Finserv to hike stake in Bajaj Finance through warrant conversion", "BAJFINANCE.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bajaj Finance plans IPO of subsidiary Bajaj Housing Finance", "BAJFINANCE.NS"))
+
+    def test_bajfinance_negative_standalone_finserv_products(self):
+        """Standalone Bajaj Finserv operations are NOT parent Bajaj Finance relevant."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Bajaj Finserv brings you India's First Credit Pass, powered by CIBIL", "BAJFINANCE.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Bajaj Finserv Mutual Fund launches Bajaj Finserv Nifty Bank ETF", "BAJFINANCE.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Bajaj Finserv's healthtech arm to acquire Vidal Healthcare for ₹325 crore", "BAJFINANCE.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "India on cusp of FDI flood, Bajaj Finserv Chair Sanjiv Bajaj says in Davos", "BAJFINANCE.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Bajaj Finserv has announced the vacancy of Senior Relationship Executive", "BAJFINANCE.NS"))
+
+    def test_bajfinance_negative_standalone_housing_finance(self):
+        """Standalone Bajaj Housing Finance operational news."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Bajaj Housing Finance reduces home loan interest rates to 8.50%", "BAJFINANCE.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "BSE : Listing of new debt securities of Bajaj Housing Finance Limited", "BAJFINANCE.NS"))
+
+    def test_bajfinance_negative_standalone_insurance(self):
+        """Bajaj Allianz Life / General Insurance products."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Bajaj Allianz General Insurance launches new health insurance plan", "BAJFINANCE.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Bajaj Allianz Life declares bonus of Rs 1,201 crore for policyholders", "BAJFINANCE.NS"))
+
+    def test_bajfinance_negative_other_group_companies(self):
+        """Bajaj Auto, Bajaj Holdings, Bajaj Electricals."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Bajaj Auto board approves share buyback of Rs 4,000 crore", "BAJFINANCE.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Bajaj Holdings Q3 results: Net profit rises 28% to ₹1,644 crore", "BAJFINANCE.NS"))
+
+    def test_bajfinance_negative_formulaic_peer_comparisons(self):
+        """Multi-institution comparison tables for FD and loan rates."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "SBI vs HDFC vs ICICI vs Bajaj Finance: Who offers the highest FD interest rates?", "BAJFINANCE.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Best fixed deposit rates in January 2024: SBI, Post Office, Bajaj Finance compared", "BAJFINANCE.NS"))
+
+    def test_bajfinance_negative_generic_roundups_and_watchlists(self):
+        """Multi-stock listicles where Bajaj Finance is an incidental member."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Stocks to Watch: Adani Ports, NTPC, Bajaj Finance, LIC, Power Grid, Wipro", "BAJFINANCE.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Stocks in news: Reliance, TCS, HDFC Bank, Infosys, Bajaj Finance, ITC", "BAJFINANCE.NS"))
+
+    def test_bajfinance_no_regression_on_ten_frozen_tickers(self):
+        """BAJFINANCE matcher must not interfere with the 10 frozen matchers."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Reliance Industries Q3 consolidated net profit rises 9% to Rs 17,265 crore", "RELIANCE.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "HDFC Bank Q3 net profit surges 33% to Rs 16,372 crore", "HDFCBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "ITC reports 10.75% rise in Q3 net profit at Rs 5,572 crore", "ITC.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "L&T bags mega order worth over Rs 15,000 crore for hydrocarbon business", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "State Bank of India reports net profit of Rs 9,164 crore for Q3", "SBIN.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "TCS Q3 results: Net profit at Rs 11,058 crore, above estimate", "TCS.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Infosys Q3 revenue misses estimates; FY24 guidance narrowed", "INFY.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "ICICI Bank Q3 net profit rises 23.6% to Rs 10,272 crore", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank Q3 net profit rises 4% to Rs 6,071 crore", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Kotak Mahindra Bank Q3 net profit rises 7.6% to Rs 3,005 crore", "KOTAKBANK.NS"))
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

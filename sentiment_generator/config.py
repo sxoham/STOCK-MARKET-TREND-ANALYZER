@@ -51,7 +51,7 @@ COMPANY_ALIASES = {
         "HDFC Bank", "HDFC Bank Ltd", "Housing Development Finance Corp", "HDFC Ltd"
     ],
     "ICICIBANK.NS": [
-        "ICICI Bank", "ICICI Bank Ltd", "ICICI Prudential", "ICICI Securities"
+        "ICICI Bank", "ICICI Bank Ltd", "ICICI Bank Limited", "ICICIBANK", "Sandeep Bakhshi"
     ],
     "INFY.NS": [
         "Infosys", "Infosys Ltd", "Infosys Technologies", "Salil Parekh", "Narayana Murthy"
@@ -87,7 +87,7 @@ COMPANY_ALIASES = {
         "Titan Company", "Titan Company Ltd", "Titan Watches", "Titan Eyeplus", "Tanishq", "Fastrack"
     ],
     "BAJFINANCE.NS": [
-        "Bajaj Finance", "Bajaj Finance Ltd", "Bajaj Finserv", "Bajaj Auto Finance"
+        "Bajaj Finance", "Bajaj Finance Ltd", "Bajaj Finance Limited", "Bajaj Auto Finance"
     ],
     "SUNPHARMA.NS": [
         "Sun Pharmaceutical", "Sun Pharma", "Sun Pharmaceuticals", "Dilip Shanghvi"
@@ -108,9 +108,61 @@ COMPANY_ALIASES = {
 # Keeps broad SQL candidate discovery separated from the final Python entity acceptance aliases.
 # Tickers not specified here fallback to COMPANY_ALIASES.
 BIGQUERY_CANDIDATE_TERMS = {
+    "BAJFINANCE.NS": [
+        "Bajaj Finance", "Bajaj Finance Ltd", "Bajaj Finserv", "Bajaj Auto Finance"
+    ],
     "ITC.NS": [
         "ITC", "ITC Ltd", "ITC Limited", "ITC Hotels", "Imperial Tobacco", "Sanjiv Puri"
+    ],
+    "LT.NS": [
+        "Larsen & Toubro", "Larsen and Toubro", "L&T", "Larsen Toubro", "L&T Construction",
+        "S.N. Subrahmanyan", "SN Subrahmanyan", "A.M. Naik", "AM Naik", "L&T Energy",
+        "L&T Hydrocarbon", "L&T Infotech", "L&T Technology", "L&T Finance", "L&T Realty",
+        "L&T Metro", "L&T Semiconductor"
+    ],
+    "SBIN.NS": [
+        "State Bank of India", "SBI", "Dinesh Khara", "Dinesh Kumar Khara",
+        "C.S. Setty", "CS Setty", "Challa Sreenivasulu Setty", "भारतीय स्टेट बैंक"
+    ],
+    "TCS.NS": [
+        "Tata Consultancy Services", "Tata Consultancy Services Ltd",
+        "Tata Consultancy Services Limited", "Tata Consultancy", "TCS",
+        "K. Krithivasan", "K Krithivasan", "Krithivasan", "टाटा कंसल्टेंसी सर्विसेज"
+    ],
+    "INFY.NS": [
+        "Infosys", "Infosys Ltd", "Infosys Limited", "Infosys Technologies",
+        "INFY", "Salil Parekh", "Narayana Murthy", "N. R. Narayana Murthy",
+        "इंफोसिस"
+    ],
+    "ICICIBANK.NS": [
+        "ICICI Bank", "ICICI Bank Limited", "ICICI Bank Ltd", "ICICIBANK",
+        "ICICI", "Sandeep Bakhshi"
     ]
+}
+
+# ─── Corporate Entity Lifecycle Configuration ───────────────────────────────
+# Explicit lifecycle boundaries for subsidiaries, demergers, and spinoffs.
+# Ensures that subsidiary sentiment is attributed to the parent during its pre-separation
+# and transition phases, but not after the subsidiary becomes an independent listed entity
+# (unless parent entity or demerger transition is explicitly referenced).
+CORPORATE_ENTITY_LIFECYCLES = {
+    "ITC.NS": {
+        "subsidiaries": {
+            "ITC Hotels Limited": {
+                "pre_separation_aliases": ["itc hotels", "itc hotel", "itc ratnadipa", "fortune hotels", "welcomhotel", "होटल"],
+                "scheme_effective_date": "2025-01-01",
+                "ex_date": "2025-01-06",
+                "listing_date": "2025-01-29",
+                "standalone_ticker": "ITCHOTELS.NS",
+                "transition_signals": [
+                    "demerger", "spinoff", "spin-off", "trades sans", "sans", "adjusts",
+                    "shareholder", "shareholders", "entitlement", "allotment", "scheme of arrangement",
+                    "डिमर्जर", "scission"
+                ],
+                "post_separation_treatment": "STANDALONE_INDEPENDENT"
+            }
+        }
+    }
 }
 
 # ─── Directory Paths ──────────────────────────────────────────────────────────

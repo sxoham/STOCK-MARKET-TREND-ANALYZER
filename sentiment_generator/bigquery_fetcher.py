@@ -11,7 +11,7 @@ from .config import (
     MARKET_TIMEZONE, STOCKS, COMPANY_ALIASES, BIGQUERY_CANDIDATE_TERMS, DATA_DIR
 )
 from .cache import generate_article_id
-from .news_fetcher import NewsFetcher
+from .news_fetcher import NewsFetcher, is_article_url
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +45,7 @@ class BigQueryGKGExtractor:
             "rows_scanned": 0,
             "candidates_extracted": 0,
             "rejected_missing_title": 0,
+            "rejected_non_article_url": 0,
             "rejected_company_match": 0,
             "rejected_invalid_timestamp": 0,
             "rejected_no_trading_session": 0,
@@ -126,13 +127,13 @@ ORDER BY
             self.stats["rejected_missing_title"] += 1
             return None
 
-        # 2. Company / Entity Relevance Verification (Headline is authoritative)
-        if not self.news_fetcher.is_relevant_to_company(headline, ticker):
-            self.stats["rejected_company_match"] += 1
+        # 1b. Document / URL Quality Validation (Filter CMS taxonomy, tag, category, author, search index pages)
+        doc_url = record.get("DocumentIdentifier")
+        if not doc_url or not is_article_url(str(doc_url)):
+            self.stats["rejected_non_article_url"] += 1
             return None
-        match_reason = "Direct headline match with company alias"
 
-        # 3. Timestamp Parsing (UTC -> Asia/Kolkata IST)
+        # 2. Timestamp Parsing (UTC -> Asia/Kolkata IST)
         date_raw = record.get("DATE")
         if not date_raw:
             self.stats["rejected_invalid_timestamp"] += 1
@@ -149,6 +150,12 @@ ORDER BY
         except Exception:
             self.stats["rejected_invalid_timestamp"] += 1
             return None
+
+        # 3. Company / Entity Relevance Verification (Headline is authoritative + Date-Aware)
+        if not self.news_fetcher.is_relevant_to_company(headline, ticker, article_datetime=ist_dt):
+            self.stats["rejected_company_match"] += 1
+            return None
+        match_reason = "Direct headline match with company alias"
 
         # Determine timestamp basis & published_at
         precise_pub = record.get("precise_pub_time")

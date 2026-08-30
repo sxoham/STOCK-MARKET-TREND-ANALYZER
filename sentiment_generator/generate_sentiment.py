@@ -24,8 +24,10 @@ from typing import List, Dict, Any, Optional, Tuple
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
-import torch
-from tqdm import tqdm
+try:
+    import torch
+except (ImportError, OSError):
+    torch = None
 import pandas as pd
 import numpy as np
 import yfinance as yf

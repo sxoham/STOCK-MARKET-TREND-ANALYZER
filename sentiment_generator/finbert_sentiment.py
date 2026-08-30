@@ -13,8 +13,14 @@ if os.path.exists(torch_lib_dir):
 import logging
 import time
 from typing import List, Dict, Any, Optional
-import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+try:
+    import torch
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+except (ImportError, OSError):
+    torch = None
+    AutoTokenizer = None
+    AutoModelForSequenceClassification = None
+    pipeline = None
 from .config import FINBERT_MODEL_NAME
 
 logger = logging.getLogger(__name__)
