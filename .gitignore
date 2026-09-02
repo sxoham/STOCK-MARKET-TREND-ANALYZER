@@ -85,7 +85,7 @@ git.txt
 Untitled*
 
 # ==========================================
-# OS Artifacts
+# OS Artifacts & Local Repositories
 # ==========================================
 .DS_Store
 .DS_Store?
@@ -95,6 +95,7 @@ Untitled*
 ehthumbs.db
 Thumbs.db
 desktop.ini
+awesome-design-md/
 
 # ==========================================
 # Node / Frontend Cache (if applicable)
