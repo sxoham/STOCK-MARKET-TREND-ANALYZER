@@ -2285,6 +2285,113 @@ class TestBajajFinanceMatcherValidation(unittest.TestCase):
             "Axis Bank Q3 net profit rises 4% to Rs 6,071 crore", "AXISBANK.NS"))
         self.assertTrue(self.fetcher.is_relevant_to_company(
             "Kotak Mahindra Bank Q3 net profit rises 7.6% to Rs 3,005 crore", "KOTAKBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bajaj Finance Q3 net profit jumps 22% to Rs 3,639 crore, AUM up 35%", "BAJFINANCE.NS"))
+
+
+class TestBhartiAirtelMatcherValidation(unittest.TestCase):
+    """
+    Focused adversarial test suite for Bharti Airtel Limited (BHARTIARTL.NS)
+    precedence entity matcher.
+    """
+
+    def setUp(self):
+        self.fetcher = NewsFetcher(trading_calendar=[])
+
+    def test_bhartiartl_positive_earnings_and_financials(self):
+        """Quarterly results, ARPU growth, revenue, and subscriber additions."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bharti Airtel Q3 net profit rises 54% to Rs 2,442 crore, ARPU improves to Rs 208", "BHARTIARTL.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Airtel adds 3.5 million mobile subscribers in November, TRAI data shows", "BHARTIARTL.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bharti Airtel revenue grows 7% YoY driven by 4G and 5G subscriber additions", "BHARTIARTL.NS"))
+
+    def test_bhartiartl_positive_stock_and_analyst_coverage(self):
+        """Brokerage ratings, target prices, stock movements."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "CLSA maintains Buy on Bharti Airtel with target price of Rs 1,350", "BHARTIARTL.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bharti Airtel shares hit fresh record high on tariff hike expectations", "BHARTIARTL.NS"))
+
+    def test_bhartiartl_positive_tariffs_and_5g_expansion(self):
+        """Corporate tariff hikes and 5G network rollout."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bharti Airtel to raise mobile tariffs across all circles to boost ARPU", "BHARTIARTL.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bharti Airtel deploys additional 5G spectrum across Maharashtra and Goa", "BHARTIARTL.NS"))
+
+    def test_bhartiartl_positive_subsidiary_materiality_override(self):
+        """Parent corporate transactions involving Hexacom IPO and Nxtra capex."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bharti Airtel arm Bharti Hexacom files draft papers with SEBI for IPO", "BHARTIARTL.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bharti Airtel's Nxtra buys PowerGrid's Internet bandwidth for Rs 320 crore", "BHARTIARTL.NS"))
+
+    def test_bhartiartl_negative_consumer_recharge_plans(self):
+        """Retail consumer prepaid/postpaid recharge plan comparisons and OTT bundles."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Airtel vs Jio: Best prepaid plans with free Disney+ Hotstar and 2GB daily data", "BHARTIARTL.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Top Airtel recharge plans under Rs 300 with 28 days validity", "BHARTIARTL.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Jio vs Airtel vs Vi: Cheapest 5G data voucher plans compared", "BHARTIARTL.NS"))
+
+    def test_bhartiartl_negative_standalone_africa_operations(self):
+        """Standalone regional Africa operations without parent corporate action."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Airtel Africa reports subscriber growth across Nigeria and Kenya operations", "BHARTIARTL.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Airtel Money launches new mobile remittance service in Uganda", "BHARTIARTL.NS"))
+
+    def test_bhartiartl_negative_standalone_payments_bank(self):
+        """Standalone banking products."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Airtel Payments Bank launches high-interest savings account for senior citizens", "BHARTIARTL.NS"))
+
+    def test_bhartiartl_negative_standalone_indus_towers(self):
+        """Standalone tower operations."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Indus Towers Q3 net profit surges to Rs 1,541 crore as collection improves", "BHARTIARTL.NS"))
+
+    def test_bhartiartl_negative_leadership_generic_speeches(self):
+        """Sunil Mittal generic non-Airtel speeches / Davos commentary."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Davos 2024: India is a bright spot amid global concerns, says Sunil Mittal", "BHARTIARTL.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Industrialists Anil Ambani, Sunil Mittal attend Ram Mandir ceremony in Ayodhya", "BHARTIARTL.NS"))
+
+    def test_bhartiartl_negative_generic_roundups_and_watchlists(self):
+        """Multi-stock listicles where Airtel is an incidental member."""
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Stocks to Watch: Adani Ports, NTPC, Bharti Airtel, LIC, Power Grid, Wipro", "BHARTIARTL.NS"))
+        self.assertFalse(self.fetcher.is_relevant_to_company(
+            "Stocks in news: Reliance, TCS, HDFC Bank, Infosys, Bharti Airtel, ITC", "BHARTIARTL.NS"))
+
+    def test_bhartiartl_no_regression_on_eleven_frozen_tickers(self):
+        """BHARTIARTL matcher must not interfere with the 11 frozen matchers."""
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Reliance Industries Q3 consolidated net profit rises 9% to Rs 17,265 crore", "RELIANCE.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "HDFC Bank Q3 net profit surges 33% to Rs 16,372 crore", "HDFCBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "ITC reports 10.75% rise in Q3 net profit at Rs 5,572 crore", "ITC.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "L&T bags mega order worth over Rs 15,000 crore for hydrocarbon business", "LT.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "State Bank of India reports net profit of Rs 9,164 crore for Q3", "SBIN.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "TCS Q3 results: Net profit at Rs 11,058 crore, above estimate", "TCS.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Infosys Q3 revenue misses estimates; FY24 guidance narrowed", "INFY.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "ICICI Bank Q3 net profit rises 23.6% to Rs 10,272 crore", "ICICIBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Axis Bank Q3 net profit rises 4% to Rs 6,071 crore", "AXISBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Kotak Mahindra Bank Q3 net profit rises 7.6% to Rs 3,005 crore", "KOTAKBANK.NS"))
+        self.assertTrue(self.fetcher.is_relevant_to_company(
+            "Bajaj Finance Q3 net profit jumps 22% to Rs 3,639 crore, AUM up 35%", "BAJFINANCE.NS"))
 
 
 if __name__ == "__main__":

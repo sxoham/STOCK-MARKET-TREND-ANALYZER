@@ -950,6 +950,124 @@ _BAJFINANCE_POSITIVE_RE = re.compile(
     re.IGNORECASE
 )
 
+# ─── Bharti Airtel Precompiled Disambiguation Patterns (BHARTIARTL.NS) ───────
+_BHARTIARTL_CONSUMER_PLAN_RE = re.compile(
+    r'\b(?:'
+    r'cheapest|best\s+(?:prepaid|postpaid|data|recharge|5g|ott)?\s*plans?|affordable\s+plan|'
+    r'free\s+ott|disney\s*\+|netflix|hotstar|amazon\s+prime|'
+    r'unlimited\s+5g(?:\s+data|\s+plans?)?|data\s+plans?|recharge\s+plans?|prepaid\s+plans?|'
+    r'postpaid\s+plans?|validity|daily\s+data|plans?\s+under\s+rs|plans?\s+with\s+\d+\s+days?|'
+    r'data\s+voucher|recharge\s+offers?|sms\s+pack|talktime|roaming\s+pack|recharge\s+for|'
+    r'brings\s+new\s+plan|launch(?:es)?\s+(?:new\s+)?(?:recharge|prepaid|postpaid)\s+plan|'
+    r'to\s+end\s+unlimited\s+5g|withdraw\s+unlimited\s+5g|start\s+charging\s+for\s+5g|'
+    r'unlimited\s+5g\s+data'
+    r')\b',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_TARIFF_OVERRIDE_RE = re.compile(
+    r'\b(?:'
+    r'target\s+price|price\s+target|upgrade|downgrade|result|earnings?|q[1-4]|'
+    r'brokerage|analyst|arpu|subscriber\s+(?:growth|addition|loss|gain)|'
+    r'revenue|ebitda|financials?'
+    r')\b',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_AFRICA_STANDALONE_RE = re.compile(
+    r'\b(?:'
+    r'airtel\s+africa|airtel\s+nigeria|airtel\s+kenya|airtel\s+uganda|'
+    r'airtel\s+tanzania|airtel\s+zambia|airtel\s+rwanda|airtel\s+malawi|'
+    r'airtel\s+money'
+    r')\b',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_PAYMENTS_BANK_RE = re.compile(
+    r'\b(?:'
+    r'airtel\s+payments\s+bank|airtel\s+bank'
+    r')\b',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_HEXACOM_STANDALONE_RE = re.compile(
+    r'\b(?:'
+    r'bharti\s+hexacom|hexacom'
+    r')\b',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_INDUS_TOWERS_RE = re.compile(
+    r'\b(?:'
+    r'indus\s+towers?'
+    r')\b',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_NXTRA_RE = re.compile(
+    r'\b(?:'
+    r'nxtra\s+data|nxtra\s+by\s+airtel|nxtra'
+    r')\b',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_PARENT_MATERIALITY_RE = re.compile(
+    r'\b(?:'
+    r'(?:stake\s+(?:sale|buy|acquisition|purchase|divest\w*|in|hike|increase|decrease))|'
+    r'(?:(?:acquires?|buys?|sells?|divests?|holds?|holding|raises?)\s+(?:(?:\d+(?:\.\d+)?%|majority|minority)\s+)?stake)|'
+    r'capital\s+(?:infusion|support|raising)|merger|demerger|amalgamation|'
+    r'ipo|draft\s+papers?|drhp|delisting|restructur\w+|promoter\s+holding|parent\s+company'
+    r')\b',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_LEADERSHIP_RE = re.compile(
+    r'\b(?:'
+    r'sunil\s+mittal|sunil\s+bharti\s+mittal'
+    r')\b',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_LEADERSHIP_DISQUALIFY_RE = re.compile(
+    r'\b(?:'
+    r'davos|ram\s+mandir|pran\s+pratistha|ayodhya|wedding|biography|'
+    r'modi\s+govt|unfinished\s+agenda|bright\s+spot|3rd\s+term|speaks?\s+at|'
+    r'wef|summit|says\s+3rd\s+term|people\s+want\s+to\s+invest|vodafone\s+idea'
+    r')\b',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_ROUNDUP_RE = re.compile(
+    r'(?:'
+    r'stocks?\s+to\s+watch(?:\s*:\s*|\s+on|\s+today).{0,60}(?:airtel|bharti)|'
+    r'stocks?\s+in\s+news\s*:\s*.{0,80}(?:airtel|bharti)|'
+    r'india\s+movers\s*:\s*.{0,80}(?:airtel|bharti)|'
+    r'sensex\s+today\s*\|\s*stock\s+market\s+live\s+updates\s*:\s*.{0,80}(?:airtel|bharti)|'
+    r'stock\s+market\s+closing\s+bell\s*\|\s*.{0,80}(?:airtel|bharti)|'
+    r'top\s+gainers\s+on\s+.{0,40}(?:airtel|bharti)|'
+    r'among\s+jefferies.{0,40}(?:airtel|bharti)'
+    r')',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_POSITIVE_RE = re.compile(
+    r'\b(?:'
+    r'bharti\s+airtel(?:\s+limited|\s+ltd)?|'
+    r'airtel\s+india'
+    r')\b',
+    re.IGNORECASE
+)
+
+_BHARTIARTL_BARE_AIRTEL_CORP_RE = re.compile(
+    r'\b(?:'
+    r'5g|4g|spectrum|trai|dot|arpu|subscribers?|tariff|broadband|xstream|dth|'
+    r'capex|network|shares?|stock|target\s+price|price\s+target|results?|earnings?|'
+    r'profit|loss|revenue|ebitda|oneweb|fdi|fundrais\w*|ncd|debt|'
+    r'market\s+share|telecom|brokerage|analyst'
+    r')\b',
+    re.IGNORECASE
+)
+
 
 
 # Tracking query parameters to strip during canonical URL normalization
@@ -1245,6 +1363,8 @@ class NewsFetcher:
                 custom_fn = self._match_kotakbank
             elif ticker == "BAJFINANCE.NS":
                 custom_fn = self._match_bajfinance
+            elif ticker == "BHARTIARTL.NS":
+                custom_fn = self._match_bhartiartl
 
             matchers[ticker] = {
                 "multi_word": multi_word,
@@ -1816,6 +1936,93 @@ class NewsFetcher:
             return True
 
         # ─── Stage 7: Default ──────────────────────────────────────────────────────────
+        return False
+
+    def _match_bhartiartl(self, text: str, text_lower: str) -> bool:
+        """
+        Specialized entity matching for Bharti Airtel Limited (BHARTIARTL.NS).
+
+        Precedence Architecture (Deterministic 11-Stage Pipeline):
+          Stage 1: Consumer Retail Recharge Plan / SEO Listicle Exclusion
+                   Rejects formulaic prepaid/postpaid plan comparisons, daily data pack SEO
+                   tables, and OTT bundle listicles, unless substantive corporate tariff hike
+                   or earnings/ARPU analysis is present.
+          Stage 2: Standalone Airtel Africa Operations Exclusion
+                   Rejects standalone regional African operational news (Nigeria, Kenya, etc.)
+                   unless parent stake/capital/holding override is present.
+          Stage 3: Standalone Airtel Payments Bank Exclusion
+                   Rejects standalone payments bank products/deposits unless parent corporate
+                   stake/capital action is present.
+          Stage 4: Standalone Bharti Hexacom Exclusion
+                   Rejects standalone Hexacom operational/telecom news, while preserving parent
+                   materiality (DRHP / IPO draft papers / ownership).
+          Stage 5: Standalone Indus Towers Exclusion
+                   Rejects standalone tower ops and tenant dues unless parent stake transaction.
+          Stage 6: Standalone Nxtra Data Centres Exclusion
+                   Rejects standalone DC news unless material Airtel capex/acquisition.
+          Stage 7: Generic Leadership Exclusion
+                   Rejects Sunil Mittal generic Davos/Ram Mandir speeches without corporate Airtel context.
+          Stage 8: Generic Market Roundup / Watchlist Rejection
+                   Rejects multi-stock watchlists where Airtel is an incidental list member.
+          Stage 9: Explicit Bharti Airtel Parent Identity
+                   Direct mention of 'Bharti Airtel', 'Bharti Airtel Ltd/Limited', or 'Airtel India'.
+          Stage 10: Contextual Bare Airtel Corporate Handling
+                   Requires strong Indian telecom/corporate context (5G, 4G, spectrum, TRAI, ARPU, etc.).
+          Stage 11: Default -> False.
+        """
+        # ─── Stage 1: Consumer Retail Recharge Plan / SEO listicle Exclusion ───────────
+        if _BHARTIARTL_CONSUMER_PLAN_RE.search(text_lower):
+            if not _BHARTIARTL_TARIFF_OVERRIDE_RE.search(text_lower):
+                return False
+
+        # ─── Stage 2: Standalone Airtel Africa Operations Exclusion ───────────────────
+        if _BHARTIARTL_AFRICA_STANDALONE_RE.search(text_lower):
+            if not _BHARTIARTL_PARENT_MATERIALITY_RE.search(text_lower):
+                return False
+
+        # ─── Stage 3: Standalone Airtel Payments Bank Exclusion ───────────────────────
+        if _BHARTIARTL_PAYMENTS_BANK_RE.search(text_lower):
+            if not _BHARTIARTL_PARENT_MATERIALITY_RE.search(text_lower):
+                return False
+
+        # ─── Stage 4: Standalone Bharti Hexacom Exclusion ─────────────────────────────
+        if _BHARTIARTL_HEXACOM_STANDALONE_RE.search(text_lower):
+            if not _BHARTIARTL_PARENT_MATERIALITY_RE.search(text_lower):
+                return False
+
+        # ─── Stage 5: Standalone Indus Towers Exclusion ───────────────────────────────
+        if _BHARTIARTL_INDUS_TOWERS_RE.search(text_lower):
+            if not _BHARTIARTL_PARENT_MATERIALITY_RE.search(text_lower):
+                return False
+
+        # ─── Stage 6: Standalone Nxtra Data Centres Exclusion ─────────────────────────
+        if _BHARTIARTL_NXTRA_RE.search(text_lower):
+            if not re.search(r'airtel.*(?:buys?|acquires?|invests?|powergrid|expansion|bandwidth)', text_lower):
+                return False
+
+        # ─── Stage 7: Leadership Sunil Mittal Generic Commentary Exclusion ────────────
+        if _BHARTIARTL_LEADERSHIP_RE.search(text_lower):
+            if _BHARTIARTL_LEADERSHIP_DISQUALIFY_RE.search(text_lower):
+                if not _BHARTIARTL_POSITIVE_RE.search(text_lower):
+                    return False
+            if not re.search(r'\b(?:airtel|bharti\s+airtel|telecom|5g|oneweb|arpu|spectrum|tariffs?)\b', text_lower):
+                return False
+
+        # ─── Stage 8: Generic Market Roundup / Watchlist Rejection ───────────────────
+        if _BHARTIARTL_ROUNDUP_RE.search(text_lower):
+            if not re.search(r'\b(?:q[1-4]|pat|profit|results?|earnings?|arpu|tariff)\b', text_lower):
+                return False
+
+        # ─── Stage 9: Explicit Bharti Airtel Parent Identity ───────────────────────────
+        if _BHARTIARTL_POSITIVE_RE.search(text_lower):
+            return True
+
+        # ─── Stage 10: Contextual Bare Airtel Corporate Handling ──────────────────────
+        if re.search(r'\bairtel\b', text_lower):
+            if _BHARTIARTL_BARE_AIRTEL_CORP_RE.search(text_lower):
+                return True
+
+        # ─── Stage 11: Default ────────────────────────────────────────────────────────
         return False
 
     # ─── URL Normalization & Article Deduplication ────────────────────────────

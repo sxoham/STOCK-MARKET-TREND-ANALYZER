@@ -66,7 +66,7 @@ COMPANY_ALIASES = {
         "State Bank of India", "SBI", "State Bank", "Dinesh Khara"
     ],
     "BHARTIARTL.NS": [
-        "Bharti Airtel", "Bharti Airtel Ltd", "Airtel", "Sunil Mittal", "Bharti Enterprises"
+        "Bharti Airtel", "Bharti Airtel Ltd", "Bharti Airtel Limited"
     ],
     "KOTAKBANK.NS": [
         "Kotak Mahindra Bank", "Kotak Bank", "Kotak Mahindra", "Uday Kotak"
@@ -108,6 +108,9 @@ COMPANY_ALIASES = {
 # Keeps broad SQL candidate discovery separated from the final Python entity acceptance aliases.
 # Tickers not specified here fallback to COMPANY_ALIASES.
 BIGQUERY_CANDIDATE_TERMS = {
+    "BHARTIARTL.NS": [
+        "Bharti Airtel", "Bharti Airtel Ltd", "Airtel", "Sunil Mittal", "Bharti Enterprises"
+    ],
     "BAJFINANCE.NS": [
         "Bajaj Finance", "Bajaj Finance Ltd", "Bajaj Finserv", "Bajaj Auto Finance"
     ],

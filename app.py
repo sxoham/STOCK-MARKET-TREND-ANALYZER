@@ -207,6 +207,148 @@ def delete_user_data():
     conn.close()
     return jsonify({"status": "success"})
 
+@app.route('/db')
+def view_database():
+    """Interactive visual database viewer for all tables in users.db."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # 1. Users Table
+    cur.execute("SELECT email, data, is_verified, subscription_tier FROM users")
+    users_raw = cur.fetchall()
+    users_list = []
+    for u in users_raw:
+        email = u['email']
+        verified = bool(u['is_verified'])
+        tier = u['subscription_tier']
+        try:
+            pdata = json.loads(u['data']) if u['data'] else {}
+        except:
+            pdata = {}
+        portfolio = pdata.get('portfolio', {})
+        balance = portfolio.get('balance', 0)
+        holdings = portfolio.get('holdings', {})
+        profile = portfolio.get('profile', {})
+        watchlist = pdata.get('watchlist', [])
+        users_list.append({
+            'email': email,
+            'balance': f"₹{balance:,.2f}" if isinstance(balance, (int, float)) else str(balance),
+            'holdings': json.dumps(holdings, indent=2),
+            'profile': json.dumps(profile, indent=2),
+            'watchlist': ", ".join(watchlist) if watchlist else "None",
+            'verified': "Yes" if verified else "No",
+            'tier': tier
+        })
+        
+    # 2. Alerts Table
+    try:
+        cur.execute("SELECT * FROM alerts")
+        alerts_list = [dict(row) for row in cur.fetchall()]
+    except:
+        alerts_list = []
+        
+    conn.close()
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>Database Viewer — TrendAnalyzer</title>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+      <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ font-family: 'Inter', sans-serif; background: #050b14; color: #f8fafc; padding: 32px; }}
+        .container {{ max-width: 1200px; margin: 0 auto; }}
+        .header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #1e293b; }}
+        h1 {{ font-size: 1.5rem; font-weight: 700; color: #38bdf8; }}
+        .btn-back {{ background: #1e293b; color: #94a3b8; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.875rem; font-weight: 600; border: 1px solid #334155; }}
+        .btn-back:hover {{ color: #ffffff; background: #334155; }}
+        .section-title {{ font-size: 1.1rem; font-weight: 700; color: #f1f5f9; margin: 24px 0 12px; display: flex; align-items: center; gap: 8px; }}
+        .badge {{ font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 8px; border-radius: 9999px; }}
+        table {{ width: 100%; border-collapse: collapse; background: #0a1120; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; margin-bottom: 32px; }}
+        th, td {{ padding: 12px 16px; text-align: left; font-size: 0.8125rem; border-bottom: 1px solid #1e293b; }}
+        th {{ background: #0f172a; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; }}
+        tr:hover td {{ background: rgba(255, 255, 255, 0.02); }}
+        pre {{ font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #38bdf8; background: #050b14; padding: 6px 10px; border-radius: 6px; border: 1px solid #1e293b; max-width: 320px; white-space: pre-wrap; }}
+        .balance-pill {{ font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #4ade80; background: rgba(34, 197, 94, 0.12); padding: 4px 8px; border-radius: 6px; display: inline-block; }}
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div>
+            <h1>TrendAnalyzer Database Inspector</h1>
+            <p style="color: #64748b; font-size: 0.875rem; margin-top: 4px;">File: <code>users.db</code> in project root</p>
+          </div>
+          <a href="/dashboard" class="btn-back">← Back to Dashboard</a>
+        </div>
+
+        <div class="section-title">
+          <span>Users & Portfolios</span>
+          <span class="badge">{len(users_list)} Users</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Cash Balance</th>
+              <th>Stock Holdings</th>
+              <th>Profile Metadata</th>
+              <th>Watchlist</th>
+              <th>Verified</th>
+            </tr>
+          </thead>
+          <tbody>
+            {"".join([f'''
+            <tr>
+              <td style="font-weight: 600; color: #f8fafc;">{u['email']}</td>
+              <td><span class="balance-pill">{u['balance']}</span></td>
+              <td><pre>{u['holdings']}</pre></td>
+              <td><pre>{u['profile']}</pre></td>
+              <td style="color: #94a3b8;">{u['watchlist']}</td>
+              <td><span style="color: {'#4ade80' if u['verified'] == 'Yes' else '#94a3b8'};">{u['verified']}</span></td>
+            </tr>
+            ''' for u in users_list])}
+          </tbody>
+        </table>
+
+        <div class="section-title">
+          <span>Price Alerts</span>
+          <span class="badge">{len(alerts_list)} Alerts</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Email</th>
+              <th>Ticker</th>
+              <th>Target Price</th>
+              <th>Condition</th>
+              <th>Active</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {"".join([f'''
+            <tr>
+              <td>{a.get('id', '')}</td>
+              <td style="font-weight: 500;">{a.get('email', '')}</td>
+              <td style="color: #38bdf8; font-weight: 600;">{a.get('ticker', '')}</td>
+              <td>₹{a.get('target_price', 0):,.2f}</td>
+              <td>{a.get('condition', '')}</td>
+              <td>{'Active' if a.get('is_active') == 1 else 'Inactive'}</td>
+              <td style="color: #64748b;">{a.get('created_at', '')}</td>
+            </tr>
+            ''' for a in alerts_list]) if alerts_list else '<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 24px;">No price alerts set yet.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </body>
+    </html>
+    """
+    return html
+
 @app.route('/api/sentiment/<ticker>')
 def get_sentiment(ticker):
     try:

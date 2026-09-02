@@ -174,6 +174,7 @@ async function loadRemoteData(email) {
         }
 
         updatePortfolioUI();
+        updateProfileUI();
         updateWatchlistUI();
         updateWatchlistButton();
     } catch (error) {
@@ -377,7 +378,32 @@ async function fetchSentiment(ticker) {
 
         headlines.slice(0, 5).forEach(news => {
             const li = document.createElement('li');
-            li.innerHTML = `<a href="${news.url || '#'}" target="_blank" rel="noopener noreferrer">${news.title}</a>`;
+            const scoreVal = typeof news.score === 'number' ? news.score : 0;
+            let badgeClass = 'neutral';
+            let badgeText = `${scoreVal >= 0 ? '+' : ''}${scoreVal.toFixed(2)}`;
+            if (scoreVal > 0.05) badgeClass = 'positive';
+            else if (scoreVal < -0.05) badgeClass = 'negative';
+
+            const btn = document.createElement('button');
+            btn.className = 'news-item-btn';
+            btn.type = 'button';
+            btn.setAttribute('aria-label', `View insight for: ${news.title}`);
+            btn.innerHTML = `
+                <span class="news-item-title">${news.title}</span>
+                <span class="news-item-badge ${badgeClass}">${badgeText}</span>
+                <span class="news-item-icon" aria-hidden="true">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </span>
+            `;
+            btn.addEventListener('click', () => {
+                window.openNewsDialog({
+                    title: news.title,
+                    score: scoreVal,
+                    link: news.link || news.url,
+                    ticker: ticker
+                });
+            });
+            li.appendChild(btn);
             list.appendChild(li);
         });
 
@@ -387,18 +413,85 @@ async function fetchSentiment(ticker) {
     }
 }
 
+// Morphing News Dialog Logic
+window.openNewsDialog = function (news) {
+    const modal = document.getElementById('newsDialogModal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('newsDialogTitle');
+    const tickerEl = document.getElementById('newsDialogTicker');
+    const badgeEl = document.getElementById('newsDialogBadge');
+    const scoreEl = document.getElementById('newsDialogScore');
+    const barEl = document.getElementById('newsDialogBar');
+    const linkEl = document.getElementById('newsDialogLink');
+
+    if (titleEl) titleEl.textContent = news.title || '--';
+    if (tickerEl) tickerEl.textContent = (news.ticker || currentStock || 'NSE').toUpperCase();
+
+    const score = typeof news.score === 'number' ? news.score : 0;
+    if (scoreEl) scoreEl.textContent = (score >= 0 ? '+' : '') + score.toFixed(2);
+
+    let badgeText = 'Neutral ⚪';
+    let badgeClass = 'sentiment-badge neutral';
+    let barColor = 'var(--text-muted)';
+    if (score > 0.05) {
+        badgeText = 'Positive 🟢';
+        badgeClass = 'sentiment-badge positive';
+        barColor = 'var(--positive-text)';
+    } else if (score < -0.05) {
+        badgeText = 'Negative 🔴';
+        badgeClass = 'sentiment-badge negative';
+        barColor = 'var(--negative-text)';
+    }
+
+    if (badgeEl) {
+        badgeEl.textContent = badgeText;
+        badgeEl.className = badgeClass;
+    }
+
+    if (barEl) {
+        // Map -1..1 score to 5%..95% width
+        const pct = Math.min(Math.max(((score + 1) / 2) * 100, 5), 95);
+        barEl.style.width = `${pct}%`;
+        barEl.style.background = barColor;
+    }
+
+    if (linkEl) {
+        const targetUrl = news.link || news.url;
+        if (targetUrl && targetUrl !== '#') {
+            linkEl.href = targetUrl;
+            linkEl.style.display = 'inline-flex';
+        } else {
+            linkEl.style.display = 'none';
+        }
+    }
+
+    modal.classList.add('active');
+};
+
+window.closeNewsDialog = function () {
+    const modal = document.getElementById('newsDialogModal');
+    if (modal) modal.classList.remove('active');
+};
+
 // Multi-Horizon Switching
 window.switchHorizon = async function (horizon) {
     currentHorizon = horizon;
 
-    // Update active horizon UI button state
+    // Update active horizon UI button state with animated background indicator
+    const targetBtn = Array.from(document.querySelectorAll('.horizon-btn')).find(
+        btn => btn.getAttribute('data-horizon') === horizon
+    );
+
     document.querySelectorAll('.horizon-btn').forEach(btn => {
-        if (btn.getAttribute('data-horizon') === horizon) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
+        const isActive = btn === targetBtn;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
+
+    if (targetBtn) {
+        updateHorizonGlider(targetBtn);
+    }
 
     const labelEl = document.getElementById('predictionHorizonLabel');
     if (labelEl) {
@@ -973,26 +1066,71 @@ function migratePortfolioStructure() {
 }
 
 function savePortfolio() {
-    // localStorage.setItem('portfolio', JSON.stringify(portfolio)); // Legacy
     saveData();
     updatePortfolioUI();
+    updateProfileUI();
 }
 
+// --- Multi-Currency Engine ---
+const CURRENCY_CONFIG = {
+    'INR': { symbol: '₹', name: 'Indian Rupee', rate: 1.0, locale: 'en-IN' },
+    'USD': { symbol: '$', name: 'US Dollar', rate: 1 / 83.50, locale: 'en-US' },
+    'EUR': { symbol: '€', name: 'Euro', rate: 1 / 90.80, locale: 'de-DE' },
+    'GBP': { symbol: '£', name: 'British Pound', rate: 1 / 105.50, locale: 'en-GB' },
+    'AED': { symbol: 'AED ', name: 'UAE Dirham', rate: 1 / 22.74, locale: 'en-AE' },
+    'JPY': { symbol: '¥', name: 'Japanese Yen', rate: 1 / 0.55, locale: 'ja-JP' }
+};
+
+const CURRENCY_KEYS = ['INR', 'USD', 'EUR', 'GBP', 'AED', 'JPY'];
+
+function getUserCurrency() {
+    if (portfolio.profile && portfolio.profile.currency && CURRENCY_CONFIG[portfolio.profile.currency]) {
+        return portfolio.profile.currency;
+    }
+    return 'INR';
+}
+
+function formatWithCurrency(inrAmount, targetCurrency = null) {
+    const code = targetCurrency || getUserCurrency();
+    const config = CURRENCY_CONFIG[code] || CURRENCY_CONFIG['INR'];
+    const converted = inrAmount * config.rate;
+    const decimals = (code === 'JPY') ? 0 : 2;
+    return `${config.symbol}${converted.toLocaleString(config.locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
+}
+
+window.cycleCurrency = function () {
+    const current = getUserCurrency();
+    const currentIndex = CURRENCY_KEYS.indexOf(current);
+    const nextIndex = (currentIndex + 1) % CURRENCY_KEYS.length;
+    const nextCurrency = CURRENCY_KEYS[nextIndex];
+    window.setCurrency(nextCurrency);
+};
+
+window.setCurrency = function (currencyCode) {
+    if (!CURRENCY_CONFIG[currencyCode]) return;
+    if (!portfolio.profile) portfolio.profile = {};
+    portfolio.profile.currency = currencyCode;
+    saveData();
+    updatePortfolioUI();
+    updateProfileUI();
+
+    const config = CURRENCY_CONFIG[currencyCode];
+    if (window.showToast) {
+        window.showToast(`Display currency changed to ${config.name} (${config.symbol.trim()})`);
+    }
+};
+
 function updatePortfolioUI() {
-    document.getElementById('portfolioBalance').textContent = '$' + portfolio.balance.toFixed(2);
+    document.getElementById('portfolioBalance').textContent = formatWithCurrency(portfolio.balance);
 
     const list = document.getElementById('holdingsList');
     list.innerHTML = '';
 
     for (const [ticker, data] of Object.entries(portfolio.holdings)) {
-        // data might be number (if not migrated yet) or object
         const qty = (typeof data === 'object') ? data.qty : data;
-        const avgPrice = (typeof data === 'object') ? data.avgPrice : 0;
-
         if (qty > 0) {
             const div = document.createElement('div');
             div.className = 'holding-item';
-            // Optional: Show Avg Price here too? For now just keep it clean
             div.innerHTML = `<span>${ticker}</span> <span>${qty} shares</span>`;
             list.appendChild(div);
         }
@@ -1015,13 +1153,13 @@ function openTradeModal(type) {
     const availEl = document.getElementById('modalAvailable');
     const btn = document.getElementById('confirmTradeBtn');
 
-    title.textContent = `${type === 'BUY' ? 'Buy' : 'Sell'} ${currentStock} `;
-    priceEl.textContent = `Current Price: $${currentPrice.toFixed(2)} `;
+    title.textContent = `${type === 'BUY' ? 'Buy' : 'Sell'} ${currentStock}`;
+    priceEl.textContent = `Current Price: ${formatWithCurrency(currentPrice)}`;
 
     // Show available balance or shares
     let avgPrice = 0;
     if (type === 'BUY') {
-        availEl.textContent = `Available Balance: $${portfolio.balance.toFixed(2)} `;
+        availEl.textContent = `Available Balance: ${formatWithCurrency(portfolio.balance)}`;
         availEl.style.color = 'var(--success-color)';
     } else {
         let holding = portfolio.holdings[currentStock];
@@ -1029,12 +1167,9 @@ function openTradeModal(type) {
         const shares = holding ? holding.qty : 0;
         avgPrice = holding ? holding.avgPrice : 0;
 
-        availEl.textContent = `Available Shares: ${shares} ${avgPrice > 0 ? '(Avg Buy: $' + avgPrice.toFixed(2) + ')' : ''}`;
+        availEl.textContent = `Available Shares: ${shares} ${avgPrice > 0 ? '(Avg Buy: ' + formatWithCurrency(avgPrice) + ')' : ''}`;
         availEl.style.color = 'var(--text-secondary)';
     }
-
-    // Pass avgPrice to updateModalTotal via global or attr? 
-    // Easier to just read from portfolio in updateModalTotal since currentStock is global.
 
     // Reset inputs
     document.getElementById('modalQty').value = 10;
@@ -1044,12 +1179,10 @@ function openTradeModal(type) {
     btn.className = type === 'BUY' ? 'btn-primary' : 'btn-danger';
     btn.textContent = type === 'BUY' ? 'Confirm Buy' : 'Confirm Sell';
 
-    // modal.style.display = 'block'; // Use class for flex display (centering)
     modal.classList.add('active');
 }
 
 function closeTradeModal() {
-    // document.getElementById('tradeModal').style.display = 'none';
     document.getElementById('tradeModal').classList.remove('active');
     pendingTradeType = null;
 }
@@ -1063,7 +1196,7 @@ function updateModalTotal() {
 
     const qty = parseInt(qtyInput.value) || 0;
     const total = qty * currentPrice;
-    document.getElementById('modalTotalCost').textContent = `Total: $${total.toFixed(2)} `;
+    document.getElementById('modalTotalCost').textContent = `Total: ${formatWithCurrency(total)}`;
 
     // Calculate Balance After
     let balanceAfter = portfolio.balance;
@@ -1071,23 +1204,17 @@ function updateModalTotal() {
 
     if (pendingTradeType === 'BUY') {
         balanceAfter -= total;
-        // Spending money -> Red indicating outflow/cost
         balanceColor = 'var(--danger-color)';
     } else if (pendingTradeType === 'SELL') {
         balanceAfter += total;
 
-        // P/L Check
-        // P/L Check
         let holding = portfolio.holdings[currentStock];
         if (typeof holding === 'number') holding = { qty: holding, avgPrice: 0 };
 
         let avgBuyPrice = 0;
         if (holding) {
-            // robust check for keys
             avgBuyPrice = parseFloat(holding.avgPrice || holding.avg_price || 0);
         }
-
-        console.log(`Debug P/L: Stock=${currentStock}, AvgBuy=${avgBuyPrice}, Curr=${currentPrice}`);
 
         // If we have history, compare prices
         if (avgBuyPrice > 0) {
@@ -1096,7 +1223,6 @@ function updateModalTotal() {
 
             let label = "Profit";
             if (diff >= 0) {
-                // Floating point or 0 -> Profit (or Break Even treated as Profit side)
                 balanceColor = diff > 0.0001 ? 'var(--success-color)' : 'var(--text-secondary)';
                 label = "Profit";
             } else {
@@ -1105,20 +1231,19 @@ function updateModalTotal() {
             }
 
             if (balanceAfterEl) {
-                balanceAfterEl.textContent = `Balance After: $${balanceAfter.toFixed(2)} (${label}: $${Math.abs(totalPL).toFixed(2)} | $${Math.abs(diff).toFixed(2)}/share)`;
+                balanceAfterEl.textContent = `Balance After: ${formatWithCurrency(balanceAfter)} (${label}: ${formatWithCurrency(Math.abs(totalPL))} | ${formatWithCurrency(Math.abs(diff))}/share)`;
                 balanceAfterEl.style.color = balanceColor;
                 balanceAfterEl.style.fontWeight = '600';
             }
             return;
         } else {
-            // Debugging Fallback: Show why it failed
             balanceColor = 'var(--text-secondary)';
-            if (balanceAfterEl) balanceAfterEl.textContent = `Balance After: $${balanceAfter.toFixed(2)} (No Hist. Price)`;
+            if (balanceAfterEl) balanceAfterEl.textContent = `Balance After: ${formatWithCurrency(balanceAfter)} (No Hist. Price)`;
         }
     }
 
     if (balanceAfterEl) {
-        balanceAfterEl.textContent = `Balance After: $${balanceAfter.toFixed(2)}`;
+        balanceAfterEl.textContent = `Balance After: ${formatWithCurrency(balanceAfter)}`;
         balanceAfterEl.style.color = balanceColor;
         balanceAfterEl.style.fontWeight = '600';
     }
@@ -1130,7 +1255,6 @@ function confirmTrade() {
     const qty = parseInt(document.getElementById('modalQty').value);
 
     if (isNaN(qty) || qty <= 0) {
-        // alert("Please enter a valid quantity greater than 0");
         showMessageModal("Invalid Input", "Please enter a valid quantity greater than 0", true);
         return;
     }
@@ -1146,7 +1270,6 @@ function showMessageModal(title, message, isError = false) {
     const contentEl = document.getElementById('msgModalContent');
 
     titleEl.textContent = title;
-    // titleEl.style.color = isError ? 'var(--danger-color)' : 'var(--text-primary)';
     contentEl.innerHTML = message;
 
     modal.classList.add('active');
@@ -1167,12 +1290,10 @@ function executeTrade(type, qty) {
 
             // Get existing holding data
             let holding = portfolio.holdings[currentStock];
-            // Normalize (if legacy number or undefined)
             if (typeof holding === 'number') holding = { qty: holding, avgPrice: 0 };
             if (!holding) holding = { qty: 0, avgPrice: 0 };
 
             // Calculate Weighted Average Price
-            // NewAvg = ((OldQty * OldAvg) + (BuyQty * BuyPrice)) / (OldQty + BuyQty)
             const oldTotalVal = holding.qty * holding.avgPrice;
             const newTotalVal = oldTotalVal + (qty * currentPrice);
             const totalQty = holding.qty + qty;
@@ -1183,7 +1304,7 @@ function executeTrade(type, qty) {
             portfolio.holdings[currentStock] = holding;
 
             savePortfolio();
-            showMessageModal("Trade Successful", `Bought <span class="highlight-text">${qty}</span> shares of ${currentStock} at <span class="highlight-text">$${currentPrice.toFixed(2)}</span>`);
+            showMessageModal("Trade Successful", `Bought <span class="highlight-text">${qty}</span> shares of ${currentStock} at <span class="highlight-text">${formatWithCurrency(currentPrice)}</span>`);
         } else {
             showMessageModal("Trade Failed", "Insufficient funds", true);
         }
@@ -1196,7 +1317,6 @@ function executeTrade(type, qty) {
             portfolio.balance += cost;
 
             holding.qty -= qty;
-            // Avg Price doesn't change on Sell
             if (holding.qty === 0) {
                 delete portfolio.holdings[currentStock]; // Remove if empty
             } else {
@@ -1204,7 +1324,7 @@ function executeTrade(type, qty) {
             }
 
             savePortfolio();
-            showMessageModal("Trade Successful", `Sold <span class="highlight-text">${qty}</span> shares of ${currentStock} at <span class="highlight-text">$${currentPrice.toFixed(2)}</span>`);
+            showMessageModal("Trade Successful", `Sold <span class="highlight-text">${qty}</span> shares of ${currentStock} at <span class="highlight-text">${formatWithCurrency(currentPrice)}</span>`);
         } else {
             showMessageModal("Trade Failed", "Insufficient holdings", true);
         }
@@ -1299,13 +1419,22 @@ function updateTabGlider(btn) {
     tabs.style.setProperty('--tab-width', btn.offsetWidth + 'px');
 }
 
-// Initialize glider on load
+function updateHorizonGlider(btn) {
+    const selector = btn.closest('.horizon-selector');
+    if (!selector) return;
+    selector.style.setProperty('--horizon-left', btn.offsetLeft + 'px');
+    selector.style.setProperty('--horizon-width', btn.offsetWidth + 'px');
+}
+
+// Initialize gliders on load
 document.addEventListener('DOMContentLoaded', () => {
     const activeBtn = document.querySelector('.tab-btn.active');
     if (activeBtn) {
-        // Warning: Element might not have layout yet if mostly hidden or during initial render frame.
-        // Small timeout helps ensure layout is settled.
         setTimeout(() => updateTabGlider(activeBtn), 50);
+    }
+    const activeHorizonBtn = document.querySelector('.horizon-btn.active');
+    if (activeHorizonBtn) {
+        setTimeout(() => updateHorizonGlider(activeHorizonBtn), 50);
     }
 });
 
@@ -1320,8 +1449,32 @@ function closeProfile() {
 }
 
 function updateProfileUI() {
+    // 1. Live Date & Greeting
+    const now = new Date();
+    const dateOptions = { weekday: 'long', day: 'numeric', month: 'short' };
+    const dateStr = now.toLocaleDateString('en-US', dateOptions);
+    const dateEl = document.getElementById('profileLiveDate');
+    if (dateEl) dateEl.textContent = dateStr;
+
+    // Greeting Name
+    let displayName = 'Trader';
+    if (portfolio.profile && portfolio.profile.name) {
+        displayName = portfolio.profile.name;
+    } else if (currentUserEmail) {
+        displayName = currentUserEmail.split('@')[0];
+        displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+    }
+    const greetingEl = document.getElementById('profileGreeting');
+    if (greetingEl) greetingEl.textContent = `Hello, ${displayName}!`;
+
+    const nameInput = document.getElementById('profileNameInput');
+    if (nameInput && portfolio.profile && portfolio.profile.name) {
+        nameInput.value = portfolio.profile.name;
+    }
+
     // User Info
-    document.getElementById('profileEmail').textContent = currentUserEmail || 'Guest';
+    const emailEl = document.getElementById('profileEmail');
+    if (emailEl) emailEl.textContent = currentUserEmail || 'Guest';
 
     const ageEl = document.getElementById('profileAge');
     const genderEl = document.getElementById('profileGender');
@@ -1335,77 +1488,207 @@ function updateProfileUI() {
         if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
             age--;
         }
-        ageEl.textContent = `Age: ${age}`;
+        if (ageEl) ageEl.textContent = `Age ${age}`;
 
-        // Gender & Avatar
         const gender = portfolio.profile.gender || 'Other';
-        genderEl.textContent = gender;
+        if (genderEl) genderEl.textContent = `• ${gender}`;
 
-        avatarEl.innerHTML = ''; // Clear text content
-        let svgIcon = '';
-
-        if (gender === 'Male') {
-            svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="48" height="48" style="color: #60a5fa;">
+        if (avatarEl) {
+            let svgColor = '#60a5fa';
+            if (gender === 'Female') svgColor = '#f472b6';
+            avatarEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" style="color: ${svgColor};">
               <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
-            </svg>`;
-        } else if (gender === 'Female') {
-            svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="48" height="48" style="color: #f472b6;">
-              <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd" />
-            </svg>`;
-        } else {
-            svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="48" height="48" style="color: var(--text-secondary);">
-              <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd" />
             </svg>`;
         }
-        avatarEl.innerHTML = svgIcon;
     } else {
-        ageEl.textContent = '';
-        genderEl.textContent = '';
-        avatarEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="48" height="48" style="color: var(--text-secondary);">
+        if (ageEl) ageEl.textContent = '18+';
+        if (genderEl) genderEl.textContent = '• Member';
+        if (avatarEl) {
+            avatarEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" style="color: var(--accent);">
               <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
             </svg>`;
+        }
     }
 
-    // Calculate Stats
-    // Calculate Stats
+    // 2. Calculate Stats & Portfolio Net Worth
     const cash = portfolio.balance;
     let investedValue = 0;
     let totalShares = 0;
+    let activeHoldingsCount = 0;
 
     for (const [ticker, data] of Object.entries(portfolio.holdings)) {
-        // Handle new object structure vs legacy number
         let qty = 0;
         let avgPrice = 0;
 
         if (typeof data === 'number') {
             qty = data;
-            avgPrice = 0; // Unknown legacy price
-        } else {
-            qty = data.qty;
-            avgPrice = data.avgPrice;
+            avgPrice = 0;
+        } else if (data) {
+            qty = data.qty || 0;
+            avgPrice = data.avgPrice || 0;
         }
 
         if (qty > 0) {
             totalShares += qty;
             investedValue += (qty * avgPrice);
+            activeHoldingsCount++;
         }
     }
 
-    document.getElementById('profileBalance').textContent = '$' + cash.toFixed(2);
+    const netWorth = cash + investedValue;
+    const currentCurrency = getUserCurrency();
+    const currencyConfig = CURRENCY_CONFIG[currentCurrency] || CURRENCY_CONFIG['INR'];
 
-    // Show Invested Shares
-    document.getElementById('profileInvested').textContent = `${totalShares} shares`;
-
-    // Show Invested Amount (Cost Basis)
-    const investedAmountEl = document.getElementById('profileInvestedAmount');
-    if (investedAmountEl) {
-        investedAmountEl.textContent = `$${investedValue.toFixed(2)}`;
+    // Update Interactive Currency Toggle Badge in Wallet Header
+    const currencyToggleBadge = document.getElementById('currencyToggleBadge');
+    if (currencyToggleBadge) {
+        currencyToggleBadge.textContent = currencyConfig.symbol.trim();
+        currencyToggleBadge.title = `Current: ${currencyConfig.name} (${currencyConfig.symbol.trim()}) • Click to switch`;
     }
 
-    // Total Net Worth (Cash + Invested Cost)
-    const netWorth = cash + investedValue;
-    document.getElementById('profileNetWorth').textContent = '$' + netWorth.toFixed(2);
+    // Sync Currency Select Dropdown in Settings Card
+    const currencySelectEl = document.getElementById('profileCurrencySelect');
+    if (currencySelectEl) {
+        currencySelectEl.value = currentCurrency;
+    }
+
+    // Update Formatted Elements
+    const netWorthEl = document.getElementById('profileNetWorth');
+    if (netWorthEl) netWorthEl.textContent = formatWithCurrency(netWorth);
+
+    const inrSubEl = document.getElementById('profileInrSub');
+    if (inrSubEl) {
+        const secondaryCode = (currentCurrency === 'INR') ? 'USD' : 'INR';
+        const secondaryFormatted = formatWithCurrency(netWorth, secondaryCode);
+        inrSubEl.textContent = `≈ ${secondaryFormatted} ${secondaryCode} • ${activeHoldingsCount} Active Holding${activeHoldingsCount === 1 ? '' : 's'}`;
+    }
+
+    const balanceEl = document.getElementById('profileBalance');
+    if (balanceEl) balanceEl.textContent = formatWithCurrency(cash);
+
+    const investedAmountEl = document.getElementById('profileInvestedAmount');
+    if (investedAmountEl) investedAmountEl.textContent = formatWithCurrency(investedValue);
+
+    const investedPillEl = document.getElementById('profileInvestedPill');
+    if (investedPillEl) investedPillEl.textContent = `+${totalShares} Share${totalShares === 1 ? '' : 's'}`;
+
+    // 3. Risk Level (LTV / Exposure) calculation
+    const exposureRatio = netWorth > 0 ? (investedValue / netWorth) : 0;
+    const riskPercent = (exposureRatio * 100).toFixed(1);
+
+    const riskStateEl = document.getElementById('profileRiskState');
+    const riskBadgeEl = document.getElementById('profileRiskBadge');
+    const riskPercentEl = document.getElementById('profileRiskPercent');
+    const gaugePathEl = document.getElementById('profileGaugePath');
+
+    if (riskPercentEl) riskPercentEl.textContent = `${riskPercent}%`;
+
+    let stateText = 'Optimal state';
+    let badgeText = 'Good';
+    let badgeColor = 'rgba(34, 197, 94, 0.15)';
+    let badgeTextColor = 'var(--positive-text)';
+
+    if (exposureRatio > 0.70) {
+        stateText = 'Elevated Risk';
+        badgeText = 'High LTV';
+        badgeColor = 'rgba(239, 68, 68, 0.15)';
+        badgeTextColor = 'var(--negative-text)';
+    } else if (exposureRatio > 0.35) {
+        stateText = 'Moderate state';
+        badgeText = 'Balanced';
+        badgeColor = 'rgba(245, 158, 11, 0.15)';
+        badgeTextColor = 'var(--warning-text)';
+    }
+
+    if (riskStateEl) riskStateEl.textContent = stateText;
+    if (riskBadgeEl) {
+        riskBadgeEl.textContent = badgeText;
+        riskBadgeEl.style.background = badgeColor;
+        riskBadgeEl.style.color = badgeTextColor;
+    }
+
+    if (gaugePathEl) {
+        // Arc total length is ~126. An offset of 126 is empty (0%), 0 is full (100%).
+        const offset = 126 - (126 * Math.min(Math.max(exposureRatio, 0.08), 1));
+        gaugePathEl.style.strokeDashoffset = offset;
+    }
 }
+
+// Sell Holdings from Profile Logic
+window.handleProfileSellClick = function () {
+    const activeHoldings = [];
+    for (const [ticker, data] of Object.entries(portfolio.holdings)) {
+        let qty = typeof data === 'number' ? data : (data ? data.qty : 0);
+        let avgPrice = typeof data === 'object' && data ? (data.avgPrice || 0) : 0;
+        if (qty > 0) {
+            activeHoldings.push({ ticker, qty, avgPrice });
+        }
+    }
+
+    if (activeHoldings.length === 0) {
+        closeProfile();
+        if (window.showToast) {
+            window.showToast("No active stock holdings found in your portfolio to sell.", "warning");
+        } else {
+            alert("You do not currently hold any shares to sell.");
+        }
+        return;
+    }
+
+    if (activeHoldings.length === 1) {
+        closeProfile();
+        selectStock(activeHoldings[0].ticker);
+        setTimeout(() => {
+            openTradeModal('SELL');
+        }, 350);
+        return;
+    }
+
+    // Multiple holdings -> Open Sell Holdings Selector Modal
+    closeProfile();
+    const modal = document.getElementById('sellHoldingsModal');
+    const listEl = document.getElementById('sellHoldingsList');
+    if (!modal || !listEl) return;
+
+    listEl.innerHTML = '';
+    activeHoldings.forEach(h => {
+        const card = document.createElement('div');
+        card.className = 'holding-sell-card';
+        const formattedAvg = formatWithCurrency(h.avgPrice);
+        card.innerHTML = `
+            <div class="holding-sell-info">
+                <span class="holding-sell-ticker">${h.ticker}</span>
+                <span class="holding-sell-qty">Owned: <strong>${h.qty}</strong> share${h.qty === 1 ? '' : 's'} ${h.avgPrice > 0 ? '• Avg ' + formattedAvg : ''}</span>
+            </div>
+            <button class="holding-sell-btn" onclick="window.executeSellSelect('${h.ticker}')">Sell Shares</button>
+        `;
+        listEl.appendChild(card);
+    });
+
+    modal.classList.add('active');
+};
+
+window.executeSellSelect = function (ticker) {
+    window.closeSellHoldingsModal();
+    selectStock(ticker);
+    setTimeout(() => {
+        openTradeModal('SELL');
+    }, 350);
+};
+
+window.closeSellHoldingsModal = function () {
+    const modal = document.getElementById('sellHoldingsModal');
+    if (modal) modal.classList.remove('active');
+};
+
+window.focusWatchlist = function () {
+    closeProfile();
+    switchTab('dashboard');
+    const watchlistEl = document.getElementById('watchlist');
+    if (watchlistEl) {
+        watchlistEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+};
 
 // Expose functions to window for HTML onclick access
 window.switchTab = switchTab;

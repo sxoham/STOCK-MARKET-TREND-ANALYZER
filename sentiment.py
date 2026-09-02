@@ -36,7 +36,7 @@ def get_news_sentiment(ticker):
             title = item.title.text
             score = sia.polarity_scores(title)['compound']
             total_score += score
-            headlines.append({"title": title, "score": score, "link": item.link.text})
+            headlines.append({"title": title, "score": score, "link": item.link.text, "url": item.link.text})
             
         avg_score = total_score / len(items)
         
