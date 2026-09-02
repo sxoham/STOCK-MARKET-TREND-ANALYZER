@@ -67,16 +67,19 @@ An AI-powered quantitative analysis and trading recommendation platform tailored
 ## 🚀 Setup & Local Installation
 
 ### Prerequisites
+
 - Python 3.10 or higher
 - Git
 
 ### 1. Clone the repository
+
 ```bash
 git clone https://github.com/sxoham/Stock-Market-Trend-Analyzer.git
 cd Stock-Market-Trend-Analyzer
 ```
 
 ### 2. Set up virtual environment
+
 ```bash
 # Windows
 python -m venv .venv
@@ -88,17 +91,20 @@ source .venv/bin/activate
 ```
 
 ### 3. Install dependencies
+
 ```bash
 pip install -r requirements.txt
 pip install xgboost
 ```
 
-*(Optional: For GPU/Transformer-accelerated FinBERT sentiment generation)*
+> **Optional**: For GPU/Transformer-accelerated FinBERT sentiment generation:
+
 ```bash
 pip install -r sentiment_generator/requirements.txt
 ```
 
 ### 4. Train models & run the web server
+
 ```bash
 # Train or update stock models (Optional — pre-trained checkpoints can be generated)
 python main.py
@@ -113,7 +119,7 @@ Access the dashboard at **[http://localhost:5000](http://localhost:5000)** in yo
 
 ## 📂 Project Architecture
 
-```
+```text
 STOCK MARKET TREND ANALYZER/
 ├── app.py                      # Flask application & REST API endpoints
 ├── main.py                     # ML training pipeline, indicator engineering & backtesting
