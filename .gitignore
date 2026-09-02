@@ -1,40 +1,110 @@
-# Python
+# ==========================================
+# Python & Bytecode
+# ==========================================
 __pycache__/
 *.py[cod]
+*$py.class
 *.pyo
 *.pyd
 .Python
 *.egg-info/
 dist/
 build/
+eggs/
+.eggs/
+*.egg
 
-# Virtual environment
+# ==========================================
+# Virtual Environments
+# ==========================================
 .venv/
 venv/
 env/
+ENV/
+env.bak/
+venv.bak/
 
-# IDE
+# ==========================================
+# Environment & Secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+*.env.local
+
+# ==========================================
+# IDE & Editors
+# ==========================================
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
+*.sublime-project
+*.sublime-workspace
 
-# Databases (local runtime data)
+# ==========================================
+# Testing & Code Quality
+# ==========================================
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+
+# ==========================================
+# Databases & Local Runtime State
+# ==========================================
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
 instance/
+model_logs.db
+users.db
+sentiment_generator/cache/
 
-# Trained model artifacts (regenerate with main.py)
+# ==========================================
+# Trained Model Weights & Artifacts
+# ==========================================
 stock_models_optionB/
 stock_models_global/
+stock_models/
 
-# OS / misc
-Data/
-.DS_Store
-Thumbs.db
-Untitled
-git.txt
-scripts/
-
-# Logs
+# ==========================================
+# Logs & Temporary Files
+# ==========================================
 *.log
+logs/
 scripts/*_log.txt
+upgrade.txt
+git.txt
+Untitled*
+
+# ==========================================
+# OS Artifacts
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# Node / Frontend Cache (if applicable)
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================================
+# Graphify & Agent Temporary Sidecars
+# ==========================================
+graphify-out/.graphify_*

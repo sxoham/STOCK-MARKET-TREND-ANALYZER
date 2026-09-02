@@ -1,0 +1,17 @@
+{
+  "ticker": "ITC.NS",
+  "start_date": "2024-07-01",
+  "end_date": "2024-07-31",
+  "bigquery_job_id": "fe9058f9-f12c-4b2c-b0e2-d38f134c6241",
+  "bytes_processed": 0,
+  "bytes_billed": 0,
+  "gib_processed": 0.0,
+  "raw_candidate_count": 328,
+  "missing_title_count": 0,
+  "matcher_rejected_count": 240,
+  "pre_dedup_accepted_count": 88,
+  "duplicates_removed": 0,
+  "post_dedup_accepted_count": 88,
+  "parquet_path": "f:\\Project\\STOCK MARKET TREND ANALYZER\\sentiment_generator\\data\\bigquery_live_poc_itc_2024_07.parquet",
+  "timestamp_utc": "2026-08-28T06:42:48.718314+00:00"
+}

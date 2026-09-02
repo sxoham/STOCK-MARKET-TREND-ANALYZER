@@ -1,0 +1,15 @@
+{
+  "ticker": "ITC.NS",
+  "start_date": "2024-04-01",
+  "end_date": "2024-04-30",
+  "job_id": "df2002b9-3a44-44d2-a4f1-c431c962a12b",
+  "bytes_processed": 7892968753,
+  "bytes_billed": 7893680128,
+  "candidate_count": 394,
+  "pre_dedup_accepted": 75,
+  "post_dedup_accepted": 75,
+  "duplicates_removed": 0,
+  "missing_title_count": 0,
+  "matcher_rejected_count": 319,
+  "generated_at_utc": "2026-08-27T15:33:18.953965+00:00"
+}
