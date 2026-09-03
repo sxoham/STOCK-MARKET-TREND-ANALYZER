@@ -21,5 +21,7 @@ services:
         value: "1"
       - key: ENABLE_DB_VIEWER
         value: "false"
+      - key: ALLOWED_ORIGINS
+        value: "https://stock-market-trend-analyzer.onrender.com,http://localhost:5000"
       - key: SECRET_KEY
         generateValue: true
