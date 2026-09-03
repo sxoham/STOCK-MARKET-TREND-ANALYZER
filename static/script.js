@@ -34,11 +34,12 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
-async function getAuthHeaders() {
+async function getAuthHeaders(userInstance = null) {
     const headers = { 'Content-Type': 'application/json' };
     try {
-        if (auth && auth.currentUser) {
-            const token = await auth.currentUser.getIdToken();
+        const u = userInstance || (auth && auth.currentUser);
+        if (u) {
+            const token = await u.getIdToken();
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
@@ -63,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Load stocks first
             fetchStocks();
             // Load remote data
-            loadRemoteData(user.email);
+            loadRemoteData(user.email, user);
         } else {
             console.log("No user logged in, redirecting...");
             window.location.href = '/login';
@@ -158,9 +159,9 @@ async function handleSearch(e) {
     }
 }
 
-async function loadRemoteData(email) {
+async function loadRemoteData(email, userInstance = null) {
     try {
-        const authHeaders = await getAuthHeaders();
+        const authHeaders = await getAuthHeaders(userInstance);
         const response = await fetch(`/api/get_data/${encodeURIComponent(email)}?t=${Date.now()}`, {
             headers: authHeaders
         });
