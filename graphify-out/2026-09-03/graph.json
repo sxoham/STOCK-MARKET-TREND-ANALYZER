@@ -113,7 +113,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 15,
+      "community": 17,
       "community_name": "process_ticker_news_fetch",
       "file_type": "code",
       "norm_label": "gdeltratelimitexhausted",
@@ -171,6 +171,19 @@
       "norm_label": "testnewsfetcher",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
       "source_location": "L64"
+    },
+    {
+      "id": "scripts_test_production_smoke_productionsmoketest",
+      "label": "ProductionSmokeTest",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "code",
+      "norm_label": "productionsmoketest",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L47"
     },
     {
       "id": "sentiment_generator_bigquery_fetcher_bigquerygkgextractor",
@@ -1619,6 +1632,54 @@
       "source_location": "L1535"
     },
     {
+      "id": "sentiment_generator_probe_ambiguous_tickers_build_trading_calendar",
+      "label": "_build_trading_calendar()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "NewsFetcher",
+      "file_type": "code",
+      "norm_label": "_build_trading_calendar()",
+      "source_file": "sentiment_generator/probe_ambiguous_tickers.py",
+      "source_location": "L18"
+    },
+    {
+      "id": "sentiment_generator_probe_ambiguous_tickers_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "NewsFetcher",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "sentiment_generator/probe_ambiguous_tickers.py",
+      "source_location": "L38"
+    },
+    {
+      "id": "sentiment_generator_probe_live_gdelt_build_trading_calendar",
+      "label": "_build_trading_calendar()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "NewsFetcher",
+      "file_type": "code",
+      "norm_label": "_build_trading_calendar()",
+      "source_file": "sentiment_generator/probe_live_gdelt.py",
+      "source_location": "L51"
+    },
+    {
+      "id": "sentiment_generator_probe_live_gdelt_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "NewsFetcher",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "sentiment_generator/probe_live_gdelt.py",
+      "source_location": "L76"
+    },
+    {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_setup",
       "label": ".setUp()",
       "_callable": true,
@@ -2195,16 +2256,16 @@
       "source_location": "L1111"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_http_200_textual_rate_limit_retries_once_and_succeeds",
-      "label": ".test_http_200_textual_rate_limit_retries_once_and_succeeds()",
+      "id": "scripts_test_security_hardening_securityhardeningtests_test_email_format_validation",
+      "label": ".test_email_format_validation()",
       "_callable": true,
       "_origin": "ast",
       "community": 126,
-      "community_name": ".test_http_200_textual_rate_limit_retries_once_and_succeeds",
+      "community_name": ".test_email_format_validation",
       "file_type": "code",
-      "norm_label": ".test_http_200_textual_rate_limit_retries_once_and_succeeds()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1400"
+      "norm_label": ".test_email_format_validation()",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L113"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testicicibankmatchervalidation_setup",
@@ -2375,18 +2436,6 @@
       "source_location": "L2185"
     },
     {
-      "id": "sentiment_generator_news_fetcher_newsfetcher_get_session",
-      "label": "._get_session()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 14,
-      "community_name": ".fetch_gdelt_window",
-      "file_type": "code",
-      "norm_label": "._get_session()",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1194"
-    },
-    {
       "id": "sentiment_generator_news_fetcher_newsfetcher_inc_stat",
       "label": "._inc_stat()",
       "_callable": true,
@@ -2476,7 +2525,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "clear_circuit_breaker_state()",
       "source_file": "sentiment_generator/cache.py",
@@ -2488,11 +2537,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "get_circuit_breaker_state()",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L377"
+    },
+    {
+      "id": "sentiment_generator_cache_get_connection",
+      "label": "get_connection()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "test_news_fetcher.py",
+      "file_type": "code",
+      "norm_label": "get_connection()",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L12"
     },
     {
       "id": "sentiment_generator_cache_init_db",
@@ -2500,7 +2561,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "init_db()",
       "source_file": "sentiment_generator/cache.py",
@@ -2512,23 +2573,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "set_circuit_breaker_state()",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L348"
-    },
-    {
-      "id": "sentiment_generator_generate_sentiment_process_ticker_news_fetch",
-      "label": "process_ticker_news_fetch()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "process_ticker_news_fetch",
-      "file_type": "code",
-      "norm_label": "process_ticker_news_fetch()",
-      "source_file": "sentiment_generator/generate_sentiment.py",
-      "source_location": "L132"
     },
     {
       "id": "sentiment_generator_news_fetcher_is_gdelt_rate_limit_text",
@@ -2536,7 +2585,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "_is_gdelt_rate_limit_text()",
       "source_file": "sentiment_generator/news_fetcher.py",
@@ -2548,7 +2597,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": ".test_persistent_circuit_breaker_db_roundtrip()",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
@@ -2651,28 +2700,28 @@
       "source_location": "L1253"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_date_only_yyyymmdd_raises_low_precision",
-      "label": ".test_date_only_YYYYMMDD_raises_low_precision()",
+      "id": "scripts_test_security_hardening_securityhardeningtests_test_feedback_endpoint_validation",
+      "label": ".test_feedback_endpoint_validation()",
       "_callable": true,
       "_origin": "ast",
       "community": 164,
-      "community_name": ".test_date_only_YYYYMMDD_raises_low_precision",
+      "community_name": ".test_feedback_endpoint_validation",
       "file_type": "code",
-      "norm_label": ".test_date_only_yyyymmdd_raises_low_precision()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1103"
+      "norm_label": ".test_feedback_endpoint_validation()",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L128"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a6_nse_holiday",
-      "label": ".test_A6_nse_holiday()",
+      "id": "scripts_test_security_hardening_securityhardeningtests_test_bola_idor_authorization_enforcement",
+      "label": ".test_bola_idor_authorization_enforcement()",
       "_callable": true,
       "_origin": "ast",
       "community": 165,
-      "community_name": ".test_A6_nse_holiday",
+      "community_name": ".test_bola_idor_authorization_enforcement",
       "file_type": "code",
-      "norm_label": ".test_a6_nse_holiday()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L114"
+      "norm_label": ".test_bola_idor_authorization_enforcement()",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L153"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_d2b_itc_lifecycle_and_transition_boundary_tests",
@@ -2699,40 +2748,28 @@
       "source_location": "L736"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_d7_word_boundary_tokens_match_as_whole_words",
-      "label": ".test_D7_word_boundary_tokens_match_as_whole_words()",
+      "id": "scripts_test_security_hardening_securityhardeningtests_test_rate_limiting_enforcement",
+      "label": ".test_rate_limiting_enforcement()",
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": ".test_D7_word_boundary_tokens_match_as_whole_words",
+      "community_name": ".test_rate_limiting_enforcement",
       "file_type": "code",
-      "norm_label": ".test_d7_word_boundary_tokens_match_as_whole_words()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L663"
+      "norm_label": ".test_rate_limiting_enforcement()",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L228"
     },
     {
-      "id": "sentiment_generator_cache_get_connection",
-      "label": "get_connection()",
+      "id": "scripts_test_security_hardening_securityhardeningtests_test_rate_limiter_memory_pruning",
+      "label": ".test_rate_limiter_memory_pruning()",
       "_callable": true,
       "_origin": "ast",
-      "community": 17,
-      "community_name": "get_connection",
+      "community": 169,
+      "community_name": ".test_rate_limiter_memory_pruning",
       "file_type": "code",
-      "norm_label": "get_connection()",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L12"
-    },
-    {
-      "id": "sentiment_generator_cache_get_unscored_articles",
-      "label": "get_unscored_articles()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "get_connection",
-      "file_type": "code",
-      "norm_label": "get_unscored_articles()",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L186"
+      "norm_label": ".test_rate_limiter_memory_pruning()",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L238"
     },
     {
       "id": "sentiment_generator_cache_record_fetch_period",
@@ -2740,71 +2777,107 @@
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_connection",
+      "community_name": "process_ticker_news_fetch",
       "file_type": "code",
       "norm_label": "record_fetch_period()",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L113"
     },
     {
-      "id": "sentiment_generator_cache_save_raw_articles",
-      "label": "save_raw_articles()",
+      "id": "sentiment_generator_generate_sentiment_process_ticker_news_fetch",
+      "label": "process_ticker_news_fetch()",
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_connection",
+      "community_name": "process_ticker_news_fetch",
       "file_type": "code",
-      "norm_label": "save_raw_articles()",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L146"
+      "norm_label": "process_ticker_news_fetch()",
+      "source_file": "sentiment_generator/generate_sentiment.py",
+      "source_location": "L132"
     },
     {
-      "id": "sentiment_generator_cache_update_article_sentiments",
-      "label": "update_article_sentiments()",
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_circuit_breaker_halts_further_period_requests",
+      "label": ".test_circuit_breaker_halts_further_period_requests()",
       "_callable": true,
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_connection",
+      "community_name": "process_ticker_news_fetch",
       "file_type": "code",
-      "norm_label": "update_article_sentiments()",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L211"
+      "norm_label": ".test_circuit_breaker_halts_further_period_requests()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1529"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_is_gdelt_rate_limit_text_narrow_matching",
-      "label": ".test_is_gdelt_rate_limit_text_narrow_matching()",
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_exhaustion_persists_circuit_breaker_cooldown",
+      "label": ".test_exhaustion_persists_circuit_breaker_cooldown()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "process_ticker_news_fetch",
+      "file_type": "code",
+      "norm_label": ".test_exhaustion_persists_circuit_breaker_cooldown()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1676"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_unattempted_periods_after_breaker_remain_absent",
+      "label": ".test_unattempted_periods_after_breaker_remain_absent()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "process_ticker_news_fetch",
+      "file_type": "code",
+      "norm_label": ".test_unattempted_periods_after_breaker_remain_absent()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1732"
+    },
+    {
+      "id": "scripts_test_security_hardening_securityhardeningtests_test_untrusted_direct_request_spoofed_headers_ignored",
+      "label": ".test_untrusted_direct_request_spoofed_headers_ignored()",
       "_callable": true,
       "_origin": "ast",
       "community": 176,
-      "community_name": ".test_is_gdelt_rate_limit_text_narrow_matching",
+      "community_name": ".test_untrusted_direct_request_spoofed_headers_ignored",
       "file_type": "code",
-      "norm_label": ".test_is_gdelt_rate_limit_text_narrow_matching()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1433"
+      "norm_label": ".test_untrusted_direct_request_spoofed_headers_ignored()",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L252"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a2_trading_day_exactly_at_1530",
-      "label": ".test_A2_trading_day_exactly_at_1530()",
+      "id": "scripts_test_security_hardening_securityhardeningtests_test_cross_process_training_lock_lifecycle",
+      "label": ".test_cross_process_training_lock_lifecycle()",
       "_callable": true,
       "_origin": "ast",
-      "community": 178,
-      "community_name": ".test_A2_trading_day_exactly_at_1530",
+      "community": 177,
+      "community_name": ".test_cross_process_training_lock_lifecycle",
       "file_type": "code",
-      "norm_label": ".test_a2_trading_day_exactly_at_1530()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L89"
+      "norm_label": ".test_cross_process_training_lock_lifecycle()",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L272"
     },
     {
       "id": "scripts_test_security_hardening_securityhardeningtests_test_cross_process_lock_exception_release",
       "label": ".test_cross_process_lock_exception_release()",
       "_callable": true,
       "_origin": "ast",
-      "community": 18,
-      "community_name": "FinBertAnalyzer",
+      "community": 178,
+      "community_name": ".test_cross_process_lock_exception_release",
       "file_type": "code",
       "norm_label": ".test_cross_process_lock_exception_release()",
       "source_file": "scripts/test_security_hardening.py",
       "source_location": "L288"
+    },
+    {
+      "id": "scripts_test_security_hardening_securityhardeningtests_test_cross_process_lock_non_owner_cannot_release",
+      "label": ".test_cross_process_lock_non_owner_cannot_release()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 179,
+      "community_name": ".test_cross_process_lock_non_owner_cannot_release",
+      "file_type": "code",
+      "norm_label": ".test_cross_process_lock_non_owner_cannot_release()",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L304"
     },
     {
       "id": "sentiment_generator_finbert_sentiment_finbertanalyzer_analyze_batch",
@@ -2865,6 +2938,114 @@
       "norm_label": "test_finbert()",
       "source_file": "sentiment_generator/test_finbert_live.py",
       "source_location": "L13"
+    },
+    {
+      "id": "scripts_test_security_hardening_securityhardeningtests_test_old_but_active_process_lock_must_not_be_stolen",
+      "label": ".test_old_but_active_process_lock_must_not_be_stolen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 180,
+      "community_name": ".test_old_but_active_process_lock_must_not_be_stolen",
+      "file_type": "code",
+      "norm_label": ".test_old_but_active_process_lock_must_not_be_stolen()",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L320"
+    },
+    {
+      "id": "scripts_test_security_hardening_securityhardeningtests_test_database_viewer_access_and_xss_protection",
+      "label": ".test_database_viewer_access_and_xss_protection()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 181,
+      "community_name": ".test_database_viewer_access_and_xss_protection",
+      "file_type": "code",
+      "norm_label": ".test_database_viewer_access_and_xss_protection()",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L373"
+    },
+    {
+      "id": "scripts_test_security_hardening_securityhardeningtests_test_security_headers_present",
+      "label": ".test_security_headers_present()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 182,
+      "community_name": ".test_security_headers_present",
+      "file_type": "code",
+      "norm_label": ".test_security_headers_present()",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L47"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a3b_trading_day_one_second_after_1530",
+      "label": ".test_A3b_trading_day_one_second_after_1530()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 183,
+      "community_name": ".test_A3b_trading_day_one_second_after_1530",
+      "file_type": "code",
+      "norm_label": ".test_a3b_trading_day_one_second_after_1530()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L99"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a4_trading_day_after_1530",
+      "label": ".test_A4_trading_day_after_1530()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 184,
+      "community_name": ".test_A4_trading_day_after_1530",
+      "file_type": "code",
+      "norm_label": ".test_a4_trading_day_after_1530()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L104"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a7_beyond_final_trading_date_returns_none",
+      "label": ".test_A7_beyond_final_trading_date_returns_none()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 185,
+      "community_name": ".test_A7_beyond_final_trading_date_returns_none",
+      "file_type": "code",
+      "norm_label": ".test_a7_beyond_final_trading_date_returns_none()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L119"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_d8_tcs_tech_and_deal_word_boundary",
+      "label": ".test_D8_tcs_tech_and_deal_word_boundary()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 186,
+      "community_name": ".test_D8_tcs_tech_and_deal_word_boundary",
+      "file_type": "code",
+      "norm_label": ".test_d8_tcs_tech_and_deal_word_boundary()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L700"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a1_trading_day_before_1530",
+      "label": ".test_A1_trading_day_before_1530()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 187,
+      "community_name": ".test_A1_trading_day_before_1530",
+      "file_type": "code",
+      "norm_label": ".test_a1_trading_day_before_1530()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L84"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a3_trading_day_one_second_before_1530",
+      "label": ".test_A3_trading_day_one_second_before_1530()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 188,
+      "community_name": ".test_A3_trading_day_one_second_before_1530",
+      "file_type": "code",
+      "norm_label": ".test_a3_trading_day_one_second_before_1530()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L94"
     },
     {
       "id": "sentiment_generator_news_fetcher_gdeltratelimiter_init",
@@ -3275,6 +3456,42 @@
       "source_location": "L92"
     },
     {
+      "id": "sentiment_generator_cache_get_unscored_articles",
+      "label": "get_unscored_articles()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "cache.py",
+      "file_type": "code",
+      "norm_label": "get_unscored_articles()",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L186"
+    },
+    {
+      "id": "sentiment_generator_cache_save_raw_articles",
+      "label": "save_raw_articles()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "cache.py",
+      "file_type": "code",
+      "norm_label": "save_raw_articles()",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L146"
+    },
+    {
+      "id": "sentiment_generator_cache_update_article_sentiments",
+      "label": "update_article_sentiments()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "cache.py",
+      "file_type": "code",
+      "norm_label": "update_article_sentiments()",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L211"
+    },
+    {
       "id": "sentiment_generator_execute_live_bigquery_poc_check_cache_state",
       "label": "check_cache_state()",
       "_callable": true,
@@ -3321,18 +3538,6 @@
       "norm_label": "run_live_poc()",
       "source_file": "sentiment_generator/execute_live_bigquery_poc.py",
       "source_location": "L61"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_is_article_url",
-      "label": "is_article_url()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "cache.py",
-      "file_type": "code",
-      "norm_label": "is_article_url()",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L261"
     },
     {
       "id": "agents_plugins_agent_skills_scripts_run_evals_buildcorpus",
@@ -3719,6 +3924,18 @@
       "source_location": "L2069"
     },
     {
+      "id": "sentiment_generator_news_fetcher_newsfetcher_compile_matchers",
+      "label": "._compile_matchers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "._article_dedupe_key",
+      "file_type": "code",
+      "norm_label": "._compile_matchers()",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1329"
+    },
+    {
       "id": "sentiment_generator_news_fetcher_newsfetcher_deduplicate_articles",
       "label": "._deduplicate_articles()",
       "_callable": true,
@@ -3741,6 +3958,18 @@
       "norm_label": ".get_diagnostics()",
       "source_file": "sentiment_generator/news_fetcher.py",
       "source_location": "L1208"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_newsfetcher_init",
+      "label": ".__init__()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "._article_dedupe_key",
+      "file_type": "code",
+      "norm_label": ".__init__()",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1141"
     },
     {
       "id": "sentiment_generator_news_fetcher_newsfetcher_normalize_headline",
@@ -3779,52 +4008,16 @@
       "source_location": "L28"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a1_trading_day_before_1530",
-      "label": ".test_A1_trading_day_before_1530()",
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a2_trading_day_exactly_at_1530",
+      "label": ".test_A2_trading_day_exactly_at_1530()",
       "_callable": true,
       "_origin": "ast",
       "community": 3,
       "community_name": "TestNewsFetcher",
       "file_type": "code",
-      "norm_label": ".test_a1_trading_day_before_1530()",
+      "norm_label": ".test_a2_trading_day_exactly_at_1530()",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L84"
-    },
-    {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a3_trading_day_one_second_before_1530",
-      "label": ".test_A3_trading_day_one_second_before_1530()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "TestNewsFetcher",
-      "file_type": "code",
-      "norm_label": ".test_a3_trading_day_one_second_before_1530()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L94"
-    },
-    {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a3b_trading_day_one_second_after_1530",
-      "label": ".test_A3b_trading_day_one_second_after_1530()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "TestNewsFetcher",
-      "file_type": "code",
-      "norm_label": ".test_a3b_trading_day_one_second_after_1530()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L99"
-    },
-    {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a4_trading_day_after_1530",
-      "label": ".test_A4_trading_day_after_1530()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "TestNewsFetcher",
-      "file_type": "code",
-      "norm_label": ".test_a4_trading_day_after_1530()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L104"
+      "source_location": "L89"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a5_weekend",
@@ -3839,16 +4032,16 @@
       "source_location": "L109"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a7_beyond_final_trading_date_returns_none",
-      "label": ".test_A7_beyond_final_trading_date_returns_none()",
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a6_nse_holiday",
+      "label": ".test_A6_nse_holiday()",
       "_callable": true,
       "_origin": "ast",
       "community": 3,
       "community_name": "TestNewsFetcher",
       "file_type": "code",
-      "norm_label": ".test_a7_beyond_final_trading_date_returns_none()",
+      "norm_label": ".test_a6_nse_holiday()",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L119"
+      "source_location": "L114"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_a7b_article_on_day_after_last_calendar_day",
@@ -3947,16 +4140,28 @@
       "source_location": "L652"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_d8_tcs_tech_and_deal_word_boundary",
-      "label": ".test_D8_tcs_tech_and_deal_word_boundary()",
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_d7_word_boundary_tokens_match_as_whole_words",
+      "label": ".test_D7_word_boundary_tokens_match_as_whole_words()",
       "_callable": true,
       "_origin": "ast",
       "community": 3,
       "community_name": "TestNewsFetcher",
       "file_type": "code",
-      "norm_label": ".test_d8_tcs_tech_and_deal_word_boundary()",
+      "norm_label": ".test_d7_word_boundary_tokens_match_as_whole_words()",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L700"
+      "source_location": "L663"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_date_only_yyyymmdd_raises_low_precision",
+      "label": ".test_date_only_YYYYMMDD_raises_low_precision()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "TestNewsFetcher",
+      "file_type": "code",
+      "norm_label": ".test_date_only_yyyymmdd_raises_low_precision()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1103"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_final_dates_strictly_in_nse_calendar",
@@ -4005,6 +4210,18 @@
       "norm_label": ".test_invalid_timestamp_rejection()",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
       "source_location": "L1095"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_is_gdelt_rate_limit_text_narrow_matching",
+      "label": ".test_is_gdelt_rate_limit_text_narrow_matching()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "TestNewsFetcher",
+      "file_type": "code",
+      "norm_label": ".test_is_gdelt_rate_limit_text_narrow_matching()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1433"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_mukesh_ambani_policy_corporate_positives_and_listicle_negatives",
@@ -4091,28 +4308,136 @@
       "source_location": "L1077"
     },
     {
-      "id": "sentiment_generator_cache_export_articles_parquet",
-      "label": "export_articles_parquet()",
+      "id": "scripts_test_production_smoke_productionsmoketest_setup",
+      "label": ".setUp()",
       "_callable": true,
       "_origin": "ast",
       "community": 32,
-      "community_name": "load_all_articles_df",
+      "community_name": "ProductionSmokeTest",
       "file_type": "code",
-      "norm_label": "export_articles_parquet()",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L239"
+      "norm_label": ".setup()",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L52"
     },
     {
-      "id": "sentiment_generator_cache_load_all_articles_df",
-      "label": "load_all_articles_df()",
+      "id": "scripts_test_production_smoke_productionsmoketest_setupclass",
+      "label": ".setUpClass()",
       "_callable": true,
       "_origin": "ast",
       "community": 32,
-      "community_name": "load_all_articles_df",
+      "community_name": "ProductionSmokeTest",
       "file_type": "code",
-      "norm_label": "load_all_articles_df()",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L229"
+      "norm_label": ".setupclass()",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L49"
+    },
+    {
+      "id": "scripts_test_production_smoke_productionsmoketest_teardown",
+      "label": ".tearDown()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "code",
+      "norm_label": ".teardown()",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L58"
+    },
+    {
+      "id": "scripts_test_production_smoke_productionsmoketest_test_01_https_and_security_headers",
+      "label": ".test_01_https_and_security_headers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "code",
+      "norm_label": ".test_01_https_and_security_headers()",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L65"
+    },
+    {
+      "id": "scripts_test_production_smoke_productionsmoketest_test_02_cors_production_origin_and_preflight",
+      "label": ".test_02_cors_production_origin_and_preflight()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "code",
+      "norm_label": ".test_02_cors_production_origin_and_preflight()",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L105"
+    },
+    {
+      "id": "scripts_test_production_smoke_productionsmoketest_test_03_authentication_and_bola_idor",
+      "label": ".test_03_authentication_and_bola_idor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "code",
+      "norm_label": ".test_03_authentication_and_bola_idor()",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L136"
+    },
+    {
+      "id": "scripts_test_production_smoke_productionsmoketest_test_04_db_viewer_disabled_in_production",
+      "label": ".test_04_db_viewer_disabled_in_production()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "code",
+      "norm_label": ".test_04_db_viewer_disabled_in_production()",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L190"
+    },
+    {
+      "id": "scripts_test_production_smoke_productionsmoketest_test_05_endpoint_smoke_tests",
+      "label": ".test_05_endpoint_smoke_tests()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "code",
+      "norm_label": ".test_05_endpoint_smoke_tests()",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L202"
+    },
+    {
+      "id": "scripts_test_production_smoke_productionsmoketest_test_06_stream_train_safe_concurrency_check",
+      "label": ".test_06_stream_train_safe_concurrency_check()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "code",
+      "norm_label": ".test_06_stream_train_safe_concurrency_check()",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L240"
+    },
+    {
+      "id": "scripts_test_production_smoke_productionsmoketest_test_07_runtime_persistence_configuration",
+      "label": ".test_07_runtime_persistence_configuration()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "code",
+      "norm_label": ".test_07_runtime_persistence_configuration()",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L262"
+    },
+    {
+      "id": "scripts_test_production_smoke_productionsmoketest_test_08_firebase_admin_initialization_and_sensitive_logging",
+      "label": ".test_08_firebase_admin_initialization_and_sensitive_logging()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "code",
+      "norm_label": ".test_08_firebase_admin_initialization_and_sensitive_logging()",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L286"
     },
     {
       "id": "scripts_analyze_predictions_analyze",
@@ -4175,28 +4500,28 @@
       "source_location": "L5"
     },
     {
-      "id": "sentiment_generator_news_fetcher_newsfetcher_compile_matchers",
-      "label": "._compile_matchers()",
+      "id": "sentiment_generator_cache_get_unresolved_failed_periods",
+      "label": "get_unresolved_failed_periods()",
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "._compile_matchers",
+      "community_name": "get_unresolved_failed_periods",
       "file_type": "code",
-      "norm_label": "._compile_matchers()",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1329"
+      "norm_label": "get_unresolved_failed_periods()",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L262"
     },
     {
-      "id": "sentiment_generator_news_fetcher_newsfetcher_init",
-      "label": ".__init__()",
+      "id": "sentiment_generator_validation_validate_production_dataset",
+      "label": "validate_production_dataset()",
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "._compile_matchers",
+      "community_name": "get_unresolved_failed_periods",
       "file_type": "code",
-      "norm_label": ".__init__()",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1141"
+      "norm_label": "validate_production_dataset()",
+      "source_file": "sentiment_generator/validation.py",
+      "source_location": "L6"
     },
     {
       "id": "sentiment_generator_bigquery_fetcher_bigquerygkgextractor_export_staging_parquet",
@@ -4487,28 +4812,16 @@
       "source_location": "L119"
     },
     {
-      "id": "sentiment_generator_probe_live_gdelt_build_trading_calendar",
-      "label": "_build_trading_calendar()",
+      "id": "sentiment_generator_news_fetcher_is_article_url",
+      "label": "is_article_url()",
       "_callable": true,
       "_origin": "ast",
       "community": 43,
-      "community_name": "probe_live_gdelt.py",
+      "community_name": "news_fetcher.py",
       "file_type": "code",
-      "norm_label": "_build_trading_calendar()",
-      "source_file": "sentiment_generator/probe_live_gdelt.py",
-      "source_location": "L51"
-    },
-    {
-      "id": "sentiment_generator_probe_live_gdelt_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "probe_live_gdelt.py",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "sentiment_generator/probe_live_gdelt.py",
-      "source_location": "L76"
+      "norm_label": "is_article_url()",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L261"
     },
     {
       "id": "sentiment_generator_news_fetcher_newsfetcher_normalize_url",
@@ -4547,28 +4860,16 @@
       "source_location": "L1223"
     },
     {
-      "id": "sentiment_generator_probe_ambiguous_tickers_build_trading_calendar",
-      "label": "_build_trading_calendar()",
+      "id": "sentiment_generator_news_fetcher_newsfetcher_get_session",
+      "label": "._get_session()",
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "probe_ambiguous_tickers.py",
+      "community_name": "._get_session",
       "file_type": "code",
-      "norm_label": "_build_trading_calendar()",
-      "source_file": "sentiment_generator/probe_ambiguous_tickers.py",
-      "source_location": "L18"
-    },
-    {
-      "id": "sentiment_generator_probe_ambiguous_tickers_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "probe_ambiguous_tickers.py",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "sentiment_generator/probe_ambiguous_tickers.py",
-      "source_location": "L38"
+      "norm_label": "._get_session()",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1194"
     },
     {
       "id": "static_darkveil_initdarkveil",
@@ -4607,18 +4908,6 @@
       "source_location": "L1193"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_circuit_breaker_halts_further_period_requests",
-      "label": ".test_circuit_breaker_halts_further_period_requests()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "patch",
-      "file_type": "code",
-      "norm_label": ".test_circuit_breaker_halts_further_period_requests()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1529"
-    },
-    {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_exhausted_429_raises_gdelt_rate_limit_exhausted",
       "label": ".test_exhausted_429_raises_gdelt_rate_limit_exhausted()",
       "_callable": true,
@@ -4629,18 +4918,6 @@
       "norm_label": ".test_exhausted_429_raises_gdelt_rate_limit_exhausted()",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
       "source_location": "L1487"
-    },
-    {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_exhaustion_persists_circuit_breaker_cooldown",
-      "label": ".test_exhaustion_persists_circuit_breaker_cooldown()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "patch",
-      "file_type": "code",
-      "norm_label": ".test_exhaustion_persists_circuit_breaker_cooldown()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1676"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_expired_cooldown_allows_request",
@@ -4727,6 +5004,18 @@
       "source_location": "L1417"
     },
     {
+      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_http_200_textual_rate_limit_retries_once_and_succeeds",
+      "label": ".test_http_200_textual_rate_limit_retries_once_and_succeeds()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "patch",
+      "file_type": "code",
+      "norm_label": ".test_http_200_textual_rate_limit_retries_once_and_succeeds()",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1400"
+    },
+    {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_missing_title_and_url_telemetry",
       "label": ".test_missing_title_and_url_telemetry()",
       "_callable": true,
@@ -4785,18 +5074,6 @@
       "norm_label": ".test_successful_request_clears_expired_breaker()",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
       "source_location": "L1709"
-    },
-    {
-      "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_unattempted_periods_after_breaker_remain_absent",
-      "label": ".test_unattempted_periods_after_breaker_remain_absent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "patch",
-      "file_type": "code",
-      "norm_label": ".test_unattempted_periods_after_breaker_remain_absent()",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1732"
     },
     {
       "id": "agents_plugins_agent_skills_scripts_lib_skill_lint_extractskillreferences",
@@ -4907,18 +5184,6 @@
       "source_location": "L40"
     },
     {
-      "id": "scripts_test_security_hardening_securityhardeningtests_test_bola_idor_authorization_enforcement",
-      "label": ".test_bola_idor_authorization_enforcement()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "code",
-      "norm_label": ".test_bola_idor_authorization_enforcement()",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L153"
-    },
-    {
       "id": "scripts_test_security_hardening_securityhardeningtests_test_conditional_hsts_on_https",
       "label": ".test_conditional_hsts_on_https()",
       "_callable": true,
@@ -4941,78 +5206,6 @@
       "norm_label": ".test_cors_origin_handling_and_preflight()",
       "source_file": "scripts/test_security_hardening.py",
       "source_location": "L73"
-    },
-    {
-      "id": "scripts_test_security_hardening_securityhardeningtests_test_cross_process_lock_non_owner_cannot_release",
-      "label": ".test_cross_process_lock_non_owner_cannot_release()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "code",
-      "norm_label": ".test_cross_process_lock_non_owner_cannot_release()",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L304"
-    },
-    {
-      "id": "scripts_test_security_hardening_securityhardeningtests_test_cross_process_training_lock_lifecycle",
-      "label": ".test_cross_process_training_lock_lifecycle()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "code",
-      "norm_label": ".test_cross_process_training_lock_lifecycle()",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L272"
-    },
-    {
-      "id": "scripts_test_security_hardening_securityhardeningtests_test_database_viewer_access_and_xss_protection",
-      "label": ".test_database_viewer_access_and_xss_protection()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "code",
-      "norm_label": ".test_database_viewer_access_and_xss_protection()",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L373"
-    },
-    {
-      "id": "scripts_test_security_hardening_securityhardeningtests_test_email_format_validation",
-      "label": ".test_email_format_validation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "code",
-      "norm_label": ".test_email_format_validation()",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L113"
-    },
-    {
-      "id": "scripts_test_security_hardening_securityhardeningtests_test_feedback_endpoint_validation",
-      "label": ".test_feedback_endpoint_validation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "code",
-      "norm_label": ".test_feedback_endpoint_validation()",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L128"
-    },
-    {
-      "id": "scripts_test_security_hardening_securityhardeningtests_test_old_but_active_process_lock_must_not_be_stolen",
-      "label": ".test_old_but_active_process_lock_must_not_be_stolen()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "code",
-      "norm_label": ".test_old_but_active_process_lock_must_not_be_stolen()",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L320"
     },
     {
       "id": "scripts_test_security_hardening_securityhardeningtests_test_oversized_user_data_payload_rejection",
@@ -5039,42 +5232,6 @@
       "source_location": "L218"
     },
     {
-      "id": "scripts_test_security_hardening_securityhardeningtests_test_rate_limiter_memory_pruning",
-      "label": ".test_rate_limiter_memory_pruning()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "code",
-      "norm_label": ".test_rate_limiter_memory_pruning()",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L238"
-    },
-    {
-      "id": "scripts_test_security_hardening_securityhardeningtests_test_rate_limiting_enforcement",
-      "label": ".test_rate_limiting_enforcement()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "code",
-      "norm_label": ".test_rate_limiting_enforcement()",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L228"
-    },
-    {
-      "id": "scripts_test_security_hardening_securityhardeningtests_test_security_headers_present",
-      "label": ".test_security_headers_present()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "code",
-      "norm_label": ".test_security_headers_present()",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L47"
-    },
-    {
       "id": "scripts_test_security_hardening_securityhardeningtests_test_stale_lockfile_dead_owner_recovery",
       "label": ".test_stale_lockfile_dead_owner_recovery()",
       "_callable": true,
@@ -5097,18 +5254,6 @@
       "norm_label": ".test_ticker_format_validation()",
       "source_file": "scripts/test_security_hardening.py",
       "source_location": "L97"
-    },
-    {
-      "id": "scripts_test_security_hardening_securityhardeningtests_test_untrusted_direct_request_spoofed_headers_ignored",
-      "label": ".test_untrusted_direct_request_spoofed_headers_ignored()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "code",
-      "norm_label": ".test_untrusted_direct_request_spoofed_headers_ignored()",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L252"
     },
     {
       "id": "sentiment_generator_aggregation_aggregate_daily_sentiment",
@@ -5135,6 +5280,18 @@
       "source_location": "L62"
     },
     {
+      "id": "sentiment_generator_cache_export_articles_parquet",
+      "label": "export_articles_parquet()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "generate_sentiment.py",
+      "file_type": "code",
+      "norm_label": "export_articles_parquet()",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L239"
+    },
+    {
       "id": "sentiment_generator_cache_get_failed_period_diagnostics",
       "label": "get_failed_period_diagnostics()",
       "_callable": true,
@@ -5147,16 +5304,16 @@
       "source_location": "L287"
     },
     {
-      "id": "sentiment_generator_cache_get_unresolved_failed_periods",
-      "label": "get_unresolved_failed_periods()",
+      "id": "sentiment_generator_cache_load_all_articles_df",
+      "label": "load_all_articles_df()",
       "_callable": true,
       "_origin": "ast",
       "community": 6,
       "community_name": "generate_sentiment.py",
       "file_type": "code",
-      "norm_label": "get_unresolved_failed_periods()",
+      "norm_label": "load_all_articles_df()",
       "source_file": "sentiment_generator/cache.py",
-      "source_location": "L262"
+      "source_location": "L229"
     },
     {
       "id": "sentiment_generator_generate_sentiment_build_data_quality_report",
@@ -5229,18 +5386,6 @@
       "norm_label": "run_pipeline()",
       "source_file": "sentiment_generator/generate_sentiment.py",
       "source_location": "L355"
-    },
-    {
-      "id": "sentiment_generator_validation_validate_production_dataset",
-      "label": "validate_production_dataset()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "generate_sentiment.py",
-      "file_type": "code",
-      "norm_label": "validate_production_dataset()",
-      "source_file": "sentiment_generator/validation.py",
-      "source_location": "L6"
     },
     {
       "id": "sentiment_generator_audit_bigquery_precision_calculate_precision_metrics",
@@ -7232,6 +7377,28 @@
       "source_location": "L1014"
     },
     {
+      "id": "sentiment_generator_probe_ambiguous_tickers",
+      "label": "probe_ambiguous_tickers.py",
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "NewsFetcher",
+      "file_type": "code",
+      "norm_label": "probe_ambiguous_tickers.py",
+      "source_file": "sentiment_generator/probe_ambiguous_tickers.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "sentiment_generator_probe_live_gdelt",
+      "label": "probe_live_gdelt.py",
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "NewsFetcher",
+      "file_type": "code",
+      "norm_label": "probe_live_gdelt.py",
+      "source_file": "sentiment_generator/probe_live_gdelt.py",
+      "source_location": "L1"
+    },
+    {
       "id": "sentiment_generator_news_fetcher_rationale_1115",
       "label": "Production-grade historical news fetcher for Indian equities (NSE) using GDELT\u2026",
       "_origin": "ast",
@@ -7340,6 +7507,28 @@
       "norm_label": "specialized entity matching for bharti airtel limited (bhartiartl.ns)....",
       "source_file": "sentiment_generator/news_fetcher.py",
       "source_location": "L1942"
+    },
+    {
+      "id": "sentiment_generator_probe_ambiguous_tickers_rationale_1",
+      "label": "Live GDELT validation probe for ambiguous tickers: ITC.NS, LT.NS, TITAN.NS,\u2026",
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "NewsFetcher",
+      "file_type": "rationale",
+      "norm_label": "live gdelt validation probe for ambiguous tickers: itc.ns, lt.ns, titan.ns,...",
+      "source_file": "sentiment_generator/probe_ambiguous_tickers.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "sentiment_generator_probe_live_gdelt_rationale_1",
+      "label": "Live GDELT validation probe -- RELIANCE.NS, January 2025. Purpose -------\u2026",
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "NewsFetcher",
+      "file_type": "rationale",
+      "norm_label": "live gdelt validation probe -- reliance.ns, january 2025. purpose -------...",
+      "source_file": "sentiment_generator/probe_live_gdelt.py",
+      "source_location": "L1"
     },
     {
       "id": "agents_plugins_agent_skills_docs_windsurf_setup",
@@ -8505,15 +8694,15 @@
       "source_location": "L1112"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1401",
-      "label": "HTTP-200 with textual rate limit message retries once and successfully returns\u2026",
+      "id": "scripts_test_security_hardening_rationale_114",
+      "label": "Verify malformed email formats are rejected on user data routes.",
       "_origin": "ast",
       "community": 126,
-      "community_name": ".test_http_200_textual_rate_limit_retries_once_and_succeeds",
+      "community_name": ".test_email_format_validation",
       "file_type": "rationale",
-      "norm_label": "http-200 with textual rate limit message retries once and successfully returns...",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1401"
+      "norm_label": "verify malformed email formats are rejected on user data routes.",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L114"
     },
     {
       "id": "agents_plugins_agent_skills_claude_commands_ship",
@@ -9288,17 +9477,6 @@
       "source_location": ""
     },
     {
-      "id": "session",
-      "label": "Session",
-      "_origin": "ast",
-      "community": 14,
-      "community_name": ".fetch_gdelt_window",
-      "file_type": "code",
-      "norm_label": "session",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "valueerror",
       "label": "ValueError",
       "_origin": "ast",
@@ -9319,17 +9497,6 @@
       "norm_label": "raised by parse_gdelt_timestamp() when a gdelt timestamp carries only date-...",
       "source_file": "sentiment_generator/news_fetcher.py",
       "source_location": "L1103"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_rationale_1195",
-      "label": "Returns an isolated requests.Session per worker thread.",
-      "_origin": "ast",
-      "community": 14,
-      "community_name": ".fetch_gdelt_window",
-      "file_type": "rationale",
-      "norm_label": "returns an isolated requests.session per worker thread.",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1195"
     },
     {
       "id": "sentiment_generator_news_fetcher_rationale_1203",
@@ -9621,24 +9788,13 @@
       "source_location": "L1"
     },
     {
-      "id": "event",
-      "label": "Event",
+      "id": "connection",
+      "label": "Connection",
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
-      "norm_label": "event",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "sentiment_generator_generate_sentiment_py_any",
-      "label": "Any",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "process_ticker_news_fetch",
-      "file_type": "code",
-      "norm_label": "any",
+      "norm_label": "connection",
       "source_file": "",
       "source_location": ""
     },
@@ -9647,18 +9803,29 @@
       "label": "test_news_fetcher.py",
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "test_news_fetcher.py",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
       "source_location": "L1"
     },
     {
+      "id": "sentiment_generator_cache_rationale_13",
+      "label": "Returns a SQLite connection configured with WAL mode for concurrency.",
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "test_news_fetcher.py",
+      "file_type": "rationale",
+      "norm_label": "returns a sqlite connection configured with wal mode for concurrency.",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L13"
+    },
+    {
       "id": "sentiment_generator_cache_rationale_21",
       "label": "Initializes tables and performs schema migrations if necessary.",
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "initializes tables and performs schema migrations if necessary.",
       "source_file": "sentiment_generator/cache.py",
@@ -9669,7 +9836,7 @@
       "label": "Persists the GDELT circuit breaker state and cooldown window in SQLite.",
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "persists the gdelt circuit breaker state and cooldown window in sqlite.",
       "source_file": "sentiment_generator/cache.py",
@@ -9680,7 +9847,7 @@
       "label": "Returns the active circuit breaker state if present, else None.",
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "returns the active circuit breaker state if present, else none.",
       "source_file": "sentiment_generator/cache.py",
@@ -9691,51 +9858,29 @@
       "label": "Clears / resets the persisted circuit breaker state upon successful recovery.",
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "clears / resets the persisted circuit breaker state upon successful recovery.",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L404"
     },
     {
-      "id": "sentiment_generator_generate_sentiment_rationale_139",
-      "label": "Fetches all period windows for a single ticker.",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "process_ticker_news_fetch",
-      "file_type": "rationale",
-      "norm_label": "fetches all period windows for a single ticker.",
-      "source_file": "sentiment_generator/generate_sentiment.py",
-      "source_location": "L139"
-    },
-    {
       "id": "sentiment_generator_news_fetcher_rationale_1087",
       "label": "Checks if a response body contains GDELT rate-limit or service throttling text.\u2026",
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "checks if a response body contains gdelt rate-limit or service throttling text....",
       "source_file": "sentiment_generator/news_fetcher.py",
       "source_location": "L1087"
     },
     {
-      "id": "sentiment_generator_news_fetcher_rationale_29",
-      "label": "Raised when all dedicated GDELT HTTP 429 rate-limit retries are exhausted.\u2026",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "process_ticker_news_fetch",
-      "file_type": "rationale",
-      "norm_label": "raised when all dedicated gdelt http 429 rate-limit retries are exhausted....",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L29"
-    },
-    {
       "id": "sentiment_generator_tests_test_news_fetcher_rationale_1647",
       "label": "set_circuit_breaker_state, get_circuit_breaker_state, and\u2026",
       "_origin": "ast",
       "community": 15,
-      "community_name": "process_ticker_news_fetch",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "set_circuit_breaker_state, get_circuit_breaker_state, and...",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
@@ -10192,26 +10337,26 @@
       "source_location": "L6"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1104",
-      "label": "YYYYMMDD timestamps must raise LowPrecisionTimestampError (ValueError subclass).",
+      "id": "scripts_test_security_hardening_rationale_129",
+      "label": "Verify /api/feedback validates message content and bounds.",
       "_origin": "ast",
       "community": 164,
-      "community_name": ".test_date_only_YYYYMMDD_raises_low_precision",
+      "community_name": ".test_feedback_endpoint_validation",
       "file_type": "rationale",
-      "norm_label": "yyyymmdd timestamps must raise lowprecisiontimestamperror (valueerror subclass).",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1104"
+      "norm_label": "verify /api/feedback validates message content and bounds.",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L129"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_115",
-      "label": "Republic Day (Friday 26-Jan-2024) -> following Monday.",
+      "id": "scripts_test_security_hardening_rationale_154",
+      "label": "Verify that when REQUIRE_AUTH=True, unauthorized callers and BOLA attacks are\u2026",
       "_origin": "ast",
       "community": 165,
-      "community_name": ".test_A6_nse_holiday",
+      "community_name": ".test_bola_idor_authorization_enforcement",
       "file_type": "rationale",
-      "norm_label": "republic day (friday 26-jan-2024) -> following monday.",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L115"
+      "norm_label": "verify that when require_auth=true, unauthorized callers and bola attacks are...",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L154"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_rationale_438",
@@ -10236,33 +10381,44 @@
       "source_location": "L737"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_664",
-      "label": "Tokens moved from FINANCIAL_CONTEXT_KEYWORDS to _FINANCIAL_CONTEXT_WORDBOUND\u2026",
+      "id": "scripts_test_security_hardening_rationale_229",
+      "label": "Verify rapid repeated requests trigger HTTP 429 Too Many Requests.",
       "_origin": "ast",
       "community": 168,
-      "community_name": ".test_D7_word_boundary_tokens_match_as_whole_words",
+      "community_name": ".test_rate_limiting_enforcement",
       "file_type": "rationale",
-      "norm_label": "tokens moved from financial_context_keywords to _financial_context_wordbound...",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L664"
+      "norm_label": "verify rapid repeated requests trigger http 429 too many requests.",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L229"
     },
     {
-      "id": "connection",
-      "label": "Connection",
+      "id": "scripts_test_security_hardening_rationale_239",
+      "label": "Verify that the rate limiter evicts stale keys and bounds memory.",
+      "_origin": "ast",
+      "community": 169,
+      "community_name": ".test_rate_limiter_memory_pruning",
+      "file_type": "rationale",
+      "norm_label": "verify that the rate limiter evicts stale keys and bounds memory.",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L239"
+    },
+    {
+      "id": "event",
+      "label": "Event",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_connection",
+      "community_name": "process_ticker_news_fetch",
       "file_type": "code",
-      "norm_label": "connection",
+      "norm_label": "event",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "sentiment_generator_cache_py_any",
+      "id": "sentiment_generator_generate_sentiment_py_any",
       "label": "Any",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_connection",
+      "community_name": "process_ticker_news_fetch",
       "file_type": "code",
       "norm_label": "any",
       "source_file": "",
@@ -10273,55 +10429,66 @@
       "label": "Records the outcome of a period fetch. status: 'success' | 'empty' | 'failed'",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_connection",
+      "community_name": "process_ticker_news_fetch",
       "file_type": "rationale",
       "norm_label": "records the outcome of a period fetch. status: 'success' | 'empty' | 'failed'",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L121"
     },
     {
-      "id": "sentiment_generator_cache_rationale_13",
-      "label": "Returns a SQLite connection configured with WAL mode for concurrency.",
+      "id": "sentiment_generator_generate_sentiment_rationale_139",
+      "label": "Fetches all period windows for a single ticker.",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_connection",
+      "community_name": "process_ticker_news_fetch",
       "file_type": "rationale",
-      "norm_label": "returns a sqlite connection configured with wal mode for concurrency.",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L13"
+      "norm_label": "fetches all period windows for a single ticker.",
+      "source_file": "sentiment_generator/generate_sentiment.py",
+      "source_location": "L139"
     },
     {
-      "id": "sentiment_generator_cache_rationale_147",
-      "label": "Saves a batch of raw articles into SQLite cache. Returns number of newly\u2026",
+      "id": "sentiment_generator_news_fetcher_rationale_29",
+      "label": "Raised when all dedicated GDELT HTTP 429 rate-limit retries are exhausted.\u2026",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_connection",
+      "community_name": "process_ticker_news_fetch",
       "file_type": "rationale",
-      "norm_label": "saves a batch of raw articles into sqlite cache. returns number of newly...",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L147"
+      "norm_label": "raised when all dedicated gdelt http 429 rate-limit retries are exhausted....",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L29"
     },
     {
-      "id": "sentiment_generator_cache_rationale_187",
-      "label": "Retrieves articles that do not yet have FinBERT sentiment scores.",
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1530",
+      "label": "When GDELTRateLimitExhausted occurs, the circuit breaker opens and stops later\u2026",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_connection",
+      "community_name": "process_ticker_news_fetch",
       "file_type": "rationale",
-      "norm_label": "retrieves articles that do not yet have finbert sentiment scores.",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L187"
+      "norm_label": "when gdeltratelimitexhausted occurs, the circuit breaker opens and stops later...",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1530"
     },
     {
-      "id": "sentiment_generator_cache_rationale_212",
-      "label": "Updates FinBERT sentiment score and label for articles.",
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1677",
+      "label": "When 429 retries are exhausted, the persistent circuit breaker cooldown is\u2026",
       "_origin": "ast",
       "community": 17,
-      "community_name": "get_connection",
+      "community_name": "process_ticker_news_fetch",
       "file_type": "rationale",
-      "norm_label": "updates finbert sentiment score and label for articles.",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L212"
+      "norm_label": "when 429 retries are exhausted, the persistent circuit breaker cooldown is...",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1677"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1733",
+      "label": "Periods never attempted after the circuit breaker trips are NOT recorded as\u2026",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "process_ticker_news_fetch",
+      "file_type": "rationale",
+      "norm_label": "periods never attempted after the circuit breaker trips are not recorded as...",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1733"
     },
     {
       "id": "agents_plugins_agent_skills_claude_commands_code_simplify",
@@ -10414,26 +10581,48 @@
       "source_location": "L1"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1434",
-      "label": "_is_gdelt_rate_limit_text only matches specific GDELT throttle phrases, not\u2026",
+      "id": "scripts_test_security_hardening_rationale_253",
+      "label": "Verify that when TRUSTED_PROXIES_COUNT=0 (direct connection / untrusted\u2026",
       "_origin": "ast",
       "community": 176,
-      "community_name": ".test_is_gdelt_rate_limit_text_narrow_matching",
+      "community_name": ".test_untrusted_direct_request_spoofed_headers_ignored",
       "file_type": "rationale",
-      "norm_label": "_is_gdelt_rate_limit_text only matches specific gdelt throttle phrases, not...",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1434"
+      "norm_label": "verify that when trusted_proxies_count=0 (direct connection / untrusted...",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L253"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_90",
-      "label": "Monday 15:30:00 IST exactly -> next trading day (look-ahead guard).",
+      "id": "scripts_test_security_hardening_rationale_273",
+      "label": "Verify normal acquisition, second-process rejection, and normal release.",
+      "_origin": "ast",
+      "community": 177,
+      "community_name": ".test_cross_process_training_lock_lifecycle",
+      "file_type": "rationale",
+      "norm_label": "verify normal acquisition, second-process rejection, and normal release.",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L273"
+    },
+    {
+      "id": "scripts_test_security_hardening_rationale_289",
+      "label": "Verify exception-safe release under error conditions.",
       "_origin": "ast",
       "community": 178,
-      "community_name": ".test_A2_trading_day_exactly_at_1530",
+      "community_name": ".test_cross_process_lock_exception_release",
       "file_type": "rationale",
-      "norm_label": "monday 15:30:00 ist exactly -> next trading day (look-ahead guard).",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L90"
+      "norm_label": "verify exception-safe release under error conditions.",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L289"
+    },
+    {
+      "id": "scripts_test_security_hardening_rationale_305",
+      "label": "Verify that a rogue caller or non-owner token CANNOT release another owner's\u2026",
+      "_origin": "ast",
+      "community": 179,
+      "community_name": ".test_cross_process_lock_non_owner_cannot_release",
+      "file_type": "rationale",
+      "norm_label": "verify that a rogue caller or non-owner token cannot release another owner's...",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L305"
     },
     {
       "id": "runtimeerror",
@@ -10480,17 +10669,6 @@
       "source_location": "L1"
     },
     {
-      "id": "scripts_test_security_hardening_rationale_289",
-      "label": "Verify exception-safe release under error conditions.",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "FinBertAnalyzer",
-      "file_type": "rationale",
-      "norm_label": "verify exception-safe release under error conditions.",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L289"
-    },
-    {
       "id": "sentiment_generator_finbert_sentiment_rationale_117",
       "label": "Scores a list of article dicts, attaching finbert_label, finbert_confidence,\u2026",
       "_origin": "ast",
@@ -10533,6 +10711,105 @@
       "norm_label": "live validation test for finbertanalyzer: 1. positive headlines -> +confidence...",
       "source_file": "sentiment_generator/test_finbert_live.py",
       "source_location": "L1"
+    },
+    {
+      "id": "scripts_test_security_hardening_rationale_321",
+      "label": "Verify that a legitimate long-running training process (>45 min) DOES NOT lose\u2026",
+      "_origin": "ast",
+      "community": 180,
+      "community_name": ".test_old_but_active_process_lock_must_not_be_stolen",
+      "file_type": "rationale",
+      "norm_label": "verify that a legitimate long-running training process (>45 min) does not lose...",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L321"
+    },
+    {
+      "id": "scripts_test_security_hardening_rationale_374",
+      "label": "Verify /db requires header auth, rejects query params, and HTML-escapes all\u2026",
+      "_origin": "ast",
+      "community": 181,
+      "community_name": ".test_database_viewer_access_and_xss_protection",
+      "file_type": "rationale",
+      "norm_label": "verify /db requires header auth, rejects query params, and html-escapes all...",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L374"
+    },
+    {
+      "id": "scripts_test_security_hardening_rationale_48",
+      "label": "Verify baseline security headers on responses.",
+      "_origin": "ast",
+      "community": 182,
+      "community_name": ".test_security_headers_present",
+      "file_type": "rationale",
+      "norm_label": "verify baseline security headers on responses.",
+      "source_file": "scripts/test_security_hardening.py",
+      "source_location": "L48"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_100",
+      "label": "Monday 15:30:01 IST -> next trading day (one second after close).",
+      "_origin": "ast",
+      "community": 183,
+      "community_name": ".test_A3b_trading_day_one_second_after_1530",
+      "file_type": "rationale",
+      "norm_label": "monday 15:30:01 ist -> next trading day (one second after close).",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L100"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_105",
+      "label": "Monday 18:45 IST -> next trading day.",
+      "_origin": "ast",
+      "community": 184,
+      "community_name": ".test_A4_trading_day_after_1530",
+      "file_type": "rationale",
+      "norm_label": "monday 18:45 ist -> next trading day.",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L105"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_120",
+      "label": "Post-market article on the final calendar day must return None (no future\u2026",
+      "_origin": "ast",
+      "community": 185,
+      "community_name": ".test_A7_beyond_final_trading_date_returns_none",
+      "file_type": "rationale",
+      "norm_label": "post-market article on the final calendar day must return none (no future...",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L120"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_701",
+      "label": "'tech' and 'deal' must be matched as whole words for TCS, not as substrings.\u2026",
+      "_origin": "ast",
+      "community": 186,
+      "community_name": ".test_D8_tcs_tech_and_deal_word_boundary",
+      "file_type": "rationale",
+      "norm_label": "'tech' and 'deal' must be matched as whole words for tcs, not as substrings....",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L701"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_85",
+      "label": "Monday 14:00 IST -> same trading day.",
+      "_origin": "ast",
+      "community": 187,
+      "community_name": ".test_A1_trading_day_before_1530",
+      "file_type": "rationale",
+      "norm_label": "monday 14:00 ist -> same trading day.",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L85"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_95",
+      "label": "Monday 15:29:59 IST -> same trading day (still within session).",
+      "_origin": "ast",
+      "community": 188,
+      "community_name": ".test_A3_trading_day_one_second_before_1530",
+      "file_type": "rationale",
+      "norm_label": "monday 15:29:59 ist -> same trading day (still within session).",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L95"
     },
     {
       "id": "sentiment_generator_news_fetcher_rationale_36",
@@ -10898,6 +11175,17 @@
       "source_location": "L1"
     },
     {
+      "id": "sentiment_generator_cache_py_any",
+      "label": "Any",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "cache.py",
+      "file_type": "code",
+      "norm_label": "any",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "sentiment_generator_config",
       "label": "config.py",
       "_origin": "ast",
@@ -10920,17 +11208,6 @@
       "source_location": "L1"
     },
     {
-      "id": "sentiment_generator_news_fetcher",
-      "label": "news_fetcher.py",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "cache.py",
-      "file_type": "code",
-      "norm_label": "news_fetcher.py",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1"
-    },
-    {
       "id": "sentiment_generator_tests_test_bigquery_fetcher",
       "label": "test_bigquery_fetcher.py",
       "_origin": "ast",
@@ -10940,6 +11217,39 @@
       "norm_label": "test_bigquery_fetcher.py",
       "source_file": "sentiment_generator/tests/test_bigquery_fetcher.py",
       "source_location": "L1"
+    },
+    {
+      "id": "sentiment_generator_cache_rationale_147",
+      "label": "Saves a batch of raw articles into SQLite cache. Returns number of newly\u2026",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "cache.py",
+      "file_type": "rationale",
+      "norm_label": "saves a batch of raw articles into sqlite cache. returns number of newly...",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L147"
+    },
+    {
+      "id": "sentiment_generator_cache_rationale_187",
+      "label": "Retrieves articles that do not yet have FinBERT sentiment scores.",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "cache.py",
+      "file_type": "rationale",
+      "norm_label": "retrieves articles that do not yet have finbert sentiment scores.",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L187"
+    },
+    {
+      "id": "sentiment_generator_cache_rationale_212",
+      "label": "Updates FinBERT sentiment score and label for articles.",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "cache.py",
+      "file_type": "rationale",
+      "norm_label": "updates finbert sentiment score and label for articles.",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L212"
     },
     {
       "id": "sentiment_generator_cache_rationale_88",
@@ -10962,50 +11272,6 @@
       "norm_label": "returns period fetch record: status ('success', 'empty', 'failed'),...",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L93"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_rationale_1536",
-      "label": "# NOTE: bare \"mia\" is intentionally excluded \u2014 it is too short and generic",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "cache.py",
-      "file_type": "rationale",
-      "norm_label": "# note: bare \"mia\" is intentionally excluded \u2014 it is too short and generic",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1536"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_rationale_2338",
-      "label": "# IMPORTANT: recursive calls must pass the SAME _request_budget list object.",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "cache.py",
-      "file_type": "rationale",
-      "norm_label": "# important: recursive calls must pass the same _request_budget list object.",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L2338"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_rationale_262",
-      "label": "Validates whether a URL represents a genuine news article rather than a static\u2026",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "cache.py",
-      "file_type": "rationale",
-      "norm_label": "validates whether a url represents a genuine news article rather than a static...",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L262"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_rationale_78",
-      "label": "# IMPORTANT: only include tokens that are safe for plain substring matching\u2026",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "cache.py",
-      "file_type": "rationale",
-      "norm_label": "# important: only include tokens that are safe for plain substring matching...",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L78"
     },
     {
       "id": "agents_plugins_agent_skills_scripts_run_evals",
@@ -11261,6 +11527,17 @@
       "source_location": ""
     },
     {
+      "id": "sentiment_generator_news_fetcher_rationale_1142",
+      "label": "trading_calendar: Sorted list of valid NSE trading dates (YYYY-MM-DD).",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "._article_dedupe_key",
+      "file_type": "rationale",
+      "norm_label": "trading_calendar: sorted list of valid nse trading dates (yyyy-mm-dd).",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1142"
+    },
+    {
       "id": "sentiment_generator_news_fetcher_rationale_1209",
       "label": "Returns a snapshot of all diagnostic telemetry, including: - All stat counters\u2026",
       "_origin": "ast",
@@ -11270,6 +11547,17 @@
       "norm_label": "returns a snapshot of all diagnostic telemetry, including: - all stat counters...",
       "source_file": "sentiment_generator/news_fetcher.py",
       "source_location": "L1209"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_rationale_1330",
+      "label": "Precompiles regular expressions for each ticker for high performance and\u2026",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "._article_dedupe_key",
+      "file_type": "rationale",
+      "norm_label": "precompiles regular expressions for each ticker for high performance and...",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1330"
     },
     {
       "id": "sentiment_generator_news_fetcher_rationale_2061",
@@ -12556,28 +12844,6 @@
       "source_location": "L14"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_100",
-      "label": "Monday 15:30:01 IST -> next trading day (one second after close).",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "TestNewsFetcher",
-      "file_type": "rationale",
-      "norm_label": "monday 15:30:01 ist -> next trading day (one second after close).",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L100"
-    },
-    {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_105",
-      "label": "Monday 18:45 IST -> next trading day.",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "TestNewsFetcher",
-      "file_type": "rationale",
-      "norm_label": "monday 18:45 ist -> next trading day.",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L105"
-    },
-    {
       "id": "sentiment_generator_tests_test_news_fetcher_rationale_1053",
       "label": "Validates the refined Mukesh Ambani policy: - Positives: Requires co-occurring\u2026",
       "_origin": "ast",
@@ -12600,6 +12866,17 @@
       "source_location": "L110"
     },
     {
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1104",
+      "label": "YYYYMMDD timestamps must raise LowPrecisionTimestampError (ValueError subclass).",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "TestNewsFetcher",
+      "file_type": "rationale",
+      "norm_label": "yyyymmdd timestamps must raise lowprecisiontimestamperror (valueerror subclass).",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1104"
+    },
+    {
       "id": "sentiment_generator_tests_test_news_fetcher_rationale_1120",
       "label": "A string that yields >14 numeric digits after stripping non-numeric characters\u2026",
       "_origin": "ast",
@@ -12611,15 +12888,15 @@
       "source_location": "L1120"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_120",
-      "label": "Post-market article on the final calendar day must return None (no future\u2026",
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_115",
+      "label": "Republic Day (Friday 26-Jan-2024) -> following Monday.",
       "_origin": "ast",
       "community": 3,
       "community_name": "TestNewsFetcher",
       "file_type": "rationale",
-      "norm_label": "post-market article on the final calendar day must return none (no future...",
+      "norm_label": "republic day (friday 26-jan-2024) -> following monday.",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L120"
+      "source_location": "L115"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_rationale_125",
@@ -12644,15 +12921,26 @@
       "source_location": "L1266"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_701",
-      "label": "'tech' and 'deal' must be matched as whole words for TCS, not as substrings.\u2026",
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1434",
+      "label": "_is_gdelt_rate_limit_text only matches specific GDELT throttle phrases, not\u2026",
       "_origin": "ast",
       "community": 3,
       "community_name": "TestNewsFetcher",
       "file_type": "rationale",
-      "norm_label": "'tech' and 'deal' must be matched as whole words for tcs, not as substrings....",
+      "norm_label": "_is_gdelt_rate_limit_text only matches specific gdelt throttle phrases, not...",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L701"
+      "source_location": "L1434"
+    },
+    {
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_664",
+      "label": "Tokens moved from FINANCIAL_CONTEXT_KEYWORDS to _FINANCIAL_CONTEXT_WORDBOUND\u2026",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "TestNewsFetcher",
+      "file_type": "rationale",
+      "norm_label": "tokens moved from financial_context_keywords to _financial_context_wordbound...",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L664"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_rationale_815",
@@ -12666,26 +12954,15 @@
       "source_location": "L815"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_85",
-      "label": "Monday 14:00 IST -> same trading day.",
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_90",
+      "label": "Monday 15:30:00 IST exactly -> next trading day (look-ahead guard).",
       "_origin": "ast",
       "community": 3,
       "community_name": "TestNewsFetcher",
       "file_type": "rationale",
-      "norm_label": "monday 14:00 ist -> same trading day.",
+      "norm_label": "monday 15:30:00 ist exactly -> next trading day (look-ahead guard).",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L85"
-    },
-    {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_95",
-      "label": "Monday 15:29:59 IST -> same trading day (still within session).",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "TestNewsFetcher",
-      "file_type": "rationale",
-      "norm_label": "monday 15:29:59 ist -> same trading day (still within session).",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L95"
+      "source_location": "L90"
     },
     {
       "id": "agents_plugins_agent_skills_skills_test_driven_development_skill",
@@ -13376,37 +13653,114 @@
       "source_location": "L23"
     },
     {
-      "id": "sentiment_generator_cache_py_dataframe",
-      "label": "DataFrame",
+      "id": "scripts_test_production_smoke",
+      "label": "test_production_smoke.py",
       "_origin": "ast",
       "community": 32,
-      "community_name": "load_all_articles_df",
+      "community_name": "ProductionSmokeTest",
       "file_type": "code",
-      "norm_label": "dataframe",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "test_production_smoke.py",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L1"
     },
     {
-      "id": "sentiment_generator_cache_rationale_230",
-      "label": "Loads all raw articles from cache as a pandas DataFrame.",
+      "id": "scripts_test_production_smoke_rationale_1",
+      "label": "Comprehensive Post-Deployment Production Smoke Test Suite Simulates the live\u2026",
       "_origin": "ast",
       "community": 32,
-      "community_name": "load_all_articles_df",
+      "community_name": "ProductionSmokeTest",
       "file_type": "rationale",
-      "norm_label": "loads all raw articles from cache as a pandas dataframe.",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L230"
+      "norm_label": "comprehensive post-deployment production smoke test suite simulates the live...",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L1"
     },
     {
-      "id": "sentiment_generator_cache_rationale_240",
-      "label": "Exports raw articles cache to the immutable news_articles.parquet audit file.",
+      "id": "scripts_test_production_smoke_rationale_106",
+      "label": "Verify CORS allows production origin and strictly rejects untrusted origins.",
       "_origin": "ast",
       "community": 32,
-      "community_name": "load_all_articles_df",
+      "community_name": "ProductionSmokeTest",
       "file_type": "rationale",
-      "norm_label": "exports raw articles cache to the immutable news_articles.parquet audit file.",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L240"
+      "norm_label": "verify cors allows production origin and strictly rejects untrusted origins.",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L106"
+    },
+    {
+      "id": "scripts_test_production_smoke_rationale_137",
+      "label": "Verify Firebase token verification, failure modes, and BOLA protection.",
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "rationale",
+      "norm_label": "verify firebase token verification, failure modes, and bola protection.",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L137"
+    },
+    {
+      "id": "scripts_test_production_smoke_rationale_191",
+      "label": "Verify /db is disabled by default in production (ENABLE_DB_VIEWER=false).",
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "rationale",
+      "norm_label": "verify /db is disabled by default in production (enable_db_viewer=false).",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L191"
+    },
+    {
+      "id": "scripts_test_production_smoke_rationale_203",
+      "label": "Verify baseline REST API endpoints without triggering heavy training.",
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "rationale",
+      "norm_label": "verify baseline rest api endpoints without triggering heavy training.",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L203"
+    },
+    {
+      "id": "scripts_test_production_smoke_rationale_241",
+      "label": "Verify /api/stream_train enforces concurrency lock without running heavy\u2026",
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "rationale",
+      "norm_label": "verify /api/stream_train enforces concurrency lock without running heavy...",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L241"
+    },
+    {
+      "id": "scripts_test_production_smoke_rationale_263",
+      "label": "Verify storage paths for users.db, model_logs.db, and stock_models_optionB/.",
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "rationale",
+      "norm_label": "verify storage paths for users.db, model_logs.db, and stock_models_optionb/.",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L263"
+    },
+    {
+      "id": "scripts_test_production_smoke_rationale_287",
+      "label": "Confirm Firebase Admin SDK initializes without committed secrets, and no\u2026",
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "rationale",
+      "norm_label": "confirm firebase admin sdk initializes without committed secrets, and no...",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L287"
+    },
+    {
+      "id": "scripts_test_production_smoke_rationale_66",
+      "label": "Verify HTTPS/TLS simulation and strict security headers.",
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ProductionSmokeTest",
+      "file_type": "rationale",
+      "norm_label": "verify https/tls simulation and strict security headers.",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L66"
     },
     {
       "id": "scripts_analyze_predictions",
@@ -13464,26 +13818,48 @@
       "source_location": "L1"
     },
     {
-      "id": "sentiment_generator_news_fetcher_rationale_1142",
-      "label": "trading_calendar: Sorted list of valid NSE trading dates (YYYY-MM-DD).",
+      "id": "sentiment_generator_validation",
+      "label": "validation.py",
       "_origin": "ast",
       "community": 38,
-      "community_name": "._compile_matchers",
-      "file_type": "rationale",
-      "norm_label": "trading_calendar: sorted list of valid nse trading dates (yyyy-mm-dd).",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1142"
+      "community_name": "get_unresolved_failed_periods",
+      "file_type": "code",
+      "norm_label": "validation.py",
+      "source_file": "sentiment_generator/validation.py",
+      "source_location": "L1"
     },
     {
-      "id": "sentiment_generator_news_fetcher_rationale_1330",
-      "label": "Precompiles regular expressions for each ticker for high performance and\u2026",
+      "id": "sentiment_generator_validation_py_any",
+      "label": "Any",
       "_origin": "ast",
       "community": 38,
-      "community_name": "._compile_matchers",
+      "community_name": "get_unresolved_failed_periods",
+      "file_type": "code",
+      "norm_label": "any",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "sentiment_generator_cache_rationale_263",
+      "label": "Returns list of periods that are currently in 'failed' status in the cache.",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "get_unresolved_failed_periods",
       "file_type": "rationale",
-      "norm_label": "precompiles regular expressions for each ticker for high performance and...",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1330"
+      "norm_label": "returns list of periods that are currently in 'failed' status in the cache.",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L263"
+    },
+    {
+      "id": "sentiment_generator_validation_rationale_13",
+      "label": "Comprehensive validation gate for the generated sentiment dataset. Returns:\u2026",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "get_unresolved_failed_periods",
+      "file_type": "rationale",
+      "norm_label": "comprehensive validation gate for the generated sentiment dataset. returns:...",
+      "source_file": "sentiment_generator/validation.py",
+      "source_location": "L13"
     },
     {
       "id": "agents_plugins_agent_skills_skills_git_workflow_and_versioning_skill",
@@ -14837,26 +15213,59 @@
       "source_location": "L184"
     },
     {
-      "id": "sentiment_generator_probe_live_gdelt",
-      "label": "probe_live_gdelt.py",
+      "id": "sentiment_generator_news_fetcher",
+      "label": "news_fetcher.py",
       "_origin": "ast",
       "community": 43,
-      "community_name": "probe_live_gdelt.py",
+      "community_name": "news_fetcher.py",
       "file_type": "code",
-      "norm_label": "probe_live_gdelt.py",
-      "source_file": "sentiment_generator/probe_live_gdelt.py",
+      "norm_label": "news_fetcher.py",
+      "source_file": "sentiment_generator/news_fetcher.py",
       "source_location": "L1"
     },
     {
-      "id": "sentiment_generator_probe_live_gdelt_rationale_1",
-      "label": "Live GDELT validation probe -- RELIANCE.NS, January 2025. Purpose -------\u2026",
+      "id": "sentiment_generator_news_fetcher_rationale_1536",
+      "label": "# NOTE: bare \"mia\" is intentionally excluded \u2014 it is too short and generic",
       "_origin": "ast",
       "community": 43,
-      "community_name": "probe_live_gdelt.py",
+      "community_name": "news_fetcher.py",
       "file_type": "rationale",
-      "norm_label": "live gdelt validation probe -- reliance.ns, january 2025. purpose -------...",
-      "source_file": "sentiment_generator/probe_live_gdelt.py",
-      "source_location": "L1"
+      "norm_label": "# note: bare \"mia\" is intentionally excluded \u2014 it is too short and generic",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1536"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_rationale_2338",
+      "label": "# IMPORTANT: recursive calls must pass the SAME _request_budget list object.",
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "news_fetcher.py",
+      "file_type": "rationale",
+      "norm_label": "# important: recursive calls must pass the same _request_budget list object.",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L2338"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_rationale_262",
+      "label": "Validates whether a URL represents a genuine news article rather than a static\u2026",
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "news_fetcher.py",
+      "file_type": "rationale",
+      "norm_label": "validates whether a url represents a genuine news article rather than a static...",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L262"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_rationale_78",
+      "label": "# IMPORTANT: only include tokens that are safe for plain substring matching\u2026",
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "news_fetcher.py",
+      "file_type": "rationale",
+      "norm_label": "# important: only include tokens that are safe for plain substring matching...",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L78"
     },
     {
       "id": "agents_plugins_agent_skills_skills_performance_optimization_skill",
@@ -15185,26 +15594,26 @@
       "source_location": "L1224"
     },
     {
-      "id": "sentiment_generator_probe_ambiguous_tickers",
-      "label": "probe_ambiguous_tickers.py",
+      "id": "session",
+      "label": "Session",
       "_origin": "ast",
       "community": 46,
-      "community_name": "probe_ambiguous_tickers.py",
+      "community_name": "._get_session",
       "file_type": "code",
-      "norm_label": "probe_ambiguous_tickers.py",
-      "source_file": "sentiment_generator/probe_ambiguous_tickers.py",
-      "source_location": "L1"
+      "norm_label": "session",
+      "source_file": "",
+      "source_location": ""
     },
     {
-      "id": "sentiment_generator_probe_ambiguous_tickers_rationale_1",
-      "label": "Live GDELT validation probe for ambiguous tickers: ITC.NS, LT.NS, TITAN.NS,\u2026",
+      "id": "sentiment_generator_news_fetcher_rationale_1195",
+      "label": "Returns an isolated requests.Session per worker thread.",
       "_origin": "ast",
       "community": 46,
-      "community_name": "probe_ambiguous_tickers.py",
+      "community_name": "._get_session",
       "file_type": "rationale",
-      "norm_label": "live gdelt validation probe for ambiguous tickers: itc.ns, lt.ns, titan.ns,...",
-      "source_file": "sentiment_generator/probe_ambiguous_tickers.py",
-      "source_location": "L1"
+      "norm_label": "returns an isolated requests.session per worker thread.",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1195"
     },
     {
       "id": "static_darkveil",
@@ -15295,6 +15704,17 @@
       "source_location": "L1384"
     },
     {
+      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1401",
+      "label": "HTTP-200 with textual rate limit message retries once and successfully returns\u2026",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "patch",
+      "file_type": "rationale",
+      "norm_label": "http-200 with textual rate limit message retries once and successfully returns...",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1401"
+    },
+    {
       "id": "sentiment_generator_tests_test_news_fetcher_rationale_1418",
       "label": "Second consecutive HTTP-200 textual rate limit raises GDELTRateLimitExhausted\u2026",
       "_origin": "ast",
@@ -15350,17 +15770,6 @@
       "source_location": "L1507"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1530",
-      "label": "When GDELTRateLimitExhausted occurs, the circuit breaker opens and stops later\u2026",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "patch",
-      "file_type": "rationale",
-      "norm_label": "when gdeltratelimitexhausted occurs, the circuit breaker opens and stops later...",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1530"
-    },
-    {
       "id": "sentiment_generator_tests_test_news_fetcher_rationale_1566",
       "label": "Active persistent cooldown prevents Phase 1 from executing any GDELT requests.",
       "_origin": "ast",
@@ -15394,17 +15803,6 @@
       "source_location": "L1614"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1677",
-      "label": "When 429 retries are exhausted, the persistent circuit breaker cooldown is\u2026",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "patch",
-      "file_type": "rationale",
-      "norm_label": "when 429 retries are exhausted, the persistent circuit breaker cooldown is...",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1677"
-    },
-    {
       "id": "sentiment_generator_tests_test_news_fetcher_rationale_1710",
       "label": "Successful fetch after an expired breaker clears the persisted circuit breaker\u2026",
       "_origin": "ast",
@@ -15414,17 +15812,6 @@
       "norm_label": "successful fetch after an expired breaker clears the persisted circuit breaker...",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
       "source_location": "L1710"
-    },
-    {
-      "id": "sentiment_generator_tests_test_news_fetcher_rationale_1733",
-      "label": "Periods never attempted after the circuit breaker trips are NOT recorded as\u2026",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "patch",
-      "file_type": "rationale",
-      "norm_label": "periods never attempted after the circuit breaker trips are not recorded as...",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1733"
     },
     {
       "id": "agents_plugins_agent_skills_skills_shipping_and_launch_skill",
@@ -17086,28 +17473,6 @@
       "source_location": "L12"
     },
     {
-      "id": "scripts_test_security_hardening_rationale_114",
-      "label": "Verify malformed email formats are rejected on user data routes.",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "rationale",
-      "norm_label": "verify malformed email formats are rejected on user data routes.",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L114"
-    },
-    {
-      "id": "scripts_test_security_hardening_rationale_129",
-      "label": "Verify /api/feedback validates message content and bounds.",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "rationale",
-      "norm_label": "verify /api/feedback validates message content and bounds.",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L129"
-    },
-    {
       "id": "scripts_test_security_hardening_rationale_144",
       "label": "Verify that payloads exceeding 512KB are rejected with 413.",
       "_origin": "ast",
@@ -17117,17 +17482,6 @@
       "norm_label": "verify that payloads exceeding 512kb are rejected with 413.",
       "source_file": "scripts/test_security_hardening.py",
       "source_location": "L144"
-    },
-    {
-      "id": "scripts_test_security_hardening_rationale_154",
-      "label": "Verify that when REQUIRE_AUTH=True, unauthorized callers and BOLA attacks are\u2026",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "rationale",
-      "norm_label": "verify that when require_auth=true, unauthorized callers and bola attacks are...",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L154"
     },
     {
       "id": "scripts_test_security_hardening_rationale_219",
@@ -17141,72 +17495,6 @@
       "source_location": "L219"
     },
     {
-      "id": "scripts_test_security_hardening_rationale_229",
-      "label": "Verify rapid repeated requests trigger HTTP 429 Too Many Requests.",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "rationale",
-      "norm_label": "verify rapid repeated requests trigger http 429 too many requests.",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L229"
-    },
-    {
-      "id": "scripts_test_security_hardening_rationale_239",
-      "label": "Verify that the rate limiter evicts stale keys and bounds memory.",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "rationale",
-      "norm_label": "verify that the rate limiter evicts stale keys and bounds memory.",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L239"
-    },
-    {
-      "id": "scripts_test_security_hardening_rationale_253",
-      "label": "Verify that when TRUSTED_PROXIES_COUNT=0 (direct connection / untrusted\u2026",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "rationale",
-      "norm_label": "verify that when trusted_proxies_count=0 (direct connection / untrusted...",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L253"
-    },
-    {
-      "id": "scripts_test_security_hardening_rationale_273",
-      "label": "Verify normal acquisition, second-process rejection, and normal release.",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "rationale",
-      "norm_label": "verify normal acquisition, second-process rejection, and normal release.",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L273"
-    },
-    {
-      "id": "scripts_test_security_hardening_rationale_305",
-      "label": "Verify that a rogue caller or non-owner token CANNOT release another owner's\u2026",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "rationale",
-      "norm_label": "verify that a rogue caller or non-owner token cannot release another owner's...",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L305"
-    },
-    {
-      "id": "scripts_test_security_hardening_rationale_321",
-      "label": "Verify that a legitimate long-running training process (>45 min) DOES NOT lose\u2026",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "rationale",
-      "norm_label": "verify that a legitimate long-running training process (>45 min) does not lose...",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L321"
-    },
-    {
       "id": "scripts_test_security_hardening_rationale_349",
       "label": "Verify that genuinely stale locks from crashed/dead processes ARE safely\u2026",
       "_origin": "ast",
@@ -17216,28 +17504,6 @@
       "norm_label": "verify that genuinely stale locks from crashed/dead processes are safely...",
       "source_file": "scripts/test_security_hardening.py",
       "source_location": "L349"
-    },
-    {
-      "id": "scripts_test_security_hardening_rationale_374",
-      "label": "Verify /db requires header auth, rejects query params, and HTML-escapes all\u2026",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "rationale",
-      "norm_label": "verify /db requires header auth, rejects query params, and html-escapes all...",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L374"
-    },
-    {
-      "id": "scripts_test_security_hardening_rationale_48",
-      "label": "Verify baseline security headers on responses.",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SecurityHardeningTests",
-      "file_type": "rationale",
-      "norm_label": "verify baseline security headers on responses.",
-      "source_file": "scripts/test_security_hardening.py",
-      "source_location": "L48"
     },
     {
       "id": "scripts_test_security_hardening_rationale_61",
@@ -17304,22 +17570,6 @@
       "node_kind": "page",
       "norm_label": "security-auditor.md",
       "source_file": ".agents/plugins/agent-skills/agents/security-auditor.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "agents_plugins_agent_skills_agents_code_reviewer",
-      "label": "code-reviewer.md",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "agent-skills/README.md",
-      "file_type": "document",
-      "frontmatter": {
-        "name": "code-reviewer",
-        "description": "Senior code reviewer that evaluates changes across five dimensions \u2014 correctness, readability, architecture, security, and performance. Use for thorough code review before merge."
-      },
-      "node_kind": "page",
-      "norm_label": "code-reviewer.md",
-      "source_file": ".agents/plugins/agent-skills/agents/code-reviewer.md",
       "source_location": "L1"
     },
     {
@@ -18100,6 +18350,17 @@
       "source_location": ""
     },
     {
+      "id": "sentiment_generator_cache_py_dataframe",
+      "label": "DataFrame",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "generate_sentiment.py",
+      "file_type": "code",
+      "norm_label": "dataframe",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "sentiment_generator_generate_sentiment",
       "label": "generate_sentiment.py",
       "_origin": "ast",
@@ -18133,28 +18394,6 @@
       "source_location": ""
     },
     {
-      "id": "sentiment_generator_validation",
-      "label": "validation.py",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "generate_sentiment.py",
-      "file_type": "code",
-      "norm_label": "validation.py",
-      "source_file": "sentiment_generator/validation.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "sentiment_generator_validation_py_any",
-      "label": "Any",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "generate_sentiment.py",
-      "file_type": "code",
-      "norm_label": "any",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "sentiment_generator_aggregation_rationale_6",
       "label": "Aggregates article-level FinBERT sentiment for a single stock on a single\u2026",
       "_origin": "ast",
@@ -18177,15 +18416,26 @@
       "source_location": "L67"
     },
     {
-      "id": "sentiment_generator_cache_rationale_263",
-      "label": "Returns list of periods that are currently in 'failed' status in the cache.",
+      "id": "sentiment_generator_cache_rationale_230",
+      "label": "Loads all raw articles from cache as a pandas DataFrame.",
       "_origin": "ast",
       "community": 6,
       "community_name": "generate_sentiment.py",
       "file_type": "rationale",
-      "norm_label": "returns list of periods that are currently in 'failed' status in the cache.",
+      "norm_label": "loads all raw articles from cache as a pandas dataframe.",
       "source_file": "sentiment_generator/cache.py",
-      "source_location": "L263"
+      "source_location": "L230"
+    },
+    {
+      "id": "sentiment_generator_cache_rationale_240",
+      "label": "Exports raw articles cache to the immutable news_articles.parquet audit file.",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "generate_sentiment.py",
+      "file_type": "rationale",
+      "norm_label": "exports raw articles cache to the immutable news_articles.parquet audit file.",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L240"
     },
     {
       "id": "sentiment_generator_cache_rationale_288",
@@ -18252,17 +18502,6 @@
       "norm_label": "loads existing genuine macro sentiment_score values from root...",
       "source_file": "sentiment_generator/generate_sentiment.py",
       "source_location": "L85"
-    },
-    {
-      "id": "sentiment_generator_validation_rationale_13",
-      "label": "Comprehensive validation gate for the generated sentiment dataset. Returns:\u2026",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "generate_sentiment.py",
-      "file_type": "rationale",
-      "norm_label": "comprehensive validation gate for the generated sentiment dataset. returns:...",
-      "source_file": "sentiment_generator/validation.py",
-      "source_location": "L13"
     },
     {
       "id": "agents_plugins_agent_skills_skills_code_simplification_skill",
@@ -24098,6 +24337,22 @@
       "norm_label": "when to use",
       "source_file": ".agents/plugins/agent-skills/skills/spec-driven-development/SKILL.md",
       "source_location": "L12"
+    },
+    {
+      "id": "agents_plugins_agent_skills_agents_code_reviewer",
+      "label": "code-reviewer.md",
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "Review Framework",
+      "file_type": "document",
+      "frontmatter": {
+        "name": "code-reviewer",
+        "description": "Senior code reviewer that evaluates changes across five dimensions \u2014 correctness, readability, architecture, security, and performance. Use for thorough code review before merge."
+      },
+      "node_kind": "page",
+      "norm_label": "code-reviewer.md",
+      "source_file": ".agents/plugins/agent-skills/agents/code-reviewer.md",
+      "source_location": "L1"
     },
     {
       "id": "agents_plugins_agent_skills_agents_code_reviewer_1_correctness",
@@ -31878,6 +32133,18 @@
       "context": "import",
       "source_file": "scripts/test_loader.py",
       "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke",
+      "target": "app",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -46640,6 +46907,17 @@
       "weight": 1.0
     },
     {
+      "source": "scripts_test_production_smoke",
+      "target": "scripts_test_production_smoke_productionsmoketest",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
       "source": "scripts_test_search",
       "target": "scripts_test_search_resolve_and_validate_ticker",
       "relation": "contains",
@@ -48573,6 +48851,127 @@
       "confidence_score": 1.0,
       "source_file": "main.py",
       "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_02_cors_production_origin_and_preflight",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L105",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_03_authentication_and_bola_idor",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L136",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_04_db_viewer_disabled_in_production",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L190",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_05_endpoint_smoke_tests",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L202",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_06_stream_train_safe_concurrency_check",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L240",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_07_runtime_persistence_configuration",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L262",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_08_firebase_admin_initialization_and_sensitive_logging",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L286",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest",
+      "target": "scripts_test_production_smoke_productionsmoketest_setupclass",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest",
+      "target": "scripts_test_production_smoke_productionsmoketest_setup",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest",
+      "target": "scripts_test_production_smoke_productionsmoketest_teardown",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_01_https_and_security_headers",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -51334,6 +51733,105 @@
       "confidence_score": 1.0,
       "source_file": "main.py",
       "source_location": "L845",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_rationale_1",
+      "target": "scripts_test_production_smoke",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_rationale_106",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_02_cors_production_origin_and_preflight",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L106",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_rationale_137",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_03_authentication_and_bola_idor",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L137",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_rationale_191",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_04_db_viewer_disabled_in_production",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L191",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_rationale_203",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_05_endpoint_smoke_tests",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L203",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_rationale_241",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_06_stream_train_safe_concurrency_check",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L241",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_rationale_263",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_07_runtime_persistence_configuration",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L263",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_rationale_287",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_08_firebase_admin_initialization_and_sensitive_logging",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L287",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_rationale_66",
+      "target": "scripts_test_production_smoke_productionsmoketest_test_01_https_and_security_headers",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -54784,6 +55282,30 @@
       "context": "call",
       "source_file": "main.py",
       "source_location": "L92",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest_test_03_authentication_and_bola_idor",
+      "target": "patch",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "call",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L144",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_production_smoke_productionsmoketest_test_06_stream_train_safe_concurrency_check",
+      "target": "patch",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "call",
+      "source_file": "scripts/test_production_smoke.py",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
