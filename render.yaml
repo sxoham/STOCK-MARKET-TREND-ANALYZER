@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: trendanalyzer
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 app:app
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.13
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "false"
+      - key: REQUIRE_AUTH
+        value: "true"
+      - key: FIREBASE_PROJECT_ID
+        value: trendanalyzer-4857f
+      - key: TRUSTED_PROXIES_COUNT
+        value: "1"
+      - key: ENABLE_DB_VIEWER
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true

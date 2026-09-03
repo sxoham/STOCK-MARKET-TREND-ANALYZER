@@ -131,6 +131,7 @@ def load_sentiment_data(ticker: str | None = None) -> pd.DataFrame:
         
     try:
         df = pd.read_csv(path)
+        df.columns = df.columns.str.strip()
         df['Date'] = pd.to_datetime(df['Date'])
         df.set_index('Date', inplace=True)
         

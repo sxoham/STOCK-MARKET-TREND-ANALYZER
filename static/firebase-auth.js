@@ -22,8 +22,6 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-console.log("Firebase App Initialized:", app.name);
-
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
@@ -36,9 +34,6 @@ async function signInWithGoogle() {
     throw error;
   }
 }
-
-console.log("Firebase Auth Initialized:", auth);
-console.log("Firebase Config:", firebaseConfig);
 
 export {
   auth,

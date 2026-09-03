@@ -16,7 +16,7 @@ if __name__ == "__main__":
     try:
         c = app.test_client()
         print("Testing / ...")
-        assert c.get('/').status_code == 200
+        assert c.get('/', follow_redirects=True).status_code == 200
         print("Testing /api/stocks ...")
         assert c.get('/api/stocks').status_code == 200
         print("Testing /api/lookup ...")

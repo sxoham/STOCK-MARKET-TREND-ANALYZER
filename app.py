@@ -1,27 +1,467 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-from flask import Flask, render_template, jsonify, request, send_from_directory, redirect, Response, stream_with_context
+import sys
+import re
+import html
+import hmac
+import time
 import queue
+import logging
 import threading
 import sqlite3
 import json
 import datetime
+import socket
+import uuid
+import urllib.request
+from functools import wraps
+from werkzeug.middleware.proxy_fix import ProxyFix
 import pandas as pd
 import numpy as np
 import joblib
 from keras.models import load_model
 import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
+from flask import Flask, render_template, jsonify, request, send_from_directory, redirect, Response, stream_with_context, abort
 import main
 import sentiment as sentiment_module
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+# Logging configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] [Security] %(message)s'
+)
+logger = logging.getLogger('trendanalyzer')
+
 app = Flask(__name__)
+
+# Request limit: 1 MB max payload
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'trendanalyzer-dev-secret-key-change-in-prod')
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_DEBUG', 'false').lower() != 'true'
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# Environment & Deployment Mode
+IS_PROD = (
+    os.environ.get("FLASK_ENV", "").lower() in ["prod", "production"]
+    or os.environ.get("ENV", "").lower() in ["prod", "production"]
+    or os.environ.get("FLASK_DEBUG", "false").lower() != "true"
+)
+# Fail-closed: in production, auth is strictly mandatory
+if IS_PROD:
+    REQUIRE_AUTH = True
+else:
+    REQUIRE_AUTH = os.environ.get("REQUIRE_AUTH", "false").lower() == "true"
 
 # Config
 DB_FILE = 'users.db'
 MODEL_DB_FILE = 'model_logs.db'
 RESULTS_DIR = main.RESULTS_DIR
 STOCKS = main.STOCKS
+ENABLE_DB_VIEWER = os.environ.get("ENABLE_DB_VIEWER", "false").lower() == "true"
+ADMIN_KEY = os.environ.get("ADMIN_KEY", "")
+FIREBASE_PROJECT_ID = os.environ.get("FIREBASE_PROJECT_ID", "trendanalyzer-4857f")
+ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000").split(",") if o.strip()]
+
+# Trusted Proxy Configuration
+# Default is 0 (direct connection; forwarding headers are untrusted to prevent IP spoofing).
+# In production with a reverse proxy (Nginx, AWS ALB, Render), set to exact number of proxy hops.
+# NOTE: Gunicorn must bind to localhost or an internal private socket so it cannot be reached directly around the reverse proxy.
+try:
+    TRUSTED_PROXIES_COUNT = max(0, int(os.environ.get("TRUSTED_PROXIES_COUNT", "0").strip()))
+except (ValueError, TypeError, AttributeError):
+    TRUSTED_PROXIES_COUNT = 0
+
+if TRUSTED_PROXIES_COUNT > 0:
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=TRUSTED_PROXIES_COUNT,
+        x_proto=TRUSTED_PROXIES_COUNT,
+        x_host=TRUSTED_PROXIES_COUNT
+    )
+
+# CORS Preflight OPTIONS handler
+@app.before_request
+def handle_preflight_and_options():
+    if request.method == 'OPTIONS':
+        origin = request.headers.get('Origin')
+        if origin and origin in ALLOWED_ORIGINS:
+            response = Response(status=204)
+            response.headers['Access-Control-Allow-Origin'] = origin
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Admin-Key'
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+            response.headers['Access-Control-Max-Age'] = '86400'
+            return response
+
+# Security headers middleware
+@app.after_request
+def apply_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'geolocation=(), camera=(), microphone=()'
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
+    response.headers['Cross-Origin-Resource-Policy'] = 'same-origin'
+
+    # HSTS: emitted only on verified HTTPS responses
+    if request.is_secure:
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+
+    # CORS Allowlist handling
+    origin = request.headers.get('Origin')
+    if origin and origin in ALLOWED_ORIGINS:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Admin-Key'
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
+    
+    # Content-Security-Policy tailored to Firebase Auth, Google Fonts, Plotly, and Chart.js
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdn.jsdelivr.net https://cdn.plot.ly https://apis.google.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebaseapp.com; "
+        "img-src 'self' data: https:; "
+        "frame-src https://*.firebaseapp.com; "
+        "frame-ancestors 'none';"
+    )
+    response.headers['Content-Security-Policy'] = csp
+    return response
+
+# Validation regexes
+TICKER_REGEX = re.compile(r'^[A-Za-z0-9\.\-\^]{1,20}$')
+EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$')
+
+def is_valid_ticker_format(ticker: str) -> bool:
+    return bool(ticker and isinstance(ticker, str) and TICKER_REGEX.match(ticker.strip()))
+
+def is_valid_email_format(email: str) -> bool:
+    if not email or not isinstance(email, str) or len(email) > 255:
+        return False
+    email = email.strip()
+    if '..' in email:
+        return False
+    return bool(EMAIL_REGEX.match(email))
+
+# Cross-Process Concurrency and Memory-Bounded Rate Limiting
+class CrossProcessLock:
+    """
+    Atomic OS file-based lock guaranteeing cross-worker mutual exclusion.
+    Stores PID, hostname, creation timestamp, and unique ownership token in lockfile.
+    Validates process liveness before reclaiming stale locks so that legitimately
+    long-running training processes (>45 min) are never stolen while still active.
+    Enforces that only the process/token that owns the lock can release it.
+    """
+    def __init__(self, lockfile_path: str, timeout_seconds: int = 2700):
+        self.lockfile_path = lockfile_path
+        self.timeout_seconds = timeout_seconds
+        self._thread_lock = threading.Lock()
+        self._fd = None
+        self._owner_token = None
+
+    @staticmethod
+    def is_pid_alive(pid: int, hostname: str) -> bool:
+        """
+        Verify whether the owning process is still active on this host.
+        Returns True if process is alive (or on foreign host), False if confirmed dead.
+        """
+        if not hostname or hostname != socket.gethostname():
+            # If on another host (e.g. shared NFS mount), we cannot inspect foreign PID; assume alive
+            return True
+        if not pid or not isinstance(pid, int) or pid <= 0:
+            return False
+
+        if sys.platform == 'win32':
+            try:
+                import ctypes
+                SYNCHRONIZE = 0x00100000
+                handle = ctypes.windll.kernel32.OpenProcess(SYNCHRONIZE, False, int(pid))
+                if handle == 0:
+                    err = ctypes.windll.kernel32.GetLastError()
+                    # Error 5 (ERROR_ACCESS_DENIED) indicates process exists but access is restricted
+                    return err == 5
+                try:
+                    # 258 is WAIT_TIMEOUT, meaning process is active (not signaled)
+                    return ctypes.windll.kernel32.WaitForSingleObject(handle, 0) == 258
+                finally:
+                    ctypes.windll.kernel32.CloseHandle(handle)
+            except Exception:
+                return True
+        else:
+            try:
+                os.kill(pid, 0)
+                return True
+            except PermissionError:
+                return True
+            except (ProcessLookupError, OSError):
+                return False
+
+    def acquire(self, blocking: bool = False) -> bool:
+        if not self._thread_lock.acquire(blocking=blocking):
+            return False
+        try:
+            # Check for existing lockfile
+            if os.path.exists(self.lockfile_path):
+                should_reclaim = False
+                try:
+                    with open(self.lockfile_path, 'r') as f:
+                        data = json.load(f)
+                    owner_pid = data.get("pid")
+                    owner_host = data.get("hostname", "")
+                    lock_time = data.get("timestamp", 0)
+                    lock_age = time.time() - lock_time
+
+                    if lock_age > self.timeout_seconds:
+                        # Before removing lock, verify if owner process is dead!
+                        # A long-running training process must NOT lose its lock merely due to age.
+                        if not self.is_pid_alive(owner_pid, owner_host):
+                            logger.warning(
+                                f"Reclaiming stale lock from dead process (PID {owner_pid} on {owner_host}, age {int(lock_age)}s)"
+                            )
+                            should_reclaim = True
+                        else:
+                            logger.info(
+                                f"Training lock age ({int(lock_age)}s) exceeds timeout, but owner PID {owner_pid} is still active. Lock will NOT be stolen."
+                            )
+                except Exception as ex:
+                    logger.warning(f"Could not parse existing lockfile metadata: {ex}")
+                    try:
+                        mtime = os.path.getmtime(self.lockfile_path)
+                        if time.time() - mtime > self.timeout_seconds:
+                            should_reclaim = True
+                    except OSError:
+                        pass
+
+                if should_reclaim:
+                    try:
+                        os.remove(self.lockfile_path)
+                    except OSError:
+                        pass
+
+            # Generate unique token for this ownership session
+            token = uuid.uuid4().hex
+
+            # Atomic OS-level file creation (POSIX & Windows)
+            self._fd = os.open(self.lockfile_path, os.O_CREAT | os.O_EXCL | os.O_RDWR)
+            pid_info = json.dumps({
+                "pid": os.getpid(),
+                "hostname": socket.gethostname(),
+                "timestamp": time.time(),
+                "owner_token": token
+            }).encode('utf-8')
+            os.write(self._fd, pid_info)
+            self._owner_token = token
+            return True
+        except (FileExistsError, OSError):
+            self._thread_lock.release()
+            return False
+
+    def release(self, token: str = None, force: bool = False) -> bool:
+        """
+        Releases the lock. Only the owner with matching token can release it.
+        If token is None, uses self._owner_token.
+        """
+        try:
+            target_token = token or self._owner_token
+            if not target_token and not force:
+                return False
+
+            if os.path.exists(self.lockfile_path) and not force:
+                try:
+                    with open(self.lockfile_path, 'r') as f:
+                        data = json.load(f)
+                    file_token = data.get("owner_token")
+                    if file_token != target_token:
+                        logger.warning(
+                            f"Refusing to release lock: token mismatch (caller {target_token} != owner {file_token})"
+                        )
+                        return False
+                except Exception:
+                    pass
+
+            # Close open file descriptor before removing file (required on Windows)
+            if self._fd is not None:
+                try:
+                    os.close(self._fd)
+                except OSError:
+                    pass
+                self._fd = None
+
+            if os.path.exists(self.lockfile_path):
+                try:
+                    os.remove(self.lockfile_path)
+                except OSError:
+                    pass
+
+            self._owner_token = None
+            return True
+        finally:
+            if self._thread_lock.locked():
+                self._thread_lock.release()
+
+    def is_locked(self) -> bool:
+        return self._thread_lock.locked() or os.path.exists(self.lockfile_path)
+
+training_lock = CrossProcessLock(os.path.join(RESULTS_DIR, ".training.lock"))
+
+# =============================================================================
+# RATE LIMITING ARCHITECTURAL NOTE:
+# This in-memory sliding-window rate limiter is worker-process-local.
+# In a multi-worker deployment (e.g. Gunicorn with N workers), the effective
+# aggregate throughput across all workers is N * configured_limit per IP.
+# For single-node deployments this is appropriate; for horizontally scaled or
+# multi-container clusters, a shared Redis-backed limiter (or reverse-proxy
+# rate limiting at Nginx / Cloudflare / Envoy layer) must be deployed.
+# =============================================================================
+class SimpleRateLimiter:
+    """Sliding-window rate limiter with memory bounding and stale key eviction."""
+    def __init__(self, max_keys: int = 10000):
+        self._requests = {}
+        self._lock = threading.Lock()
+        self._max_keys = max_keys
+    
+    def is_allowed(self, key: str, max_requests: int, window_seconds: int = 60) -> bool:
+        now = time.time()
+        with self._lock:
+            # Evict stale entries when tracking table grows large
+            if len(self._requests) > self._max_keys:
+                self._prune(now, window_seconds)
+
+            timestamps = self._requests.get(key, [])
+            timestamps = [t for t in timestamps if now - t < window_seconds]
+            if len(timestamps) >= max_requests:
+                self._requests[key] = timestamps
+                return False
+            timestamps.append(now)
+            self._requests[key] = timestamps
+            return True
+
+    def _prune(self, now: float, window_seconds: int):
+        stale_keys = [k for k, ts in self._requests.items() if not ts or (now - ts[-1] >= window_seconds)]
+        for k in stale_keys:
+            del self._requests[k]
+        if len(self._requests) > self._max_keys:
+            sorted_keys = sorted(self._requests.keys(), key=lambda k: self._requests[k][-1] if self._requests[k] else 0)
+            for k in sorted_keys[:len(self._requests) - self._max_keys]:
+                del self._requests[k]
+
+rate_limiter = SimpleRateLimiter()
+
+def limit_rate(max_requests: int, window_seconds: int = 60):
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            # Use request.remote_addr directly (safe under ProxyFix)
+            client_ip = request.remote_addr or '127.0.0.1'
+            key = f"{f.__name__}:{client_ip}"
+            if not rate_limiter.is_allowed(key, max_requests, window_seconds):
+                logger.warning(f"Rate limit exceeded for IP {client_ip} on {request.path}")
+                return jsonify({"status": "error", "error": "Too many requests. Please slow down."}), 429
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+
+# =============================================================================
+# FIREBASE ADMIN SDK PRODUCTION INITIALIZATION:
+# In production, Firebase Admin SDK authenticates using Google Application
+# Default Credentials (ADC). Set GOOGLE_APPLICATION_CREDENTIALS to the external
+# file path of your service-account JSON, or rely on Workload Identity / Cloud IAM
+# if hosted on GCP/GKE/Cloud Run. Never commit service account credentials.
+# Verify that FIREBASE_PROJECT_ID matches the project ID of your Firebase Auth tenant.
+# NEVER log ID tokens, service-account keys, SECRET_KEY, or ADMIN_KEY.
+# =============================================================================
+try:
+    import firebase_admin
+    from firebase_admin import auth as firebase_auth
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(options={'projectId': FIREBASE_PROJECT_ID})
+    HAS_FIREBASE_ADMIN = True
+except Exception as e:
+    logger.warning(f"Firebase Admin SDK initialization deferred: {e}")
+    HAS_FIREBASE_ADMIN = False
+
+def verify_firebase_id_token(token: str):
+    """
+    Verifies a Firebase ID token using Firebase Admin SDK where feasible.
+    Verifies signature, aud, iss, exp, and token validity.
+    Falls back to Google's public tokeninfo endpoint if Firebase Admin credentials are unconfigured.
+    Returns decoded token dict containing 'email' if valid, None otherwise.
+    """
+    if not token or not isinstance(token, str):
+        return None
+    token = token.strip()
+    
+    # 1. Prefer Firebase Admin SDK (signature, iss, aud, exp verified against Google certs)
+    if HAS_FIREBASE_ADMIN:
+        try:
+            decoded = firebase_auth.verify_id_token(token, check_revoked=False)
+            if decoded:
+                return decoded
+        except Exception as ex:
+            # If invalid or expired token, fail immediately without fallback
+            if "invalid" in str(ex).lower() or "expired" in str(ex).lower() or "revoked" in str(ex).lower():
+                logger.warning(f"Firebase Admin SDK token verification rejected token: {ex}")
+                return None
+            logger.debug(f"Firebase Admin verification error (falling back): {ex}")
+
+    # 2. Tokeninfo verification fallback
+    try:
+        url = f"https://oauth2.googleapis.com/tokeninfo?id_token={token}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'TrendAnalyzer-Backend/1.0'})
+        with urllib.request.urlopen(req, timeout=4) as resp:
+            if resp.status == 200:
+                payload = json.loads(resp.read().decode('utf-8'))
+                aud = payload.get('aud')
+                iss = payload.get('iss', '')
+                if (aud and aud == FIREBASE_PROJECT_ID) or f"securetoken.google.com/{FIREBASE_PROJECT_ID}" in iss:
+                    return payload
+                logger.warning(f"Token aud '{aud}' did not match project '{FIREBASE_PROJECT_ID}'")
+    except Exception as e:
+        logger.warning(f"Token verification fallback failed: {e}")
+    return None
+
+def require_user_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        target_email = kwargs.get('email')
+        if not target_email and request.is_json and request.get_json(silent=True):
+            target_email = request.get_json(silent=True).get('email')
+        
+        auth_header = request.headers.get('Authorization', '')
+        token = None
+        if auth_header.startswith('Bearer '):
+            token = auth_header.split(' ', 1)[1].strip()
+            
+        if not REQUIRE_AUTH and not token:
+            request.auth_email = (target_email or 'dev@local').lower().strip()
+            return f(*args, **kwargs)
+            
+        if not token:
+            logger.warning(f"Unauthorized access attempt to {request.path} without token")
+            return jsonify({"status": "error", "error": "Authentication required. Bearer token missing."}), 401
+            
+        token_payload = verify_firebase_id_token(token)
+        if not token_payload:
+            logger.warning(f"Invalid or expired token for {request.path}")
+            return jsonify({"status": "error", "error": "Invalid or expired authentication token."}), 401
+            
+        auth_email = token_payload.get('email', '').lower().strip()
+        if not auth_email:
+            logger.warning(f"Token for {request.path} lacks email identity")
+            return jsonify({"status": "error", "error": "Invalid token: missing email identity."}), 401
+
+        # Strict BOLA / IDOR check: caller identity must match target resource identity
+        if target_email and auth_email != target_email.lower().strip():
+            logger.warning(f"BOLA/IDOR attempt: Authenticated '{auth_email}' attempted access to '{target_email}'")
+            return jsonify({"status": "error", "error": "Forbidden: You do not have permission to access or modify this account."}), 403
+            
+        request.auth_email = auth_email
+        return f(*args, **kwargs)
+    return decorated
 
 def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
@@ -54,6 +494,9 @@ def dashboard():
 import yfinance as yf
 
 def resolve_and_validate_ticker(ticker):
+    if not is_valid_ticker_format(ticker):
+        return None
+    ticker = ticker.strip().upper()
     # 1. Try to download a tiny slice of data to check if ticker is directly valid
     try:
         df = yf.download(ticker, period="5d", progress=False)
@@ -77,6 +520,7 @@ def resolve_and_validate_ticker(ticker):
     return None
 
 @app.route('/api/stocks')
+@limit_rate(max_requests=60, window_seconds=60)
 def get_stocks():
     # Return local STOCKS plus any other trained tickers
     results = list(STOCKS)
@@ -100,10 +544,12 @@ def get_stocks():
     return jsonify(results)
 
 @app.route('/api/lookup')
+@limit_rate(max_requests=60, window_seconds=60)
 def lookup_stock():
-    query = request.args.get('q', '').upper()
-    if not query:
+    raw_query = request.args.get('q', '')
+    if not raw_query or len(raw_query) > 50:
         return jsonify([])
+    query = raw_query.strip().upper()
     
     # 1. Local STOCKS filtration
     results = [
@@ -156,7 +602,16 @@ def lookup_stock():
     return jsonify(results[:10])
 
 @app.route('/api/get_data/<email>')
+@limit_rate(max_requests=60, window_seconds=60)
+@require_user_auth
 def get_user_data(email):
+    if not is_valid_email_format(email):
+        return jsonify({"status": "error", "message": "Invalid email format"}), 400
+
+    # Authoritative email identity from verified token
+    if hasattr(request, 'auth_email') and request.auth_email:
+        email = request.auth_email
+
     conn = get_db_connection()
     user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
     conn.close()
@@ -171,45 +626,134 @@ def get_user_data(email):
         return jsonify({"status": "game_start", "message": "User not found"})
 
 @app.route('/api/save_data', methods=['POST'])
+@limit_rate(max_requests=60, window_seconds=60)
+@require_user_auth
 def save_user_data():
     try:
         req_data = request.get_json()
+        if not req_data or not isinstance(req_data, dict):
+            return jsonify({"status": "error", "message": "Invalid JSON body"}), 400
+
         email = req_data.get('email')
         data = req_data.get('data')
         
-        if not email or not data:
+        if not email or data is None:
             return jsonify({"status": "error", "message": "Missing email or data"}), 400
             
+        if not is_valid_email_format(email):
+            return jsonify({"status": "error", "message": "Invalid email format"}), 400
+
+        # Authoritative identity check: never trust client body over verified token
+        if hasattr(request, 'auth_email') and request.auth_email:
+            if email.lower().strip() != request.auth_email:
+                logger.warning(f"BOLA attempt in save_user_data: body '{email}' != auth '{request.auth_email}'")
+                return jsonify({"status": "error", "error": "Forbidden: Target email does not match authenticated user."}), 403
+            email = request.auth_email
+
+        if not isinstance(data, dict):
+            return jsonify({"status": "error", "message": "Data payload must be a JSON object"}), 400
+
+        # Enforce serialized size boundary (max 512KB)
+        serialized_data = json.dumps(data)
+        if len(serialized_data) > 512 * 1024:
+            return jsonify({"status": "error", "message": "User data payload too large (max 512KB)"}), 413
+
         conn = get_db_connection()
         # Upsert
         conn.execute('''
             INSERT INTO users (email, data, is_verified, subscription_tier) 
             VALUES (?, ?, ?, ?)
             ON CONFLICT(email) DO UPDATE SET data=excluded.data
-        ''', (email, json.dumps(data), 0, 'free'))
+        ''', (email, serialized_data, 0, 'free'))
         conn.commit()
         conn.close()
         return jsonify({"status": "success"})
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Error saving user data: {e}")
+        return jsonify({"status": "error", "message": "Internal error saving user data"}), 500
 
 @app.route('/api/delete_data', methods=['POST'])
+@limit_rate(max_requests=10, window_seconds=60)
+@require_user_auth
 def delete_user_data():
     req_data = request.get_json()
+    if not req_data or not isinstance(req_data, dict):
+        return jsonify({"status": "error", "message": "Invalid JSON body"}), 400
+
     email = req_data.get('email')
-    
-    if not email:
-        return jsonify({"status": "error", "message": "Missing email"}), 400
+    if not email or not is_valid_email_format(email):
+        return jsonify({"status": "error", "message": "Missing or invalid email"}), 400
         
+    # Authoritative identity check: never trust client body over verified token
+    if hasattr(request, 'auth_email') and request.auth_email:
+        if email.lower().strip() != request.auth_email:
+            logger.warning(f"BOLA attempt in delete_user_data: body '{email}' != auth '{request.auth_email}'")
+            return jsonify({"status": "error", "error": "Forbidden: Target email does not match authenticated user."}), 403
+        email = request.auth_email
+
     conn = get_db_connection()
     conn.execute('DELETE FROM users WHERE email = ?', (email,))
     conn.commit()
     conn.close()
+    logger.info(f"User account and data deleted for {email}")
     return jsonify({"status": "success"})
+
+@app.route('/api/feedback', methods=['POST'])
+@limit_rate(max_requests=20, window_seconds=60)
+def handle_feedback():
+    """Accepts user feedback with length bounds and rate limiting."""
+    try:
+        req_data = request.get_json() or {}
+        email = req_data.get('email', 'anonymous')
+        message = req_data.get('message', '')
+        rating = req_data.get('rating', 5)
+
+        if not message or not isinstance(message, str) or len(message.strip()) == 0:
+            return jsonify({"status": "error", "error": "Feedback message cannot be empty"}), 400
+
+        if len(message) > 2000:
+            return jsonify({"status": "error", "error": "Feedback message exceeds 2000 characters limit"}), 400
+
+        try:
+            rating = int(rating)
+            if not 1 <= rating <= 5:
+                rating = 5
+        except (ValueError, TypeError):
+            rating = 5
+
+        sanitized_email = html.escape(str(email)[:255].strip())
+        logger.info(f"Feedback received from {sanitized_email} (Rating: {rating}/5)")
+        return jsonify({"status": "success", "message": "Feedback received successfully"})
+    except Exception as e:
+        logger.error(f"Error handling feedback: {e}")
+        return jsonify({"status": "error", "error": "Failed to submit feedback"}), 500
 
 @app.route('/db')
 def view_database():
-    """Interactive visual database viewer for all tables in users.db."""
+    """Interactive visual database viewer for all tables in users.db (Development/Debug only)."""
+    if not ENABLE_DB_VIEWER:
+        abort(404)
+
+    # In production, require strong ADMIN_KEY of >= 16 chars
+    if IS_PROD and (not ADMIN_KEY or len(ADMIN_KEY) < 16):
+        logger.error("ENABLE_DB_VIEWER is enabled in production but ADMIN_KEY is absent or < 16 chars. Blocking access.")
+        abort(404)
+
+    # Strictly disallow ?key= query parameters to avoid access log leakage
+    if 'key' in request.args:
+        logger.warning("Rejected /db access using query parameter. Secret must be in header.")
+        abort(403)
+
+    # Accept header only: X-Admin-Key or Authorization: Bearer <key>
+    admin_key_header = request.headers.get('X-Admin-Key', '')
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        admin_key_header = auth_header.split(' ', 1)[1].strip()
+
+    if not ADMIN_KEY or not admin_key_header or not hmac.compare_digest(admin_key_header, ADMIN_KEY):
+        logger.warning(f"Unauthorized access attempt to /db from {request.remote_addr}")
+        abort(403)
+
     conn = get_db_connection()
     cur = conn.cursor()
     
@@ -218,9 +762,9 @@ def view_database():
     users_raw = cur.fetchall()
     users_list = []
     for u in users_raw:
-        email = u['email']
+        email = html.escape(str(u['email'] or ''))
         verified = bool(u['is_verified'])
-        tier = u['subscription_tier']
+        tier = html.escape(str(u['subscription_tier'] or ''))
         try:
             pdata = json.loads(u['data']) if u['data'] else {}
         except:
@@ -230,12 +774,18 @@ def view_database():
         holdings = portfolio.get('holdings', {})
         profile = portfolio.get('profile', {})
         watchlist = pdata.get('watchlist', [])
+        
+        escaped_holdings = html.escape(json.dumps(holdings, indent=2))
+        escaped_profile = html.escape(json.dumps(profile, indent=2))
+        escaped_watchlist = html.escape(", ".join(watchlist)) if watchlist else "None"
+        formatted_balance = html.escape(f"₹{balance:,.2f}" if isinstance(balance, (int, float)) else str(balance))
+
         users_list.append({
             'email': email,
-            'balance': f"₹{balance:,.2f}" if isinstance(balance, (int, float)) else str(balance),
-            'holdings': json.dumps(holdings, indent=2),
-            'profile': json.dumps(profile, indent=2),
-            'watchlist': ", ".join(watchlist) if watchlist else "None",
+            'balance': formatted_balance,
+            'holdings': escaped_holdings,
+            'profile': escaped_profile,
+            'watchlist': escaped_watchlist,
             'verified': "Yes" if verified else "No",
             'tier': tier
         })
@@ -249,7 +799,7 @@ def view_database():
         
     conn.close()
     
-    html = f"""
+    html_page = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -297,6 +847,7 @@ def view_database():
               <th>Profile Metadata</th>
               <th>Watchlist</th>
               <th>Verified</th>
+              <th>Tier</th>
             </tr>
           </thead>
           <tbody>
@@ -308,6 +859,7 @@ def view_database():
               <td><pre>{u['profile']}</pre></td>
               <td style="color: #94a3b8;">{u['watchlist']}</td>
               <td><span style="color: {'#4ade80' if u['verified'] == 'Yes' else '#94a3b8'};">{u['verified']}</span></td>
+              <td style="color: #94a3b8;">{u['tier']}</td>
             </tr>
             ''' for u in users_list])}
           </tbody>
@@ -332,13 +884,13 @@ def view_database():
           <tbody>
             {"".join([f'''
             <tr>
-              <td>{a.get('id', '')}</td>
-              <td style="font-weight: 500;">{a.get('email', '')}</td>
-              <td style="color: #38bdf8; font-weight: 600;">{a.get('ticker', '')}</td>
+              <td>{html.escape(str(a.get('id', '')))}</td>
+              <td style="font-weight: 500;">{html.escape(str(a.get('email', '')))}</td>
+              <td style="color: #38bdf8; font-weight: 600;">{html.escape(str(a.get('ticker', '')))}</td>
               <td>₹{a.get('target_price', 0):,.2f}</td>
-              <td>{a.get('condition', '')}</td>
+              <td>{html.escape(str(a.get('condition', '')))}</td>
               <td>{'Active' if a.get('is_active') == 1 else 'Inactive'}</td>
-              <td style="color: #64748b;">{a.get('created_at', '')}</td>
+              <td style="color: #64748b;">{html.escape(str(a.get('created_at', '')))}</td>
             </tr>
             ''' for a in alerts_list]) if alerts_list else '<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 24px;">No price alerts set yet.</td></tr>'}
           </tbody>
@@ -347,17 +899,22 @@ def view_database():
     </body>
     </html>
     """
-    return html
+    return html_page
 
 @app.route('/api/sentiment/<ticker>')
+@limit_rate(max_requests=60, window_seconds=60)
 def get_sentiment(ticker):
+    if not is_valid_ticker_format(ticker):
+        return jsonify({"error": "Invalid ticker symbol format", "label": "Neutral", "score": 0, "headlines": []}), 400
     try:
         result = sentiment_module.get_news_sentiment(ticker)
         return jsonify(result)
     except Exception as e:
-        return jsonify({"error": str(e), "label": "Neutral", "score": 0, "headlines": []})
+        logger.error(f"Error fetching sentiment for {ticker}: {e}")
+        return jsonify({"error": "Failed to fetch sentiment", "label": "Neutral", "score": 0, "headlines": []})
 
 @app.route('/api/predict/<ticker>')
+@limit_rate(max_requests=30, window_seconds=60)
 def get_prediction(ticker):
     resolved_ticker = resolve_and_validate_ticker(ticker)
     if not resolved_ticker:
@@ -674,13 +1231,18 @@ def generate_live_prediction(ticker, horizon: int = 1):
     return prediction, prob, top_drivers, all_attributions
 
 @app.route('/api/backtest/<ticker>')
+@limit_rate(max_requests=30, window_seconds=60)
 def backtest_endpoint(ticker):
+    if not is_valid_ticker_format(ticker):
+        return jsonify({"error": "Invalid ticker symbol format"}), 400
+
     try:
         # Load model and scaler
-        model_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_best_model.keras")
+        safe_ticker = os.path.basename(ticker.replace('.', '_'))
+        model_path = os.path.join(RESULTS_DIR, f"{safe_ticker}_best_model.keras")
         if not os.path.exists(model_path):
-             model_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_final_model.keras")
-        scaler_path = os.path.join(RESULTS_DIR, f"{ticker.replace('.', '_')}_scaler.save")
+             model_path = os.path.join(RESULTS_DIR, f"{safe_ticker}_final_model.keras")
+        scaler_path = os.path.join(RESULTS_DIR, f"{safe_ticker}_scaler.save")
         
         if not os.path.exists(model_path) or not os.path.exists(scaler_path):
             return jsonify({"error": "Model not trained yet"}), 404
@@ -694,19 +1256,16 @@ def backtest_endpoint(ticker):
             return jsonify({"error": "Not enough data for backtest"}), 400
         
         # --- Metric Calculations ---
-        # Cumulative return curves start at 1.0, so total return = (final - 1) * 100
         final_strategy = result_df["Cum_Strategy_Return"].iloc[-1]
         final_market = result_df["Cum_Market_Return"].iloc[-1]
         total_return = (final_strategy - 1.0) * 100
         market_return = (final_market - 1.0) * 100
         
-        # Win rate: positive-return days among all BUY days
         buy_days = result_df[result_df["Signal"] == 1]
         total_trades = len(buy_days)
         wins = len(buy_days[buy_days["Strategy_Daily_Return"] > 0])
         win_rate = (wins / total_trades * 100) if total_trades > 0 else 0
         
-        # Max Drawdown on strategy curve
         strat_curve = result_df["Cum_Strategy_Return"]
         rolling_max = strat_curve.cummax()
         drawdown = (strat_curve - rolling_max) / rolling_max
@@ -728,9 +1287,11 @@ def backtest_endpoint(ticker):
         })
         
     except Exception as e:
-        print(f"Backtest error: {e}")
-        import traceback; traceback.print_exc()
+        logger.error(f"Backtest error for {ticker}: {e}")
+        return jsonify({"error": "Failed to execute backtest"}), 500
+
 @app.route('/api/stream_train/<ticker>')
+@limit_rate(max_requests=10, window_seconds=60)
 def stream_train(ticker):
     resolved_ticker = resolve_and_validate_ticker(ticker)
     if not resolved_ticker:
@@ -746,18 +1307,28 @@ def stream_train(ticker):
         horizon = 1
 
     ticker_key = ticker.replace('.', '_') if horizon == 1 else f"{ticker.replace('.', '_')}_h{horizon}"
-    model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_best_model.keras")
+    safe_ticker_key = os.path.basename(ticker_key)
+    model_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_best_model.keras")
     if not os.path.exists(model_path):
-        model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_final_model.keras")
-    scaler_path = os.path.join(RESULTS_DIR, f"{ticker_key}_scaler.save")
+        model_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_final_model.keras")
+    scaler_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_scaler.save")
 
-    def generate():
-        # If model is already trained, emit complete status immediately
-        if os.path.exists(model_path) and os.path.exists(scaler_path):
+    # If model is already trained, return immediately without locking
+    if os.path.exists(model_path) and os.path.exists(scaler_path):
+        def generate_immediate():
             payload = json.dumps({"step": "Completed", "progress": 100, "message": f"Model for {ticker} is already trained and ready!"})
             yield f"data: {payload}\n\n"
-            return
+        return Response(stream_with_context(generate_immediate()), mimetype='text/event-stream')
 
+    # Acquire concurrency lock to prevent CPU/memory exhaustion
+    if not training_lock.acquire(blocking=False):
+        logger.warning(f"Concurrent training rejected for {ticker}")
+        def generate_busy():
+            payload = json.dumps({"step": "Busy", "progress": 0, "message": "Another model is currently training. Please wait a moment and retry."})
+            yield f"data: {payload}\n\n"
+        return Response(stream_with_context(generate_busy()), mimetype='text/event-stream')
+
+    def generate():
         msg_queue = queue.Queue()
 
         def progress_cb(step, progress, message):
@@ -767,9 +1338,11 @@ def stream_train(ticker):
             try:
                 main.train_single_model(ticker, horizon=horizon, progress_callback=progress_cb)
             except Exception as e:
-                print(f"SSE training error for {ticker}: {e}")
+                logger.error(f"SSE training error for {ticker}: {e}")
                 msg_queue.put({"step": "Error", "progress": 100, "message": str(e)})
             finally:
+                if training_lock.is_locked():
+                    training_lock.release()
                 msg_queue.put(None)
 
         t = threading.Thread(target=run_training)
@@ -785,13 +1358,17 @@ def stream_train(ticker):
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
 @app.route('/api/watchlist_alerts', methods=['GET', 'POST'])
+@limit_rate(max_requests=30, window_seconds=60)
 def watchlist_alerts():
     if request.method == 'POST':
         req = request.get_json() or {}
-        watchlist = req.get('watchlist', [])
+        raw_list = req.get('watchlist', [])
     else:
-        raw_list = request.args.get('tickers', '')
-        watchlist = [t.strip() for t in raw_list.split(',') if t.strip()]
+        raw_list_str = request.args.get('tickers', '')
+        raw_list = [t.strip() for t in raw_list_str.split(',') if t.strip()]
+
+    # Limit to maximum 20 tickers to prevent resource exhaustion
+    watchlist = [t.strip().upper() for t in raw_list if isinstance(t, str) and is_valid_ticker_format(t)][:20]
 
     if not watchlist:
         return jsonify([])
@@ -811,7 +1388,7 @@ def watchlist_alerts():
                     "message": f"🚀 High-Confidence BUY Signal ({conf_pct}%) on {ticker}!"
                 })
         except Exception as e:
-            print(f"Watchlist alert check failed for {ticker}: {e}")
+            logger.warning(f"Watchlist alert check failed for {ticker}: {e}")
             continue
 
     return jsonify(alerts)
@@ -833,4 +1410,7 @@ if __name__ == '__main__':
         ''')
         conn.close()
         
-    app.run(debug=True, port=5000)
+    debug_mode = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    port = int(os.environ.get("PORT", 5000))
+    host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
+    app.run(debug=debug_mode, host=host, port=port)

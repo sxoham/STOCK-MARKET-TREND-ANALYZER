@@ -23,6 +23,32 @@ let portfolio = {
 
 let watchlist = []; // Initialize empty, load later
 
+// Security Utilities
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+async function getAuthHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    try {
+        if (auth && auth.currentUser) {
+            const token = await auth.currentUser.getIdToken();
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+        }
+    } catch (err) {
+        console.warn("Could not retrieve auth token:", err);
+    }
+    return headers;
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, (user) => {
@@ -48,40 +74,43 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchStocks();
 
     // Request notification permission for high confidence alerts
-    requestNotificationPermission();
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        setTimeout(() => {
+            Notification.requestPermission();
+        }, 5000);
+    }
 
-    // Periodically check watchlist alerts every 60 seconds
-    setInterval(() => {
-        checkWatchlistAlerts();
-    }, 60000);
-});
+    // Set default active tab
+    const defaultTab = document.querySelector('.tab-btn[data-tab="chart"]');
+    if (defaultTab) defaultTab.click();
 
-// Search Listener
-const searchInput = document.getElementById('stockSearchInput');
-if (searchInput) {
-    searchInput.addEventListener('input', debounce(handleSearch, 300));
-
-    // Hide dropdown on click outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.stock-search-container')) {
-            document.getElementById('searchResults').style.display = 'none';
-        }
-    });
-
-    // Enter key
-    searchInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            const query = this.value.trim().toUpperCase();
-            if (query) {
-                selectStock(query);
+    // Setup Search Listener
+    const searchInput = document.getElementById('stockSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(handleSearch, 300));
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !document.getElementById('searchResults').contains(e.target)) {
                 document.getElementById('searchResults').style.display = 'none';
             }
-        }
-    });
-}
-// End of Search Listener logic
+        });
+    }
 
-// --- Search & Autocomplete ---
+    // Horizon buttons listener
+    const horizonButtons = document.querySelectorAll('.horizon-btn');
+    horizonButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            horizonButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentHorizon = e.target.getAttribute('data-horizon');
+            console.log(`Switched horizon to ${currentHorizon}`);
+            // If we have a selected stock, re-fetch prediction for this horizon
+            if (currentStock) {
+                fetchPrediction(currentStock, currentHorizon);
+            }
+        });
+    });
+});
 
 function debounce(func, wait) {
     let timeout;
@@ -109,8 +138,8 @@ async function handleSearch(e) {
             results.forEach(item => {
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    <div style="font-weight: bold;">${item.symbol}</div>
-                    <small>${item.shortname} (${item.exchange})</small>
+                    <div style="font-weight: bold;">${escapeHtml(item.symbol)}</div>
+                    <small>${escapeHtml(item.shortname)} (${escapeHtml(item.exchange)})</small>
                 `;
                 li.onclick = () => {
                     selectStock(item.symbol);
@@ -131,7 +160,10 @@ async function handleSearch(e) {
 
 async function loadRemoteData(email) {
     try {
-        const response = await fetch(`/api/get_data/${email}?t=${Date.now()}`);
+        const authHeaders = await getAuthHeaders();
+        const response = await fetch(`/api/get_data/${encodeURIComponent(email)}?t=${Date.now()}`, {
+            headers: authHeaders
+        });
         const result = await response.json();
 
         if (result.status === 'success' && result.data) {
@@ -145,8 +177,6 @@ async function loadRemoteData(email) {
             console.log("Data loaded from server");
         } else if (result.status === 'game_start') {
             console.log("New user, using default/local data");
-            // Optional: Try to load from localStorage if we want to migrate, 
-            // but simpler to just start fresh or use what's in memory variables
             loadPortfolioFromLocal();
             loadWatchlistFromLocal();
         }
@@ -191,9 +221,10 @@ async function saveData() {
     };
 
     try {
+        const authHeaders = await getAuthHeaders();
         await fetch('/api/save_data', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders,
             body: JSON.stringify({ email: currentUserEmail, data: data })
         });
         console.log("Data saved to server");
@@ -389,7 +420,7 @@ async function fetchSentiment(ticker) {
             btn.type = 'button';
             btn.setAttribute('aria-label', `View insight for: ${news.title}`);
             btn.innerHTML = `
-                <span class="news-item-title">${news.title}</span>
+                <span class="news-item-title">${escapeHtml(news.title)}</span>
                 <span class="news-item-badge ${badgeClass}">${badgeText}</span>
                 <span class="news-item-icon" aria-hidden="true">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -537,7 +568,16 @@ function renderTopDrivers(drivers) {
         const dirClass = d.direction === 'positive' ? 'positive' : 'negative';
         const signSymbol = d.direction === 'positive' ? '▲' : '▼';
         pill.className = `xai-pill ${dirClass}`;
-        pill.innerHTML = `<span>${signSymbol} ${d.name}</span> <small style="font-weight: 700;">(${d.impact})</small>`;
+        
+        const spanText = document.createElement('span');
+        spanText.textContent = `${signSymbol} ${d.name || ''}`;
+        
+        const smallImpact = document.createElement('small');
+        smallImpact.style.fontWeight = '700';
+        smallImpact.textContent = ` (${d.impact || ''})`;
+        
+        pill.appendChild(spanText);
+        pill.appendChild(smallImpact);
         list.appendChild(pill);
     });
 }
@@ -562,8 +602,8 @@ window.openXaiModal = function () {
                 const pct = Math.min(Math.max(item.pct, 1.5), 100);
                 row.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 3px;">
-                        <span><strong style="color: #f8fafc;">${item.name}</strong> <small style="color: #94a3b8; font-size: 0.75rem;">(${item.feature})</small></span>
-                        <span style="font-weight: 700; color: ${color}; font-size: 0.85rem;">${item.impact_str}</span>
+                        <span><strong style="color: #f8fafc;">${escapeHtml(item.name)}</strong> <small style="color: #94a3b8; font-size: 0.75rem;">(${escapeHtml(item.feature)})</small></span>
+                        <span style="font-weight: 700; color: ${color}; font-size: 0.85rem;">${escapeHtml(item.impact_str)}</span>
                     </div>
                     <div style="width: 100%; height: 7px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; position: relative;">
                         <div style="width: ${pct}%; height: 100%; background: ${color}; border-radius: 4px; transition: width 0.4s ease;"></div>
@@ -674,9 +714,10 @@ window.confirmDeleteAccount = async function () {
         btn.disabled = true;
 
         // 1. Delete data from backend
+        const authHeaders = await getAuthHeaders();
         const response = await fetch('/api/delete_data', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders,
             body: JSON.stringify({ email: user.email })
         });
 
@@ -1131,7 +1172,15 @@ function updatePortfolioUI() {
         if (qty > 0) {
             const div = document.createElement('div');
             div.className = 'holding-item';
-            div.innerHTML = `<span>${ticker}</span> <span>${qty} shares</span>`;
+            
+            const spanTicker = document.createElement('span');
+            spanTicker.textContent = ticker;
+            
+            const spanQty = document.createElement('span');
+            spanQty.textContent = `${Number(qty)} shares`;
+            
+            div.appendChild(spanTicker);
+            div.appendChild(spanQty);
             list.appendChild(div);
         }
     }
@@ -1270,7 +1319,7 @@ function showMessageModal(title, message, isError = false) {
     const contentEl = document.getElementById('msgModalContent');
 
     titleEl.textContent = title;
-    contentEl.innerHTML = message;
+    contentEl.textContent = message;
 
     modal.classList.add('active');
 }
@@ -1655,13 +1704,28 @@ window.handleProfileSellClick = function () {
         const card = document.createElement('div');
         card.className = 'holding-sell-card';
         const formattedAvg = formatWithCurrency(h.avgPrice);
-        card.innerHTML = `
-            <div class="holding-sell-info">
-                <span class="holding-sell-ticker">${h.ticker}</span>
-                <span class="holding-sell-qty">Owned: <strong>${h.qty}</strong> share${h.qty === 1 ? '' : 's'} ${h.avgPrice > 0 ? '• Avg ' + formattedAvg : ''}</span>
-            </div>
-            <button class="holding-sell-btn" onclick="window.executeSellSelect('${h.ticker}')">Sell Shares</button>
-        `;
+        
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'holding-sell-info';
+        
+        const tickerSpan = document.createElement('span');
+        tickerSpan.className = 'holding-sell-ticker';
+        tickerSpan.textContent = h.ticker;
+        
+        const qtySpan = document.createElement('span');
+        qtySpan.className = 'holding-sell-qty';
+        qtySpan.textContent = `Owned: ${Number(h.qty)} share${h.qty === 1 ? '' : 's'} ${h.avgPrice > 0 ? '• Avg ' + formattedAvg : ''}`;
+        
+        infoDiv.appendChild(tickerSpan);
+        infoDiv.appendChild(qtySpan);
+        
+        const sellBtn = document.createElement('button');
+        sellBtn.className = 'holding-sell-btn';
+        sellBtn.textContent = 'Sell Shares';
+        sellBtn.onclick = () => window.executeSellSelect(h.ticker);
+        
+        card.appendChild(infoDiv);
+        card.appendChild(sellBtn);
         listEl.appendChild(card);
     });
 
@@ -1922,8 +1986,8 @@ function showAlertToast(alertData) {
             <button class="toast-close" onclick="this.closest('.toast-card').remove()">&times;</button>
         </div>
         <div class="toast-body">
-            <strong>${alertData.ticker}</strong> hit <strong>${alertData.confidence}% Confidence</strong>!
-            <div class="toast-driver">Top Driver: ${alertData.driver}</div>
+            <strong>${escapeHtml(alertData.ticker)}</strong> hit <strong>${Number(alertData.confidence)}% Confidence</strong>!
+            <div class="toast-driver">Top Driver: ${escapeHtml(alertData.driver)}</div>
         </div>
     `;
 
