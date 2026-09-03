@@ -70,7 +70,6 @@ sentiment_generator/cache/
 # ==========================================
 # Trained Model Weights & Artifacts
 # ==========================================
-stock_models_optionB/
 stock_models_global/
 stock_models/
 

@@ -1121,19 +1121,8 @@ def generate_live_prediction(ticker, horizon: int = 1):
     feature_path = os.path.join(RESULTS_DIR, f"{ticker_key}_features.joblib")
     
     if not os.path.exists(model_path) or not os.path.exists(scaler_path):
-        print(f"Model for {ticker} (horizon={horizon}d) not found. Training model on demand...")
-        try:
-            main.train_single_model(ticker, horizon=horizon)
-            model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_best_model.keras")
-            if not os.path.exists(model_path):
-                model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_final_model.keras")
-            scaler_path = os.path.join(RESULTS_DIR, f"{ticker_key}_scaler.save")
-        except Exception as e:
-            print(f"Error training model for {ticker}: {e}")
-            return "TRAINING", 0.0, [], []
-            
-        if not os.path.exists(model_path) or not os.path.exists(scaler_path):
-            return "TRAINING", 0.0, [], []
+        logger.warning(f"Model for {ticker} (horizon={horizon}d) not found. Returning baseline neutral prediction.")
+        return "NEUTRAL", 0.5, [], []
         
     try:
         model = load_model(model_path)
