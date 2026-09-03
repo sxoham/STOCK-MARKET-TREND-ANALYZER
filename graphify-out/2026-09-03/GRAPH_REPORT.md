@@ -1,16 +1,16 @@
 # Graph Report - STOCK MARKET TREND ANALYZER  (2026-09-03)
 
 ## Corpus Check
-- 252 files · ~1,938,141 words
+- 252 files · ~1,938,246 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2193 nodes · 2643 edges · 189 communities (122 shown, 51 thin omitted)
+- 2195 nodes · 2645 edges · 179 communities (123 shown, 40 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 47 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1aa8c4a6`
+- Built from commit: `7679f41d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -56,7 +56,7 @@
 - news_fetcher.py
 - Performance Optimization
 - .normalize_url
-- ._get_session
+- ._has_financial_context
 - Shipping and Launch
 - skill-lint.js
 - CI/CD and Automation
@@ -133,7 +133,7 @@
 - split.test.js
 - validate-versions.js
 - .test_11_digit_timestamp_raises_plain_value_error
-- .test_email_format_validation
+- ._compile_matchers
 - ship.md
 - Using agent-skills with Codex
 - split-payment
@@ -169,19 +169,9 @@
 - idea-refine.sh
 - rules/graphify.md
 - workflows/graphify.md
-- .test_feedback_endpoint_validation
-- .test_bola_idor_authorization_enforcement
+- probe_live_gdelt.py
 - .test_D2b_itc_lifecycle_and_transition_boundary_tests
 - .test_D8b_sbi_bank_word_boundary
-- .test_rate_limiting_enforcement
-- .test_rate_limiter_memory_pruning
-- .test_untrusted_direct_request_spoofed_headers_ignored
-- .test_cross_process_training_lock_lifecycle
-- .test_cross_process_lock_exception_release
-- .test_cross_process_lock_non_owner_cannot_release
-- .test_old_but_active_process_lock_must_not_be_stolen
-- .test_database_viewer_access_and_xss_protection
-- .test_security_headers_present
 - .test_A3b_trading_day_one_second_after_1530
 - .test_A4_trading_day_after_1530
 - .test_A7_beyond_final_trading_date_returns_none
@@ -216,7 +206,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (189 total, 51 thin omitted)
+## Communities (179 total, 40 thin omitted)
 
 ### Community 0 - "main.py"
 Cohesion: 0.07
@@ -235,8 +225,8 @@ Cohesion: 0.05
 Nodes (12): Validates the refined Mukesh Ambani policy: - Positives: Requires co-occurring…, Saturday 11:00 IST -> following Monday., YYYYMMDD timestamps must raise LowPrecisionTimestampError (ValueError subclass)., A string that yields >14 numeric digits after stripping non-numeric characters…, Republic Day (Friday 26-Jan-2024) -> following Monday., Article on a date completely outside the calendar also returns None., Sunday news must map forward to Monday (next trading session)., _is_gdelt_rate_limit_text only matches specific GDELT throttle phrases, not… (+4 more)
 
 ### Community 4 - "TestBigQueryGKGExtractor"
-Cohesion: 0.07
-Nodes (12): BigQueryGKGExtractor, Any, Parses and validates a single BigQuery GKG row into a normalized raw article…, Ingestion adapter for GDELT Global Knowledge Graph (GKG) 2.0 via Google…, Parses, validates, filters, and deduplicates a batch of BigQuery GKG records., Exports the candidate articles to an isolated staging Parquet file for auditing., Constructs an optimized, partition-pruned BigQuery SQL query for a specific…, Validates whether a URL represents a genuine article rather than a… (+4 more)
+Cohesion: 0.08
+Nodes (11): BigQueryGKGExtractor, Any, Parses and validates a single BigQuery GKG row into a normalized raw article…, Ingestion adapter for GDELT Global Knowledge Graph (GKG) 2.0 via Google…, Parses, validates, filters, and deduplicates a batch of BigQuery GKG records., Exports the candidate articles to an isolated staging Parquet file for auditing., Constructs an optimized, partition-pruned BigQuery SQL query for a specific…, fetch_nse_trading_calendar() (+3 more)
 
 ### Community 5 - "patch"
 Cohesion: 0.06
@@ -263,20 +253,20 @@ Cohesion: 0.08
 Nodes (13): Focused adversarial test suite for Bharti Airtel Limited (BHARTIARTL.NS)…, Quarterly results, ARPU growth, revenue, and subscriber additions., Brokerage ratings, target prices, stock movements., Corporate tariff hikes and 5G network rollout., Parent corporate transactions involving Hexacom IPO and Nxtra capex., Retail consumer prepaid/postpaid recharge plan comparisons and OTT bundles., Standalone regional Africa operations without parent corporate action., Standalone banking products. (+5 more)
 
 ### Community 11 - "NewsFetcher"
-Cohesion: 0.08
-Nodes (17): NewsFetcher, Production-grade historical news fetcher for Indian equities (NSE) using GDELT…, Returns True if text_lower contains at least one financial/corporate signal,…, Determines whether a headline/text is genuinely relevant to TCS.NS (Tata…, Determines whether a headline/text is genuinely relevant to RELIANCE.NS…, Determines whether a headline/text is genuinely relevant to INFY.NS (Infosys…, Determines whether a headline/text is genuinely relevant to ICICIBANK.NS (ICICI…, Determines whether a headline/text is genuinely relevant to AXISBANK.NS (Axis… (+9 more)
+Cohesion: 0.09
+Nodes (13): NewsFetcher, Production-grade historical news fetcher for Indian equities (NSE) using GDELT…, Validates whether a URL represents a genuine article rather than a…, Determines whether a headline/text is genuinely relevant to RELIANCE.NS…, Determines whether a headline/text is genuinely relevant to INFY.NS (Infosys…, Determines whether a headline/text is genuinely relevant to ICICIBANK.NS (ICICI…, Determines whether a headline/text is genuinely relevant to AXISBANK.NS (Axis…, Specialized entity matching for Kotak Mahindra Bank Limited (KOTAKBANK.NS).… (+5 more)
 
 ### Community 12 - "app.py"
 Cohesion: 0.07
-Nodes (42): after_request, apply_security_headers(), backtest_endpoint(), CrossProcessLock, dashboard(), delete_user_data(), get_db_connection(), get_model_db_connection() (+34 more)
+Nodes (44): after_request, apply_security_headers(), backtest_endpoint(), CrossProcessLock, dashboard(), delete_user_data(), get_db_connection(), get_model_db_connection() (+36 more)
 
 ### Community 13 - "TestICICIBankMatcherValidation"
 Cohesion: 0.09
 Nodes (12): Adversarial and boundary test suite for ICICIBANK.NS (ICICI Bank Limited)…, Explicit ICICI Bank financial results, NIM, NII, asset quality, and shares., ICICI Bank regulatory, governance, digital banking, and operational…, Subsidiary actions materially involving parent bank (merger, delisting, parent…, Bare ICICI references with strong banking, market mover, or peer signals., Current and former leadership in corporate/legal/governance contexts., Standalone subsidiary products, earnings, and operations without parent bank…, Automated 13F and SEC foreign portfolio filing notices. (+4 more)
 
 ### Community 14 - ".fetch_gdelt_window"
-Cohesion: 0.13
-Nodes (12): date, LowPrecisionTimestampError, datetime, Raised by parse_gdelt_timestamp() when a GDELT timestamp carries only date-…, Thread-safe increment of diagnostic counters., Builds a GDELT OR query from the primary company name and configured aliases,…, Determines whether a headline is genuinely relevant to the target company,…, Parses a GDELT seendate string (UTC) into a 4-tuple: (source_timestamp,… (+4 more)
+Cohesion: 0.11
+Nodes (14): date, LowPrecisionTimestampError, datetime, Raised by parse_gdelt_timestamp() when a GDELT timestamp carries only date-…, Returns an isolated requests.Session per worker thread., Thread-safe increment of diagnostic counters., Builds a GDELT OR query from the primary company name and configured aliases,…, Determines whether a headline is genuinely relevant to the target company,… (+6 more)
 
 ### Community 15 - "test_news_fetcher.py"
 Cohesion: 0.17
@@ -315,8 +305,8 @@ Cohesion: 0.31
 Nodes (9): initStarGrid(), destroy(), drawBackground(), drawDotGrid(), drawLines(), drawVignette(), frame(), resize() (+1 more)
 
 ### Community 24 - "._article_dedupe_key"
-Cohesion: 0.15
-Nodes (7): Any, trading_calendar: Sorted list of valid NSE trading dates (YYYY-MM-DD)., Returns a snapshot of all diagnostic telemetry, including: - All stat counters…, Precompiles regular expressions for each ticker for high performance and…, Cleans headline string for duplicate detection., Generates a stable, canonical deduplication key for an article record. Returns…, Deduplicates article records using canonical deduplication keys. Primary key…
+Cohesion: 0.22
+Nodes (5): Any, Returns a snapshot of all diagnostic telemetry, including: - All stat counters…, Cleans headline string for duplicate detection., Generates a stable, canonical deduplication key for an article record. Returns…, Deduplicates article records using canonical deduplication keys. Primary key…
 
 ### Community 25 - "Worked example: Agent Teams for competing-hypothesis debugging"
 Cohesion: 0.06
@@ -403,8 +393,8 @@ Cohesion: 0.08
 Nodes (23): Accessibility (WCAG 2.1 AA), ARIA Labels, Avoid the AI Aesthetic, Color, Common Rationalizations, Component Architecture, Component Patterns, Design System Adherence (+15 more)
 
 ### Community 56 - "SecurityHardeningTests"
-Cohesion: 0.13
-Nodes (7): Verify that payloads exceeding 512KB are rejected with 413., Verify that when IS_PROD is active, auth cannot be bypassed., Verify that genuinely stale locks from crashed/dead processes ARE safely…, Verify Strict-Transport-Security is emitted only when request.is_secure., Verify exact CORS origin allowlist and preflight OPTIONS handling., Verify invalid/path-traversal ticker formats are blocked with HTTP 400 or 404., SecurityHardeningTests
+Cohesion: 0.05
+Nodes (19): Verify malformed email formats are rejected on user data routes., Verify /api/feedback validates message content and bounds., Verify that payloads exceeding 512KB are rejected with 413., Verify that when REQUIRE_AUTH=True, unauthorized callers and BOLA attacks are…, Verify that when IS_PROD is active, auth cannot be bypassed., Verify rapid repeated requests trigger HTTP 429 Too Many Requests., Verify that the rate limiter evicts stale keys and bounds memory., Verify that when TRUSTED_PROXIES_COUNT=0 (direct connection / untrusted… (+11 more)
 
 ### Community 58 - "Context Engineering"
 Cohesion: 0.09
@@ -523,7 +513,7 @@ Cohesion: 0.14
 Nodes (13): Common Rationalizations, Keeping the Spec Alive, Overview, Phase 0: Scope Check, Phase 1: Specify, Phase 2: Plan, Phase 3: Tasks, Phase 4: Implement (+5 more)
 
 ### Community 87 - "Review Framework"
-Cohesion: 0.17
+Cohesion: 0.18
 Nodes (11): 1. Correctness, 2. Readability, 3. Architecture, 4. Security, 5. Performance, Composition, Output Format, Review Framework (+3 more)
 
 ### Community 88 - "Review Scope"
@@ -547,7 +537,7 @@ Cohesion: 0.17
 Nodes (11): 1. User Value, 2. Feasibility, 3. Differentiation, Assumption Audit, Core Evaluation Dimensions, Decision Framework, Might Be True (Nice to Have), Must Be True (Dealbreakers) (+3 more)
 
 ### Community 93 - "Approach"
-Cohesion: 0.18
+Cohesion: 0.20
 Nodes (10): 1. Analyze Before Writing, 2. Test at the Right Level, 3. Follow the Prove-It Pattern for Bugs, 4. Write Descriptive Tests, 5. Cover These Scenarios, Approach, Composition, Output Format (+2 more)
 
 ### Community 94 - "The Standing Checklist"
@@ -706,20 +696,24 @@ Nodes (3): fs, http, path
 Cohesion: 0.83
 Nodes (3): dbg(), hash_key(), sdd-cache-pre.sh script
 
+### Community 164 - "probe_live_gdelt.py"
+Cohesion: 0.67
+Nodes (3): _build_trading_calendar(), main(), Live GDELT validation probe -- RELIANCE.NS, January 2025. Purpose -------…
+
 ## Knowledge Gaps
 - **1012 isolated node(s):** `$schema`, `name`, `description`, `name`, `url` (+1007 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1412 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **51 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1413 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **40 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `NewsFetcher` connect `NewsFetcher` to `TestAxisBankMatcherValidation`, `TestNewsFetcher`, `TestBigQueryGKGExtractor`, `generate_sentiment.py`, `TestKotakBankMatcherValidation`, `TestBajajFinanceMatcherValidation`, `TestBhartiAirtelMatcherValidation`, `news_fetcher.py`, `.normalize_url`, `.fetch_gdelt_window`, `._get_session`, `test_news_fetcher.py`, `process_ticker_news_fetch`, `TestICICIBankMatcherValidation`, `cache.py`, `._article_dedupe_key`?**
+- **Why does `NewsFetcher` connect `NewsFetcher` to `TestAxisBankMatcherValidation`, `TestNewsFetcher`, `TestBigQueryGKGExtractor`, `probe_live_gdelt.py`, `generate_sentiment.py`, `TestKotakBankMatcherValidation`, `TestBajajFinanceMatcherValidation`, `TestBhartiAirtelMatcherValidation`, `news_fetcher.py`, `.normalize_url`, `.fetch_gdelt_window`, `._has_financial_context`, `test_news_fetcher.py`, `process_ticker_news_fetch`, `TestICICIBankMatcherValidation`, `cache.py`, `._article_dedupe_key`, `._compile_matchers`?**
   _High betweenness centrality (0.057) - this node is a cross-community bridge._
 - **Why does `TestNewsFetcher` connect `TestNewsFetcher` to `patch`, `NewsFetcher`, `.fetch_gdelt_window`, `test_news_fetcher.py`, `_make_article`, `process_ticker_news_fetch`, `GDELTRateLimiter`, `_gdelt_item`, `._article_dedupe_key`, `.test_D2b_itc_lifecycle_and_transition_boundary_tests`, `.test_D8b_sbi_bank_word_boundary`, `.normalize_url`, `.test_A3b_trading_day_one_second_after_1530`, `.test_A4_trading_day_after_1530`, `.test_A7_beyond_final_trading_date_returns_none`, `.test_D8_tcs_tech_and_deal_word_boundary`, `.test_A1_trading_day_before_1530`, `.test_A3_trading_day_one_second_before_1530`, `.test_reliance_disambiguation_positive_and_negative_matrix`, `.test_11_digit_timestamp_raises_plain_value_error`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Why does `download_macro_data()` connect `main.py` to `.fetch_gdelt_window`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `TestNewsFetcher` (e.g. with `GDELTRateLimiter` and `GDELTRateLimitExhausted`) actually correct?**
   _`TestNewsFetcher` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 8 inferred relationships involving `NewsFetcher` (e.g. with `BigQueryGKGExtractor` and `process_ticker_news_fetch()`) actually correct?**

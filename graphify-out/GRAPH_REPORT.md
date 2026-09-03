@@ -1,16 +1,16 @@
 # Graph Report - STOCK MARKET TREND ANALYZER  (2026-09-03)
 
 ## Corpus Check
-- 252 files · ~1,938,246 words
+- 252 files · ~1,938,207 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2195 nodes · 2645 edges · 179 communities (123 shown, 40 thin omitted)
+- 2195 nodes · 2644 edges · 179 communities (123 shown, 40 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 47 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7679f41d`
+- Built from commit: `41d85a4e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -182,8 +182,8 @@
 ## God Nodes (most connected - your core abstractions)
 1. `TestNewsFetcher` - 79 edges
 2. `NewsFetcher` - 56 edges
-3. `train_single_model()` - 22 edges
-4. `TestAxisBankMatcherValidation` - 22 edges
+3. `TestAxisBankMatcherValidation` - 22 edges
+4. `train_single_model()` - 21 edges
 5. `SecurityHardeningTests` - 21 edges
 6. `run_pipeline()` - 21 edges
 7. `process_ticker_news_fetch()` - 20 edges
@@ -513,7 +513,7 @@ Cohesion: 0.14
 Nodes (13): Common Rationalizations, Keeping the Spec Alive, Overview, Phase 0: Scope Check, Phase 1: Specify, Phase 2: Plan, Phase 3: Tasks, Phase 4: Implement (+5 more)
 
 ### Community 87 - "Review Framework"
-Cohesion: 0.18
+Cohesion: 0.17
 Nodes (11): 1. Correctness, 2. Readability, 3. Architecture, 4. Security, 5. Performance, Composition, Output Format, Review Framework (+3 more)
 
 ### Community 88 - "Review Scope"
@@ -537,7 +537,7 @@ Cohesion: 0.17
 Nodes (11): 1. User Value, 2. Feasibility, 3. Differentiation, Assumption Audit, Core Evaluation Dimensions, Decision Framework, Might Be True (Nice to Have), Must Be True (Dealbreakers) (+3 more)
 
 ### Community 93 - "Approach"
-Cohesion: 0.20
+Cohesion: 0.18
 Nodes (10): 1. Analyze Before Writing, 2. Test at the Right Level, 3. Follow the Prove-It Pattern for Bugs, 4. Write Descriptive Tests, 5. Cover These Scenarios, Approach, Composition, Output Format (+2 more)
 
 ### Community 94 - "The Standing Checklist"
