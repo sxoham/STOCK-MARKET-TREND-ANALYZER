@@ -1,8 +1,8 @@
 {
   "app.py": {
-    "mtime": 1788442491.2921867,
-    "seen": 1788442570.481227,
-    "ast_hash": "3e23c6a9fd63139f7636fda8c5384774",
+    "mtime": 1788444747.7028325,
+    "seen": 1788444890.164061,
+    "ast_hash": "53a1069e5788286ff5d4fb779279e589",
     "semantic_hash": ""
   },
   "main.py": {
@@ -1488,9 +1488,9 @@
     "semantic_hash": ""
   },
   "templates/index.html": {
-    "mtime": 1788309539.7639437,
-    "seen": 1788431913.9717336,
-    "ast_hash": "54652a03dbd1e77ccae7cf6556c24a16",
+    "mtime": 1788443189.5939152,
+    "seen": 1788444890.2149673,
+    "ast_hash": "57e45d7aadf400c15abc931c9d4acf9c",
     "semantic_hash": ""
   },
   "templates/login.html": {
