@@ -475,6 +475,57 @@ def get_model_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+def init_databases():
+    """Ensure SQLite tables exist upon startup regardless of WSGI server (Gunicorn/Waitress/Flask)."""
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                email TEXT PRIMARY KEY,
+                data TEXT,
+                is_verified INTEGER DEFAULT 0,
+                subscription_tier TEXT DEFAULT 'free',
+                subscription_expiry DATETIME,
+                start_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                status TEXT DEFAULT 'active'
+            )
+        ''')
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT,
+                ticker TEXT,
+                target_price REAL,
+                condition TEXT,
+                is_active INTEGER DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Failed to initialize {DB_FILE}: {e}")
+
+    try:
+        conn = sqlite3.connect(MODEL_DB_FILE)
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS predictions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticker TEXT,
+                date TEXT,
+                prediction TEXT,
+                probability REAL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(ticker, date)
+            )
+        ''')
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Failed to initialize {MODEL_DB_FILE}: {e}")
+
+init_databases()
+
 @app.route('/')
 def index():
     return redirect('/login')
@@ -939,12 +990,15 @@ def get_prediction(ticker):
     
     # 1. Check DB for existing prediction (only for 1d default)
     if horizon == 1:
-        conn = get_model_db_connection()
-        row = conn.execute('SELECT prediction, probability FROM predictions WHERE ticker = ? AND date = ?', (ticker, today_str)).fetchone()
-        conn.close()
-        if row:
-            prediction = row['prediction']
-            probability = row['probability']
+        try:
+            conn = get_model_db_connection()
+            row = conn.execute('SELECT prediction, probability FROM predictions WHERE ticker = ? AND date = ?', (ticker, today_str)).fetchone()
+            conn.close()
+            if row:
+                prediction = row['prediction']
+                probability = row['probability']
+        except Exception as e:
+            logger.warning(f"Could not query cached prediction: {e}")
 
     # 2. Generate on-the-fly if missing or non-standard horizon
     if not prediction:
@@ -1396,22 +1450,6 @@ def watchlist_alerts():
     return jsonify(alerts)
 
 if __name__ == '__main__':
-    # Create DB if not exists (users)
-    if not os.path.exists(DB_FILE):
-        conn = sqlite3.connect(DB_FILE)
-        conn.execute('''
-            CREATE TABLE users (
-                email TEXT PRIMARY KEY,
-                data TEXT,
-                is_verified INTEGER DEFAULT 0,
-                subscription_tier TEXT DEFAULT 'free',
-                subscription_expiry DATETIME,
-                start_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-                status TEXT DEFAULT 'active'
-            )
-        ''')
-        conn.close()
-        
     debug_mode = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
     port = int(os.environ.get("PORT", 5000))
     host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
