@@ -1314,19 +1314,55 @@ function confirmTrade() {
 }
 
 // --- Message Modal Logic ---
+function createTradeSuccessContent(action, qty, stock, price) {
+    const fragment = document.createDocumentFragment();
+
+    fragment.append(document.createTextNode(`${action} `));
+
+    const qtySpan = document.createElement('span');
+    qtySpan.className = 'highlight-text';
+    qtySpan.textContent = typeof qty === 'number' ? qty.toLocaleString('en-IN') : String(qty);
+    fragment.append(qtySpan);
+
+    fragment.append(document.createTextNode(' shares of '));
+
+    const stockNode = document.createTextNode(String(stock));
+    fragment.append(stockNode);
+
+    fragment.append(document.createTextNode(' at '));
+
+    const priceSpan = document.createElement('span');
+    priceSpan.className = 'highlight-text';
+    priceSpan.textContent = formatWithCurrency(price);
+    fragment.append(priceSpan);
+
+    return fragment;
+}
+
 function showMessageModal(title, message, isError = false) {
     const modal = document.getElementById('messageModal');
     const titleEl = document.getElementById('msgModalTitle');
     const contentEl = document.getElementById('msgModalContent');
 
+    if (!modal || !titleEl || !contentEl) return;
+
     titleEl.textContent = title;
-    contentEl.textContent = message;
+    contentEl.textContent = '';
+
+    if (message instanceof Node) {
+        contentEl.appendChild(message);
+    } else if (Array.isArray(message)) {
+        contentEl.append(...message);
+    } else {
+        contentEl.textContent = message != null ? String(message) : '';
+    }
 
     modal.classList.add('active');
 }
 
 function closeMessageModal() {
-    document.getElementById('messageModal').classList.remove('active');
+    const modal = document.getElementById('messageModal');
+    if (modal) modal.classList.remove('active');
 }
 
 function executeTrade(type, qty) {
@@ -1354,7 +1390,7 @@ function executeTrade(type, qty) {
             portfolio.holdings[currentStock] = holding;
 
             savePortfolio();
-            showMessageModal("Trade Successful", `Bought <span class="highlight-text">${qty}</span> shares of ${currentStock} at <span class="highlight-text">${formatWithCurrency(currentPrice)}</span>`);
+            showMessageModal("Trade Successful", createTradeSuccessContent("Bought", qty, currentStock, currentPrice));
         } else {
             showMessageModal("Trade Failed", "Insufficient funds", true);
         }
@@ -1374,7 +1410,7 @@ function executeTrade(type, qty) {
             }
 
             savePortfolio();
-            showMessageModal("Trade Successful", `Sold <span class="highlight-text">${qty}</span> shares of ${currentStock} at <span class="highlight-text">${formatWithCurrency(currentPrice)}</span>`);
+            showMessageModal("Trade Successful", createTradeSuccessContent("Sold", qty, currentStock, currentPrice));
         } else {
             showMessageModal("Trade Failed", "Insufficient holdings", true);
         }
@@ -1767,6 +1803,8 @@ window.runBacktest = runBacktest;
 window.selectStock = selectStock;
 window.openProfile = openProfile;
 window.closeProfile = closeProfile;
+window.showMessageModal = showMessageModal;
+window.createTradeSuccessContent = createTradeSuccessContent;
 
 // --- Age Verification ---
 function verifyAge() {
