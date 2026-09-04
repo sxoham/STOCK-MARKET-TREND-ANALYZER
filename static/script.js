@@ -34,18 +34,22 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
-async function getAuthHeaders(userInstance = null) {
+async function getAuthHeaders(userInstance = null, forceRefresh = false) {
     const headers = { 'Content-Type': 'application/json' };
     try {
         const u = userInstance || (auth && auth.currentUser);
         if (u) {
-            const token = await u.getIdToken();
-            if (token) {
+            const token = await u.getIdToken(forceRefresh);
+            if (token && typeof token === 'string' && token.length > 20 && token !== 'undefined' && token !== 'null') {
                 headers['Authorization'] = `Bearer ${token}`;
+            } else {
+                console.warn("[Auth] Retrieved empty or malformed token from currentUser");
             }
+        } else {
+            console.warn("[Auth] No currentUser found when generating auth headers");
         }
     } catch (err) {
-        console.warn("Could not retrieve auth token:", err);
+        console.warn("[Auth] Could not retrieve ID token:", err.message || err);
     }
     return headers;
 }
@@ -161,10 +165,20 @@ async function handleSearch(e) {
 
 async function loadRemoteData(email, userInstance = null) {
     try {
-        const authHeaders = await getAuthHeaders(userInstance);
-        const response = await fetch(`/api/get_data/${encodeURIComponent(email)}?t=${Date.now()}`, {
+        let authHeaders = await getAuthHeaders(userInstance);
+        let response = await fetch(`/api/get_data/${encodeURIComponent(email)}?t=${Date.now()}`, {
             headers: authHeaders
         });
+
+        // If 401, retry once with a freshly forced token refresh
+        if (response.status === 401) {
+            console.info("[Auth] Initial get_data returned 401, attempting forced token refresh...");
+            authHeaders = await getAuthHeaders(userInstance, true);
+            response = await fetch(`/api/get_data/${encodeURIComponent(email)}?t=${Date.now()}`, {
+                headers: authHeaders
+            });
+        }
+
         const result = await response.json();
 
         if (result.status === 'success' && result.data) {
@@ -222,13 +236,29 @@ async function saveData() {
     };
 
     try {
-        const authHeaders = await getAuthHeaders();
-        await fetch('/api/save_data', {
+        let authHeaders = await getAuthHeaders();
+        let response = await fetch('/api/save_data', {
             method: 'POST',
             headers: authHeaders,
             body: JSON.stringify({ email: currentUserEmail, data: data })
         });
-        console.log("Data saved to server");
+
+        // If 401, retry once with a freshly forced token refresh
+        if (response.status === 401) {
+            console.info("[Auth] Initial save_data returned 401, attempting forced token refresh...");
+            authHeaders = await getAuthHeaders(null, true);
+            response = await fetch('/api/save_data', {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify({ email: currentUserEmail, data: data })
+            });
+        }
+
+        if (response.ok) {
+            console.log("Data saved to server");
+        } else {
+            console.warn("Server returned status", response.status, "while saving data");
+        }
     } catch (error) {
         console.error("Error saving data:", error);
     }

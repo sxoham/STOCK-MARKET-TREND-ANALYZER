@@ -234,9 +234,9 @@
     "semantic_hash": ""
   },
   "static/script.js": {
-    "mtime": 1788442477.1707232,
-    "seen": 1788442570.4856656,
-    "ast_hash": "e836336f3b36f5043349c29e32204296",
+    "mtime": 1788561103.6546345,
+    "seen": 1788561223.7972083,
+    "ast_hash": "0f489db54041a0277768fe699664200d",
     "semantic_hash": ""
   },
   "static/stargrid.js": {
@@ -1518,9 +1518,9 @@
     "semantic_hash": ""
   },
   "images/dashboard.png": {
-    "mtime": 1785199383.5986495,
-    "seen": 1788431913.9717336,
-    "ast_hash": "1500ee925fb547a1b3149fd8dc7aded0",
+    "mtime": 1788560598.654529,
+    "seen": 1788561223.8092844,
+    "ast_hash": "7f80de5dee4b2f27da604786f02045c6",
     "semantic_hash": ""
   },
   "images/feature_importance.png": {
@@ -2105,12 +2105,6 @@
     "ast_hash": "5702677a621c97e396363c53794d130a",
     "semantic_hash": ""
   },
-  "Production-Grade Website Audit Prompt.md": {
-    "mtime": 1788431308.5227141,
-    "seen": 1788544097.371122,
-    "ast_hash": "3152d2778e2ae2958cc7cc4b21a077e7",
-    "semantic_hash": ""
-  },
   "templates/contact.html": {
     "mtime": 1788534612.3798041,
     "seen": 1788544097.3721218,
@@ -2157,6 +2151,12 @@
     "mtime": 1788552192.55357,
     "seen": 1788554311.1249866,
     "ast_hash": "5f7e081ed156cbf1b6092dc7cfdfb101",
+    "semantic_hash": ""
+  },
+  "scripts/test_modal_rendering.js": {
+    "mtime": 1788561126.045527,
+    "seen": 1788561223.7935522,
+    "ast_hash": "320a37384312f15b310dfede1a851f88",
     "semantic_hash": ""
   }
 }

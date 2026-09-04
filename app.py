@@ -376,61 +376,108 @@ def limit_rate(max_requests: int, window_seconds: int = 60):
 
 # =============================================================================
 # FIREBASE ADMIN SDK PRODUCTION INITIALIZATION:
-# In production, Firebase Admin SDK authenticates using Google Application
-# Default Credentials (ADC). Set GOOGLE_APPLICATION_CREDENTIALS to the external
-# file path of your service-account JSON, or rely on Workload Identity / Cloud IAM
-# if hosted on GCP/GKE/Cloud Run. Never commit service account credentials.
-# Verify that FIREBASE_PROJECT_ID matches the project ID of your Firebase Auth tenant.
+# Supports multiple secure credential configurations:
+# 1. GOOGLE_APPLICATION_CREDENTIALS: file path to service account JSON (e.g. Render Secret File)
+# 2. FIREBASE_SERVICE_ACCOUNT_JSON: raw JSON string in environment variable
+# 3. Public certificate verification mode (PublicCertCredential): verifies signatures,
+#    iss, aud, and exp against Google's public x509 certs without requiring a service account.
 # NEVER log ID tokens, service-account keys, SECRET_KEY, or ADMIN_KEY.
 # =============================================================================
+HAS_FIREBASE_ADMIN = False
 try:
     import firebase_admin
     from firebase_admin import auth as firebase_auth
+    from firebase_admin import credentials as fb_credentials
+
+    class PublicCertCredential(fb_credentials.Base):
+        """Credential for verifying Firebase ID tokens via public x509 certs without ADC."""
+        def get_credential(self):
+            return None
+
     if not firebase_admin._apps:
-        firebase_admin.initialize_app(options={'projectId': FIREBASE_PROJECT_ID})
+        cred = None
+        service_account_file = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
+        service_account_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON", "").strip()
+
+        if service_account_file and os.path.isfile(service_account_file):
+            try:
+                cred = fb_credentials.Certificate(service_account_file)
+                logger.info("Firebase Admin initialized with service-account file credentials")
+            except Exception as ce:
+                logger.warning(f"Failed to load GOOGLE_APPLICATION_CREDENTIALS file: {ce}")
+
+        if not cred and service_account_json:
+            try:
+                cert_dict = json.loads(service_account_json)
+                cred = fb_credentials.Certificate(cert_dict)
+                logger.info("Firebase Admin initialized with FIREBASE_SERVICE_ACCOUNT_JSON credentials")
+            except Exception as cje:
+                logger.warning(f"Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON: {cje}")
+
+        if not cred:
+            # Fall back to public certificate verification credential
+            cred = PublicCertCredential()
+            logger.info("Firebase Admin initialized with public certificate verification mode")
+
+        firebase_admin.initialize_app(cred, options={'projectId': FIREBASE_PROJECT_ID})
     HAS_FIREBASE_ADMIN = True
 except Exception as e:
-    logger.warning(f"Firebase Admin SDK initialization deferred: {e}")
+    logger.warning(f"Firebase Admin SDK initialization error: {e}")
     HAS_FIREBASE_ADMIN = False
+
+# Import google.oauth2.id_token and google.auth.transport.requests for authoritative fallback
+try:
+    from google.oauth2 import id_token as google_id_token
+    from google.auth.transport import requests as google_requests
+    _GOOGLE_AUTH_REQUEST = google_requests.Request()
+    HAS_GOOGLE_AUTH_ID_TOKEN = True
+except Exception as e:
+    logger.warning(f"google.oauth2.id_token import deferred: {e}")
+    HAS_GOOGLE_AUTH_ID_TOKEN = False
 
 def verify_firebase_id_token(token: str):
     """
-    Verifies a Firebase ID token using Firebase Admin SDK where feasible.
-    Verifies signature, aud, iss, exp, and token validity.
-    Falls back to Google's public tokeninfo endpoint if Firebase Admin credentials are unconfigured.
-    Returns decoded token dict containing 'email' if valid, None otherwise.
+    Verifies a Firebase ID token with authoritative signature verification.
+    1. Primary: Firebase Admin SDK verify_id_token (validates against Google x509 certs).
+    2. Authoritative Fallback: google.oauth2.id_token.verify_firebase_token (direct RS256
+       signature, audience, issuer, and expiration verification).
+    Fails closed: returns None if token is invalid, expired, malformed, or unverified.
+    Never logs raw token contents.
     """
     if not token or not isinstance(token, str):
         return None
     token = token.strip()
-    
-    # 1. Prefer Firebase Admin SDK (signature, iss, aud, exp verified against Google certs)
+    if not token or len(token.split('.')) != 3:
+        # JWT must have header.payload.signature
+        return None
+
+    # 1. Primary: Firebase Admin SDK
     if HAS_FIREBASE_ADMIN:
         try:
             decoded = firebase_auth.verify_id_token(token, check_revoked=False)
             if decoded:
                 return decoded
         except Exception as ex:
-            # If invalid or expired token, fail immediately without fallback
-            if "invalid" in str(ex).lower() or "expired" in str(ex).lower() or "revoked" in str(ex).lower():
-                logger.warning(f"Firebase Admin SDK token verification rejected token: {ex}")
+            ex_str = str(ex).lower()
+            if "invalid" in ex_str or "expired" in ex_str or "revoked" in ex_str:
+                logger.warning(f"Firebase Admin SDK rejected token: {type(ex).__name__}")
                 return None
-            logger.debug(f"Firebase Admin verification error (falling back): {ex}")
+            logger.debug(f"Firebase Admin verification error (attempting fallback): {type(ex).__name__}")
 
-    # 2. Tokeninfo verification fallback
-    try:
-        url = f"https://oauth2.googleapis.com/tokeninfo?id_token={token}"
-        req = urllib.request.Request(url, headers={'User-Agent': 'TrendAnalyzer-Backend/1.0'})
-        with urllib.request.urlopen(req, timeout=4) as resp:
-            if resp.status == 200:
-                payload = json.loads(resp.read().decode('utf-8'))
-                aud = payload.get('aud')
-                iss = payload.get('iss', '')
-                if (aud and aud == FIREBASE_PROJECT_ID) or f"securetoken.google.com/{FIREBASE_PROJECT_ID}" in iss:
-                    return payload
-                logger.warning(f"Token aud '{aud}' did not match project '{FIREBASE_PROJECT_ID}'")
-    except Exception as e:
-        logger.warning(f"Token verification fallback failed: {e}")
+    # 2. Authoritative Secondary: google.oauth2.id_token.verify_firebase_token
+    if HAS_GOOGLE_AUTH_ID_TOKEN:
+        try:
+            decoded = google_id_token.verify_firebase_token(
+                token,
+                _GOOGLE_AUTH_REQUEST,
+                audience=FIREBASE_PROJECT_ID
+            )
+            if decoded:
+                return decoded
+        except Exception as ge:
+            logger.warning(f"Google auth token verification rejected token: {type(ge).__name__}")
+            return None
+
     return None
 
 def require_user_auth(f):
