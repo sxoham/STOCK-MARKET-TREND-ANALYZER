@@ -375,12 +375,18 @@ def limit_rate(max_requests: int, window_seconds: int = 60):
     return decorator
 
 # =============================================================================
-# FIREBASE ADMIN SDK PRODUCTION INITIALIZATION:
-# Supports multiple secure credential configurations:
-# 1. GOOGLE_APPLICATION_CREDENTIALS: file path to service account JSON (e.g. Render Secret File)
-# 2. FIREBASE_SERVICE_ACCOUNT_JSON: raw JSON string in environment variable
-# 3. Public certificate verification mode (PublicCertCredential): verifies signatures,
-#    iss, aud, and exp against Google's public x509 certs without requiring a service account.
+# FIREBASE AUTHENTICATION & TOKEN VERIFICATION:
+# Supported verification modes:
+# MODE 1 (Service Account Configured):
+#   If GOOGLE_APPLICATION_CREDENTIALS (file) or FIREBASE_SERVICE_ACCOUNT_JSON
+#   (raw JSON) is supplied, Firebase Admin is initialized with a legitimate
+#   Certificate credential, and firebase_admin.auth.verify_id_token() is used.
+# MODE 2 (No Service Account Configured):
+#   Firebase Admin is NOT initialized with synthetic credentials.
+#   Tokens are verified authoritatively via google.oauth2.id_token.verify_firebase_token(),
+#   performing cryptographic RS256 signature verification against Google's public
+#   x509 certs, audience validation (FIREBASE_PROJECT_ID), issuer validation, and exp.
+#
 # NEVER log ID tokens, service-account keys, SECRET_KEY, or ADMIN_KEY.
 # =============================================================================
 HAS_FIREBASE_ADMIN = False
@@ -389,43 +395,40 @@ try:
     from firebase_admin import auth as firebase_auth
     from firebase_admin import credentials as fb_credentials
 
-    class PublicCertCredential(fb_credentials.Base):
-        """Credential for verifying Firebase ID tokens via public x509 certs without ADC."""
-        def get_credential(self):
-            return None
+    service_account_file = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
+    service_account_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON", "").strip()
+    cred = None
 
-    if not firebase_admin._apps:
-        cred = None
-        service_account_file = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
-        service_account_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON", "").strip()
+    if service_account_file and os.path.isfile(service_account_file):
+        try:
+            cred = fb_credentials.Certificate(service_account_file)
+            logger.info("Firebase Admin initialized in Mode 1 with service-account file credentials")
+        except Exception as ce:
+            logger.warning(f"Failed to load GOOGLE_APPLICATION_CREDENTIALS file: {ce}")
 
-        if service_account_file and os.path.isfile(service_account_file):
-            try:
-                cred = fb_credentials.Certificate(service_account_file)
-                logger.info("Firebase Admin initialized with service-account file credentials")
-            except Exception as ce:
-                logger.warning(f"Failed to load GOOGLE_APPLICATION_CREDENTIALS file: {ce}")
+    if not cred and service_account_json:
+        try:
+            cert_dict = json.loads(service_account_json)
+            cred = fb_credentials.Certificate(cert_dict)
+            logger.info("Firebase Admin initialized in Mode 1 with FIREBASE_SERVICE_ACCOUNT_JSON credentials")
+        except Exception as cje:
+            logger.warning(f"Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON: {cje}")
 
-        if not cred and service_account_json:
-            try:
-                cert_dict = json.loads(service_account_json)
-                cred = fb_credentials.Certificate(cert_dict)
-                logger.info("Firebase Admin initialized with FIREBASE_SERVICE_ACCOUNT_JSON credentials")
-            except Exception as cje:
-                logger.warning(f"Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON: {cje}")
-
-        if not cred:
-            # Fall back to public certificate verification credential
-            cred = PublicCertCredential()
-            logger.info("Firebase Admin initialized with public certificate verification mode")
-
-        firebase_admin.initialize_app(cred, options={'projectId': FIREBASE_PROJECT_ID})
-    HAS_FIREBASE_ADMIN = True
+    if cred:
+        if not firebase_admin._apps:
+            firebase_admin.initialize_app(cred, options={'projectId': FIREBASE_PROJECT_ID})
+        HAS_FIREBASE_ADMIN = True
+    else:
+        logger.info(
+            f"No Firebase service-account configured. Mode 2 active: "
+            f"authoritative verification via google.oauth2.id_token (project: '{FIREBASE_PROJECT_ID}')."
+        )
+        HAS_FIREBASE_ADMIN = False
 except Exception as e:
     logger.warning(f"Firebase Admin SDK initialization error: {e}")
     HAS_FIREBASE_ADMIN = False
 
-# Import google.oauth2.id_token and google.auth.transport.requests for authoritative fallback
+# Import google.oauth2.id_token and google.auth.transport.requests for authoritative verification
 try:
     from google.oauth2 import id_token as google_id_token
     from google.auth.transport import requests as google_requests
@@ -437,34 +440,44 @@ except Exception as e:
 
 def verify_firebase_id_token(token: str):
     """
-    Verifies a Firebase ID token with authoritative signature verification.
-    1. Primary: Firebase Admin SDK verify_id_token (validates against Google x509 certs).
-    2. Authoritative Fallback: google.oauth2.id_token.verify_firebase_token (direct RS256
-       signature, audience, issuer, and expiration verification).
-    Fails closed: returns None if token is invalid, expired, malformed, or unverified.
+    Verifies a Firebase ID token with authoritative cryptographic RS256 signature,
+    audience, issuer, and expiration verification.
+    - Mode 1: Firebase Admin SDK verify_id_token (when legitimate service-account configured).
+    - Mode 2: google.oauth2.id_token.verify_firebase_token (direct verification against
+              Google's public x509 certs with audience and issuer checks).
+    Fails closed: returns None if token is invalid, expired, malformed, wrong audience,
+    wrong issuer, or unverified.
     Never logs raw token contents.
     """
     if not token or not isinstance(token, str):
         return None
     token = token.strip()
     if not token or len(token.split('.')) != 3:
-        # JWT must have header.payload.signature
+        # JWT must consist of header.payload.signature
         return None
 
-    # 1. Primary: Firebase Admin SDK
+    # Expected Firebase issuer for project
+    expected_issuer_prefix = f"https://securetoken.google.com/{FIREBASE_PROJECT_ID}"
+
+    # MODE 1: Legitimate Firebase Admin SDK
     if HAS_FIREBASE_ADMIN:
         try:
             decoded = firebase_auth.verify_id_token(token, check_revoked=False)
             if decoded:
+                iss = decoded.get('iss', '')
+                aud = decoded.get('aud', '')
+                if aud != FIREBASE_PROJECT_ID:
+                    logger.warning(f"Token audience mismatch: expected '{FIREBASE_PROJECT_ID}', got '{aud}'")
+                    return None
+                if iss and iss != expected_issuer_prefix:
+                    logger.warning(f"Token issuer mismatch: expected '{expected_issuer_prefix}', got '{iss}'")
+                    return None
                 return decoded
         except Exception as ex:
-            ex_str = str(ex).lower()
-            if "invalid" in ex_str or "expired" in ex_str or "revoked" in ex_str:
-                logger.warning(f"Firebase Admin SDK rejected token: {type(ex).__name__}")
-                return None
-            logger.debug(f"Firebase Admin verification error (attempting fallback): {type(ex).__name__}")
+            logger.warning(f"Firebase Admin SDK rejected token: {type(ex).__name__}")
+            return None
 
-    # 2. Authoritative Secondary: google.oauth2.id_token.verify_firebase_token
+    # MODE 2: Authoritative Google OAuth2 ID token verifier (Direct RS256 Public Cert verification)
     if HAS_GOOGLE_AUTH_ID_TOKEN:
         try:
             decoded = google_id_token.verify_firebase_token(
@@ -473,6 +486,14 @@ def verify_firebase_id_token(token: str):
                 audience=FIREBASE_PROJECT_ID
             )
             if decoded:
+                iss = decoded.get('iss', '')
+                aud = decoded.get('aud', '')
+                if aud != FIREBASE_PROJECT_ID:
+                    logger.warning(f"Token audience mismatch: expected '{FIREBASE_PROJECT_ID}', got '{aud}'")
+                    return None
+                if iss and iss != expected_issuer_prefix:
+                    logger.warning(f"Token issuer mismatch: expected '{expected_issuer_prefix}', got '{iss}'")
+                    return None
                 return decoded
         except Exception as ge:
             logger.warning(f"Google auth token verification rejected token: {type(ge).__name__}")

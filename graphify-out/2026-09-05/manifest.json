@@ -1,8 +1,8 @@
 {
   "app.py": {
-    "mtime": 1788551719.3385446,
-    "seen": 1788554311.119347,
-    "ast_hash": "e5a9605666dfe799ffb6e3c068bc9866",
+    "mtime": 1788562227.654161,
+    "seen": 1788562678.6865973,
+    "ast_hash": "02a5e15036032009e9608754189ee051",
     "semantic_hash": ""
   },
   "main.py": {
@@ -234,9 +234,9 @@
     "semantic_hash": ""
   },
   "static/script.js": {
-    "mtime": 1788561103.6546345,
-    "seen": 1788561223.7972083,
-    "ast_hash": "0f489db54041a0277768fe699664200d",
+    "mtime": 1788561895.309485,
+    "seen": 1788562678.6891248,
+    "ast_hash": "646f4d0ee8d92d3626729ba9ca6e09c0",
     "semantic_hash": ""
   },
   "static/stargrid.js": {
@@ -1518,9 +1518,9 @@
     "semantic_hash": ""
   },
   "images/dashboard.png": {
-    "mtime": 1788560598.654529,
-    "seen": 1788561223.8092844,
-    "ast_hash": "7f80de5dee4b2f27da604786f02045c6",
+    "mtime": 1788562647.360948,
+    "seen": 1788562678.7024896,
+    "ast_hash": "1500ee925fb547a1b3149fd8dc7aded0",
     "semantic_hash": ""
   },
   "images/feature_importance.png": {
@@ -2157,6 +2157,12 @@
     "mtime": 1788561126.045527,
     "seen": 1788561223.7935522,
     "ast_hash": "320a37384312f15b310dfede1a851f88",
+    "semantic_hash": ""
+  },
+  "scripts/test_firebase_auth_hardening.py": {
+    "mtime": 1788562270.8605702,
+    "seen": 1788562678.6865973,
+    "ast_hash": "2e24c1e311348da8a35d263330772d4e",
     "semantic_hash": ""
   }
 }
