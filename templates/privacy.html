@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Privacy Policy for TrendAnalyzer — Factual disclosure of data processing, authentication, and user storage.">
+  <title>Privacy Policy — TrendAnalyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .legal-page {
+      min-height: 100vh;
+      background: var(--canvas);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      font-family: var(--font-sans);
+    }
+    .legal-nav {
+      border-bottom: 1px solid var(--border-default);
+      background: var(--surface-1);
+      backdrop-filter: var(--blur-glass);
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .legal-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.125rem;
+    }
+    .legal-container {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6);
+      flex: 1;
+      width: 100%;
+    }
+    .legal-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: var(--space-7);
+      box-shadow: var(--card-shadow);
+    }
+    .legal-card h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+      color: var(--text-primary);
+    }
+    .legal-meta {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .legal-card h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: var(--space-6);
+      margin-bottom: var(--space-3);
+      color: var(--accent);
+    }
+    .legal-card p, .legal-card li {
+      font-size: 0.9375rem;
+      line-height: 1.65;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+    }
+    .legal-card ul {
+      padding-left: var(--space-5);
+      margin-bottom: var(--space-4);
+    }
+    .legal-footer {
+      border-top: 1px solid var(--border-default);
+      background: var(--surface-0);
+      padding: var(--space-6);
+      margin-top: var(--space-8);
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+    .legal-footer-links {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-3);
+    }
+    .legal-footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color var(--transition-base);
+    }
+    .legal-footer-links a:hover {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body class="legal-page">
+  <nav class="legal-nav" aria-label="Main Navigation">
+    <a href="/dashboard" class="legal-logo" aria-label="TrendAnalyzer Dashboard">
+      <span class="auth-logo-mark" aria-hidden="true" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;background:var(--accent-dim);border-radius:var(--radius-sm);border:1px solid var(--border-accent);color:var(--accent);">📈</span>
+      <span>TrendAnalyzer</span>
+    </a>
+    <div style="display:flex;gap:var(--space-3);">
+      <a href="/dashboard" class="btn-secondary btn-sm" style="text-decoration:none;padding:6px 14px;font-size:0.8125rem;">Dashboard</a>
+      <a href="/login" class="btn-primary btn-sm" style="text-decoration:none;padding:6px 14px;font-size:0.8125rem;">Sign In</a>
+    </div>
+  </nav>
+
+  <main class="legal-container">
+    <article class="legal-card">
+      <h1>Privacy Policy</h1>
+      <div class="legal-meta">
+        <span>Last updated: September 4, 2026</span> • <span>Version: 2026-v1</span>
+      </div>
+
+      <p>
+        TrendAnalyzer ("the Platform") respects your privacy. This Privacy Policy details the exact categories of data collected, processed, and retained when you access our market trend analysis and simulation platform.
+      </p>
+
+      <h2>1. Information Actually Collected & Processed</h2>
+      <p>We restrict data collection to the minimum required to provide simulated trading and market analytics:</p>
+      <ul>
+        <li><strong>Authentication Credentials:</strong> Managed securely via Google Firebase Authentication. This includes your registered email address, authentication UID, display name, and login provider details. User passwords are handled directly by Firebase and are never received or stored by our application server.</li>
+        <li><strong>User Profile & Preferences:</strong> Optional profile information you provide in account settings (display name, age, gender, preferred display currency).</li>
+        <li><strong>Paper-Trading & Watchlist Data:</strong> Simulated virtual portfolio records (holdings, transaction history, virtual cash balance) and saved watchlist tickers stored in our database.</li>
+        <li><strong>User Feedback:</strong> Voluntary ratings and text feedback submitted through the application feedback interface.</li>
+        <li><strong>Technical & Network Telemetry:</strong> Client IP addresses processed transiently in server memory for security auditing, DDoS prevention, and rate limiting.</li>
+      </ul>
+
+      <h2>2. Browser Storage & Local State</h2>
+      <p>The platform utilizes the following browser storage mechanisms:</p>
+      <ul>
+        <li><strong>IndexedDB / LocalStorage (Firebase Auth):</strong> Strictly necessary client-side storage managed by the Firebase SDK to maintain your authenticated session across page navigation without requiring re-login on every request.</li>
+        <li><strong>LocalStorage (UI State Fallback):</strong> Functional local caching for your active watchlist and recent portfolio view to ensure responsive interface rendering prior to server synchronization.</li>
+        <li><strong>Tracking & Analytics Notice:</strong> TrendAnalyzer does not deploy third-party advertising cookies, marketing tracking pixels, or cross-site tracking beacons.</li>
+      </ul>
+
+      <h2>3. Third-Party Service Providers</h2>
+      <p>The platform relies on the following infrastructure and service providers:</p>
+      <ul>
+        <li><strong>Google Firebase:</strong> Identity authentication provider and credential token validation.</li>
+        <li><strong>Yahoo Finance & GDELT Project:</strong> Public market quotes, historical pricing, and open news sentiment feeds.</li>
+        <li><strong>Hosting Infrastructure:</strong> Cloud application runtime hosting (Render).</li>
+        <li><strong>Content Delivery Networks:</strong> Cloudflare / CDNJS / Google Fonts for serving secure, verified UI stylesheets and charting libraries.</li>
+      </ul>
+
+      <h2>4. Data Retention & Account Deletion</h2>
+      <p>
+        You maintain complete control over your account data. You may delete your account and associated simulation records at any time using the "Delete Account" feature inside the Profile drawer. When executed, your user database records (portfolio, transactions, watchlist, and custom profile) are purged from the database, and your authentication profile is removed from Firebase.
+      </p>
+
+      <h2>5. Security Measures</h2>
+      <p>
+        TrendAnalyzer enforces defense-in-depth technical safeguards including Content Security Policy (CSP), HTTP Strict Transport Security (HSTS), cross-origin isolation headers, sliding-window rate limiting, and parameterized database queries.
+      </p>
+
+      <h2>6. Contact Us</h2>
+      <p>
+        If you have questions regarding this Privacy Policy or your data, please reach out through our <a href="/contact" style="color:var(--accent);text-decoration:underline;">Contact Page</a> or submit feedback directly through the in-app feedback dialog.
+      </p>
+    </article>
+  </main>
+
+  <footer class="legal-footer">
+    <div class="legal-footer-links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/disclaimer">Financial Disclaimer</a>
+      <a href="/contact">Contact Support</a>
+    </div>
+    <p style="max-width:640px;margin:0 auto var(--space-2);line-height:1.5;">
+      Market investments are subject to market risks. TrendAnalyzer predictive models and paper trading tools are strictly educational simulations and do not constitute financial advice.
+    </p>
+    <p>© 2026 TrendAnalyzer. All rights reserved.</p>
+  </footer>
+</body>
+</html>

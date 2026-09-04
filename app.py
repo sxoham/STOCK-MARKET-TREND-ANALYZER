@@ -58,8 +58,15 @@ else:
     REQUIRE_AUTH = os.environ.get("REQUIRE_AUTH", "false").lower() == "true"
 
 # Config
-DB_FILE = 'users.db'
-MODEL_DB_FILE = 'model_logs.db'
+DATA_DIR = os.environ.get("DATA_DIR", "").strip()
+if DATA_DIR:
+    os.makedirs(DATA_DIR, exist_ok=True)
+    DB_FILE = os.path.join(DATA_DIR, 'users.db')
+    MODEL_DB_FILE = os.path.join(DATA_DIR, 'model_logs.db')
+else:
+    DB_FILE = os.environ.get("DATABASE_PATH", "users.db").strip()
+    MODEL_DB_FILE = os.environ.get("MODEL_DB_PATH", "model_logs.db").strip()
+
 RESULTS_DIR = main.RESULTS_DIR
 STOCKS = main.STOCKS
 ENABLE_DB_VIEWER = os.environ.get("ENABLE_DB_VIEWER", "false").lower() == "true"
@@ -362,7 +369,7 @@ def limit_rate(max_requests: int, window_seconds: int = 60):
             key = f"{f.__name__}:{client_ip}"
             if not rate_limiter.is_allowed(key, max_requests, window_seconds):
                 logger.warning(f"Rate limit exceeded for IP {client_ip} on {request.path}")
-                return jsonify({"status": "error", "error": "Too many requests. Please slow down."}), 429
+                return jsonify({"status": "error", "error": "Too many requests. Please slow down and try again shortly.", "code": 429}), 429
             return f(*args, **kwargs)
         return wrapped
     return decorator
@@ -465,64 +472,18 @@ def require_user_auth(f):
         return f(*args, **kwargs)
     return decorated
 
-def get_db_connection():
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def get_model_db_connection():
-    conn = sqlite3.connect(MODEL_DB_FILE)
-    conn.row_factory = sqlite3.Row
-    return conn
+from db import (
+    get_db_connection,
+    get_model_db_connection,
+    init_all_tables,
+    verify_production_database_config,
+    is_postgres_configured
+)
 
 def init_databases():
-    """Ensure SQLite tables exist upon startup regardless of WSGI server (Gunicorn/Waitress/Flask)."""
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                email TEXT PRIMARY KEY,
-                data TEXT,
-                is_verified INTEGER DEFAULT 0,
-                subscription_tier TEXT DEFAULT 'free',
-                subscription_expiry DATETIME,
-                start_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-                status TEXT DEFAULT 'active'
-            )
-        ''')
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS alerts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT,
-                ticker TEXT,
-                target_price REAL,
-                condition TEXT,
-                is_active INTEGER DEFAULT 1,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        logger.error(f"Failed to initialize {DB_FILE}: {e}")
-
-    try:
-        conn = sqlite3.connect(MODEL_DB_FILE)
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS predictions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ticker TEXT,
-                date TEXT,
-                prediction TEXT,
-                probability REAL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(ticker, date)
-            )
-        ''')
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        logger.error(f"Failed to initialize {MODEL_DB_FILE}: {e}")
+    """Ensure database tables exist upon startup (PostgreSQL or SQLite)."""
+    verify_production_database_config()
+    init_all_tables()
 
 init_databases()
 
@@ -541,6 +502,75 @@ def register():
 @app.route('/dashboard')
 def dashboard():
     return render_template('index.html')
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+@app.route('/disclaimer')
+def disclaimer():
+    return render_template('disclaimer.html')
+
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
+
+# =============================================================================
+# HTTP ERROR HANDLERS (Branded HTML for Browser, JSON for API)
+# =============================================================================
+def _wants_json_error():
+    return request.path.startswith('/api/') or not request.accept_mimetypes.accept_html
+
+@app.errorhandler(403)
+def handle_forbidden(e):
+    if _wants_json_error():
+        response = jsonify({"status": "error", "error": "Forbidden: Access denied", "code": 403})
+        response.status_code = 403
+        return response
+    return render_template('error.html', error_code=403, error_title="Access Forbidden", error_message="You do not have permission to access this resource."), 403
+
+@app.errorhandler(404)
+def handle_not_found(e):
+    if _wants_json_error():
+        response = jsonify({"status": "error", "error": "Resource not found", "code": 404})
+        response.status_code = 404
+        return response
+    return render_template('error.html', error_code=404, error_title="Page Not Found", error_message="The page or asset you are looking for does not exist or has been moved."), 404
+
+@app.errorhandler(429)
+def handle_too_many_requests(e):
+    if _wants_json_error():
+        response = jsonify({"status": "error", "error": "Too many requests. Please slow down and try again shortly.", "code": 429})
+        response.status_code = 429
+        return response
+    return render_template('error.html', error_code=429, error_title="Rate Limit Exceeded", error_message="Too many requests were sent in a short window. Please wait a few moments and try again."), 429
+
+@app.errorhandler(500)
+def handle_server_error(e):
+    sanitized_path = request.path
+    logger.error(f"Internal server error (500) on path '{sanitized_path}': {type(e).__name__}: {str(e)}", exc_info=True)
+    if _wants_json_error():
+        response = jsonify({"status": "error", "error": "Internal server error. The incident has been logged.", "code": 500})
+        response.status_code = 500
+        return response
+    return render_template('error.html', error_code=500, error_title="Server Error", error_message="An unexpected server error occurred. Our engineering team has been notified."), 500
+
+@app.errorhandler(Exception)
+def handle_unexpected_exception(e):
+    from werkzeug.exceptions import HTTPException
+    if isinstance(e, HTTPException):
+        return e
+    sanitized_path = request.path
+    logger.error(f"Unhandled exception (500) on path '{sanitized_path}': {type(e).__name__}: {str(e)}", exc_info=True)
+    if _wants_json_error():
+        response = jsonify({"status": "error", "error": "Internal server error. The incident has been logged.", "code": 500})
+        response.status_code = 500
+        return response
+    return render_template('error.html', error_code=500, error_title="Server Error", error_message="An unexpected server error occurred. Our engineering team has been notified."), 500
 
 # --- API Endpoints ---
 

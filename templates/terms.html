@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Terms of Service for TrendAnalyzer — Acceptable use, paper trading rules, and platform limitations.">
+  <title>Terms of Service — TrendAnalyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .legal-page {
+      min-height: 100vh;
+      background: var(--canvas);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      font-family: var(--font-sans);
+    }
+    .legal-nav {
+      border-bottom: 1px solid var(--border-default);
+      background: var(--surface-1);
+      backdrop-filter: var(--blur-glass);
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .legal-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.125rem;
+    }
+    .legal-container {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6);
+      flex: 1;
+      width: 100%;
+    }
+    .legal-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: var(--space-7);
+      box-shadow: var(--card-shadow);
+    }
+    .legal-card h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+      color: var(--text-primary);
+    }
+    .legal-meta {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .legal-card h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: var(--space-6);
+      margin-bottom: var(--space-3);
+      color: var(--accent);
+    }
+    .legal-card p, .legal-card li {
+      font-size: 0.9375rem;
+      line-height: 1.65;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+    }
+    .legal-card ul {
+      padding-left: var(--space-5);
+      margin-bottom: var(--space-4);
+    }
+    .highlight-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      margin: var(--space-4) 0;
+    }
+    .highlight-box p {
+      margin-bottom: 0;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .legal-footer {
+      border-top: 1px solid var(--border-default);
+      background: var(--surface-0);
+      padding: var(--space-6);
+      margin-top: var(--space-8);
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+    .legal-footer-links {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-3);
+    }
+    .legal-footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color var(--transition-base);
+    }
+    .legal-footer-links a:hover {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body class="legal-page">
+  <nav class="legal-nav" aria-label="Main Navigation">
+    <a href="/dashboard" class="legal-logo" aria-label="TrendAnalyzer Dashboard">
+      <span class="auth-logo-mark" aria-hidden="true" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;background:var(--accent-dim);border-radius:var(--radius-sm);border:1px solid var(--border-accent);color:var(--accent);">📈</span>
+      <span>TrendAnalyzer</span>
+    </a>
+    <div style="display:flex;gap:var(--space-3);">
+      <a href="/dashboard" class="btn-secondary btn-sm" style="text-decoration:none;padding:6px 14px;font-size:0.8125rem;">Dashboard</a>
+      <a href="/login" class="btn-primary btn-sm" style="text-decoration:none;padding:6px 14px;font-size:0.8125rem;">Sign In</a>
+    </div>
+  </nav>
+
+  <main class="legal-container">
+    <article class="legal-card">
+      <h1>Terms of Service</h1>
+      <div class="legal-meta">
+        <span>Last updated: September 4, 2026</span> • <span>Version: 2026-v1</span>
+      </div>
+
+      <p>
+        These Terms of Service ("Terms") govern your access to and use of the TrendAnalyzer application, websites, and associated services (collectively, "TrendAnalyzer" or "the Service"). By creating an account or using the Service, you agree to be bound by these Terms.
+      </p>
+
+      <div class="highlight-box">
+        <p>
+          Simulated Trading Notice: All cash balances, portfolio values, trades, and returns within TrendAnalyzer are strictly simulated paper-trading instruments. They represent virtual credits with zero real monetary value, cannot be redeemed for legal currency, and do not interface with real-world brokerage accounts.
+        </p>
+      </div>
+
+      <h2>1. Experimental Nature of AI Predictions</h2>
+      <p>
+        TrendAnalyzer uses statistical and machine-learning models to produce experimental market analysis. Outputs are informational and educational only and are not personalized investment advice. Past performance, simulated results, forecasts, and backtest metrics do not guarantee future outcomes. You acknowledge that algorithmic predictions are probabilistic estimations subject to model drift, unexpected macroeconomic anomalies, and data provider latency.
+      </p>
+
+      <h2>2. Acceptable Use & Account Responsibilities</h2>
+      <p>When accessing or using TrendAnalyzer, you agree to:</p>
+      <ul>
+        <li>Provide accurate registration information and keep your authentication credentials confidential.</li>
+        <li>Notify us immediately if you suspect unauthorized access to your account.</li>
+        <li>Maintain compliance with all applicable laws and regulations in your jurisdiction.</li>
+      </ul>
+
+      <h2>3. Prohibited Conduct</h2>
+      <p>You agree not to engage in any of the following prohibited activities:</p>
+      <ul>
+        <li>Automated scraping, bulk extraction, or unauthorized harvesting of market sentiment data or model outputs without express written authorization.</li>
+        <li>Submitting malicious payloads, SQL injection attacks, path traversal attempts, or deliberate invalid ticker floods aimed at overwhelming backend computing resources.</li>
+        <li>Attempting to probe, scan, or test the vulnerability of the system or circumvent rate-limiting mechanisms.</li>
+        <li>Using model outputs to misrepresent algorithmic recommendations as certified investment advisory services to third parties.</li>
+      </ul>
+
+      <h2>4. Third-Party Data & Service Availability</h2>
+      <p>
+        TrendAnalyzer integrates with third-party data providers including Yahoo Finance and GDELT DOC API 2.0. The Service is provided on an "AS IS" and "AS AVAILABLE" basis. We do not warrant that market data feeds will be continuous, error-free, or fully real-time. Upstream API rate limits, market trading holidays, and network outages may temporarily affect data timeliness.
+      </p>
+
+      <h2>5. Intellectual Property & License</h2>
+      <p>
+        The software architecture, user interface designs, custom CSS, analytical visualizers, and pre-trained ensemble model architectures are protected by applicable intellectual property rights. You are granted a limited, personal, non-exclusive, non-transferable license to use the interface for personal educational analysis.
+      </p>
+
+      <h2>6. Termination & Account Deletion</h2>
+      <p>
+        You may terminate your account at any time by using the "Delete Account" button within the Profile drawer. We reserve the right to suspend or terminate access for accounts that violate these Terms or engage in hostile security testing against the platform.
+      </p>
+
+      <h2>7. Limitation of Liability</h2>
+      <p>
+        To the maximum extent permitted by applicable law, TrendAnalyzer and its developers shall not be liable for any direct, indirect, incidental, special, or consequential damages resulting from your use of the platform, simulated trading decisions, or reliance on machine learning forecasts. Users should independently evaluate all information before making financial decisions.
+      </p>
+
+      <h2>8. Contact Information</h2>
+      <p>
+        For inquiries regarding these Terms, please contact us via our <a href="/contact" style="color:var(--accent);text-decoration:underline;">Contact Page</a>.
+      </p>
+    </article>
+  </main>
+
+  <footer class="legal-footer">
+    <div class="legal-footer-links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/disclaimer">Financial Disclaimer</a>
+      <a href="/contact">Contact Support</a>
+    </div>
+    <p style="max-width:640px;margin:0 auto var(--space-2);line-height:1.5;">
+      Market investments are subject to market risks. TrendAnalyzer predictive models and paper trading tools are strictly educational simulations and do not constitute financial advice.
+    </p>
+    <p>© 2026 TrendAnalyzer. All rights reserved.</p>
+  </footer>
+</body>
+</html>

@@ -1,8 +1,8 @@
 {
   "app.py": {
-    "mtime": 1788551719.3385446,
-    "seen": 1788554311.119347,
-    "ast_hash": "e5a9605666dfe799ffb6e3c068bc9866",
+    "mtime": 1788447731.8559985,
+    "seen": 1788454376.6993213,
+    "ast_hash": "4b57157b6f6c6bae2f38b4e909fc246e",
     "semantic_hash": ""
   },
   "main.py": {
@@ -228,9 +228,9 @@
     "semantic_hash": "99e28cc6935720dd696879b32a266626"
   },
   "static/firebase-auth.js": {
-    "mtime": 1788534627.06555,
-    "seen": 1788544097.3373773,
-    "ast_hash": "3b96672c16411d651fcbf64f27508e04",
+    "mtime": 1788363744.1974113,
+    "seen": 1788431913.9717336,
+    "ast_hash": "ebb8fd9ec76a34a817287ad353ba2f77",
     "semantic_hash": ""
   },
   "static/script.js": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "requirements.txt": {
-    "mtime": 1788551736.6143794,
-    "seen": 1788554311.2788968,
-    "ast_hash": "8fb5720d0f04133b9517a64f80befae7",
+    "mtime": 1788432573.0061252,
+    "seen": 1788433076.2271237,
+    "ast_hash": "0a6cb758ff07b929dabd57eb4d3a3ab2",
     "semantic_hash": ""
   },
   "runtime.txt": {
@@ -1488,21 +1488,21 @@
     "semantic_hash": ""
   },
   "templates/index.html": {
-    "mtime": 1788534715.1855464,
-    "seen": 1788544097.3721218,
-    "ast_hash": "148fb3dc6ad95705dfd0daf95d768b31",
+    "mtime": 1788443189.5939152,
+    "seen": 1788444890.2149673,
+    "ast_hash": "57e45d7aadf400c15abc931c9d4acf9c",
     "semantic_hash": ""
   },
   "templates/login.html": {
-    "mtime": 1788534655.741236,
-    "seen": 1788544097.3721218,
-    "ast_hash": "8805ca0ea935d8dbc128781a880c1bbf",
+    "mtime": 1788301644.9796593,
+    "seen": 1788431913.9717336,
+    "ast_hash": "abd99b8d06363f921c0cdd87641cc44f",
     "semantic_hash": ""
   },
   "templates/register.html": {
-    "mtime": 1788534675.400627,
-    "seen": 1788544097.3721218,
-    "ast_hash": "2d1d449f300dc48ca7575ae744d5ddaa",
+    "mtime": 1788301650.6054592,
+    "seen": 1788431913.9717336,
+    "ast_hash": "921a34964700c8dbb343ca968d81a3b8",
     "semantic_hash": ""
   },
   "upgrade.txt": {
@@ -2088,75 +2088,15 @@
     "semantic_hash": ""
   },
   "scripts/test_production_smoke.py": {
-    "mtime": 1788551727.786894,
-    "seen": 1788554311.1269877,
-    "ast_hash": "4b83fdd5ec611087b44d835055371c61",
+    "mtime": 1788437750.6275618,
+    "seen": 1788438128.913531,
+    "ast_hash": "be2c990dc6beafa9305cc5331f94634f",
     "semantic_hash": ""
   },
   "render.yaml": {
-    "mtime": 1788551751.2735095,
-    "seen": 1788554311.2788968,
-    "ast_hash": "6ff4dea3480bfa5e170fabdd3b000498",
-    "semantic_hash": ""
-  },
-  "scripts/test_p0_readiness.py": {
-    "mtime": 1788535100.681583,
-    "seen": 1788544097.3193057,
-    "ast_hash": "5702677a621c97e396363c53794d130a",
-    "semantic_hash": ""
-  },
-  "Production-Grade Website Audit Prompt.md": {
-    "mtime": 1788431308.5227141,
-    "seen": 1788544097.371122,
-    "ast_hash": "3152d2778e2ae2958cc7cc4b21a077e7",
-    "semantic_hash": ""
-  },
-  "templates/contact.html": {
-    "mtime": 1788534612.3798041,
-    "seen": 1788544097.3721218,
-    "ast_hash": "c7681ca604544e3c7d646733e0ba972e",
-    "semantic_hash": ""
-  },
-  "templates/disclaimer.html": {
-    "mtime": 1788534598.5661495,
-    "seen": 1788544097.3721218,
-    "ast_hash": "7feef231d25b8c1d5e97d434f0998ebd",
-    "semantic_hash": ""
-  },
-  "templates/error.html": {
-    "mtime": 1788534631.8627043,
-    "seen": 1788544097.3721218,
-    "ast_hash": "31f25ed2332f4c695c3df6a3b3675f5a",
-    "semantic_hash": ""
-  },
-  "templates/privacy.html": {
-    "mtime": 1788534570.3096695,
-    "seen": 1788544097.3721218,
-    "ast_hash": "c83c2b71b127fa7f7c31ea00bd48c1d7",
-    "semantic_hash": ""
-  },
-  "templates/terms.html": {
-    "mtime": 1788534585.5416272,
-    "seen": 1788544097.3721218,
-    "ast_hash": "fc83d51d6adbbf20e3d374882b1156a9",
-    "semantic_hash": ""
-  },
-  "db.py": {
-    "mtime": 1788553355.7043285,
-    "seen": 1788554311.119347,
-    "ast_hash": "26dfc9d19d447dec47a9b3ce90ca68d1",
-    "semantic_hash": ""
-  },
-  "scripts/migrate_sqlite_to_postgres.py": {
-    "mtime": 1788552175.7518387,
-    "seen": 1788554311.1249866,
-    "ast_hash": "a73ce182fcad276774bbfb019a5a045a",
-    "semantic_hash": ""
-  },
-  "scripts/test_database_persistence.py": {
-    "mtime": 1788552192.55357,
-    "seen": 1788554311.1249866,
-    "ast_hash": "5f7e081ed156cbf1b6092dc7cfdfb101",
+    "mtime": 1788442458.6101165,
+    "seen": 1788442570.4957032,
+    "ast_hash": "29ed8b2e6ad1bbdc02cc638c26466fbc",
     "semantic_hash": ""
   }
 }

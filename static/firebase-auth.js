@@ -8,7 +8,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   deleteUser,
-  sendEmailVerification
+  sendEmailVerification,
+  sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -43,5 +44,6 @@ export {
   signOut,
   signInWithGoogle,
   deleteUser,
-  sendEmailVerification
+  sendEmailVerification,
+  sendPasswordResetEmail
 };

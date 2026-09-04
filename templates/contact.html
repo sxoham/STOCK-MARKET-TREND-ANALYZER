@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Contact and Support for TrendAnalyzer — Inquiries, issue reporting, and feedback.">
+  <title>Contact & Support — TrendAnalyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .contact-page {
+      min-height: 100vh;
+      background: var(--canvas);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      font-family: var(--font-sans);
+    }
+    .contact-nav {
+      border-bottom: 1px solid var(--border-default);
+      background: var(--surface-1);
+      backdrop-filter: var(--blur-glass);
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .contact-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.125rem;
+    }
+    .contact-container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6);
+      flex: 1;
+      width: 100%;
+    }
+    .contact-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: var(--space-7);
+      box-shadow: var(--card-shadow);
+    }
+    .contact-card h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+      color: var(--text-primary);
+    }
+    .contact-card p {
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-5);
+    }
+    .support-channel {
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+    }
+    .support-channel-icon {
+      font-size: 1.25rem;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .support-channel-title {
+      font-weight: 600;
+      font-size: 0.9375rem;
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+    .support-channel-desc {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .contact-footer {
+      border-top: 1px solid var(--border-default);
+      background: var(--surface-0);
+      padding: var(--space-6);
+      margin-top: var(--space-8);
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+    .contact-footer-links {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-3);
+    }
+    .contact-footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color var(--transition-base);
+    }
+    .contact-footer-links a:hover {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body class="contact-page">
+  <nav class="contact-nav" aria-label="Main Navigation">
+    <a href="/dashboard" class="contact-logo" aria-label="TrendAnalyzer Dashboard">
+      <span class="auth-logo-mark" aria-hidden="true" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;background:var(--accent-dim);border-radius:var(--radius-sm);border:1px solid var(--border-accent);color:var(--accent);">📈</span>
+      <span>TrendAnalyzer</span>
+    </a>
+    <div style="display:flex;gap:var(--space-3);">
+      <a href="/dashboard" class="btn-secondary btn-sm" style="text-decoration:none;padding:6px 14px;font-size:0.8125rem;">Dashboard</a>
+      <a href="/login" class="btn-primary btn-sm" style="text-decoration:none;padding:6px 14px;font-size:0.8125rem;">Sign In</a>
+    </div>
+  </nav>
+
+  <main class="contact-container">
+    <div class="contact-card">
+      <h1>Contact & Support</h1>
+      <p>
+        Have questions regarding platform features, machine learning indicators, or account management? Use the verified support channels below.
+      </p>
+
+      <div class="support-channel">
+        <div class="support-channel-icon" aria-hidden="true">💬</div>
+        <div>
+          <div class="support-channel-title">In-App User Feedback</div>
+          <p class="support-channel-desc">
+            Signed-in users can submit ratings and detailed feedback directly through the feedback modal located in the user Profile drawer on the <a href="/dashboard" style="color:var(--accent);text-decoration:underline;">Dashboard</a>.
+          </p>
+        </div>
+      </div>
+
+      <div class="support-channel">
+        <div class="support-channel-icon" aria-hidden="true">🛡️</div>
+        <div>
+          <div class="support-channel-title">Security & Technical Inquiries</div>
+          <p class="support-channel-desc">
+            For technical anomalies, responsible security vulnerability disclosures, or data privacy questions, please review our <a href="/privacy" style="color:var(--accent);text-decoration:underline;">Privacy Policy</a> or open an issue on our project repository.
+          </p>
+        </div>
+      </div>
+
+      <div class="support-channel">
+        <div class="support-channel-icon" aria-hidden="true">⚖️</div>
+        <div>
+          <div class="support-channel-title">Terms & Legal Questions</div>
+          <p class="support-channel-desc">
+            For legal notices, platform rules, and simulation parameters, review the <a href="/terms" style="color:var(--accent);text-decoration:underline;">Terms of Service</a> and <a href="/disclaimer" style="color:var(--accent);text-decoration:underline;">Financial Disclaimer</a>.
+          </p>
+        </div>
+      </div>
+
+      <div style="margin-top:var(--space-6);text-align:center;">
+        <a href="/dashboard" class="btn-primary" style="text-decoration:none;display:inline-block;padding:10px 24px;font-size:0.875rem;">
+          Return to Market Dashboard
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="contact-footer">
+    <div class="contact-footer-links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/disclaimer">Financial Disclaimer</a>
+      <a href="/contact">Contact Support</a>
+    </div>
+    <p style="max-width:640px;margin:0 auto var(--space-2);line-height:1.5;">
+      Market investments are subject to market risks. TrendAnalyzer predictive models and paper trading tools are strictly educational simulations and do not constitute financial advice.
+    </p>
+    <p>© 2026 TrendAnalyzer. All rights reserved.</p>
+  </footer>
+</body>
+</html>

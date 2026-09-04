@@ -36,6 +36,7 @@ os.environ["ADMIN_KEY"] = "prod_admin_secret_key_12345"
 os.environ["TRUSTED_PROXIES_COUNT"] = "1"
 os.environ["ALLOWED_ORIGINS"] = "https://trendanalyzer.onrender.com"
 os.environ["FIREBASE_PROJECT_ID"] = "trendanalyzer-4857f"
+os.environ["ALLOW_SQLITE_DEV_OVERRIDE"] = "true"
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
