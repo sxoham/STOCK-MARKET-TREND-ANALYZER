@@ -234,9 +234,9 @@
     "semantic_hash": ""
   },
   "static/script.js": {
-    "mtime": 1788565750.7986312,
-    "seen": 1788567540.6104736,
-    "ast_hash": "6cecaf9392db3bed4599ef6146ea02fc",
+    "mtime": 1788572509.0246506,
+    "seen": 1788572623.464302,
+    "ast_hash": "c2c383f529d68efa02b233eb882e9f6f",
     "semantic_hash": ""
   },
   "static/stargrid.js": {
@@ -1488,9 +1488,9 @@
     "semantic_hash": ""
   },
   "templates/index.html": {
-    "mtime": 1788534715.1855464,
-    "seen": 1788544097.3721218,
-    "ast_hash": "148fb3dc6ad95705dfd0daf95d768b31",
+    "mtime": 1788572496.3498151,
+    "seen": 1788572623.4809105,
+    "ast_hash": "e94f2736c437908ddba3278be210a5d5",
     "semantic_hash": ""
   },
   "templates/login.html": {

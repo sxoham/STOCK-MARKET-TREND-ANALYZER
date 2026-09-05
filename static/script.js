@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load stocks immediately (public data)
     fetchStocks();
+    updateWatchlistUI();
 
     // Request notification permission for high confidence alerts
     if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
@@ -343,7 +344,9 @@ async function fetchStocks() {
         stocks.forEach(stock => {
             const li = document.createElement('li');
             li.textContent = stock;
+            li.setAttribute('data-ticker', stock);
             li.onclick = () => selectStock(stock, li);
+            if (stock === currentStock) li.classList.add('active');
             list.appendChild(li);
         });
     } catch (error) {
@@ -355,10 +358,18 @@ async function fetchStocks() {
 async function selectStock(ticker, element) {
     currentStock = ticker;
 
-    if (element) {
-        document.querySelectorAll('.stock-list li').forEach(li => li.classList.remove('active'));
-        element.classList.add('active');
-    }
+    // Highlight the selected ticker across all stock lists (Watchlist and Available Stocks)
+    document.querySelectorAll('.stock-list li').forEach(li => {
+        const itemTicker = li.getAttribute('data-ticker') || li.textContent.trim();
+        if (itemTicker === ticker) {
+            li.classList.add('active');
+            try {
+                li.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            } catch (e) {}
+        } else {
+            li.classList.remove('active');
+        }
+    });
 
     const refreshBtn = document.getElementById('refreshBtn');
     if (refreshBtn) refreshBtn.style.display = 'block';
@@ -1477,11 +1488,27 @@ function toggleWatchlist() {
 
 function updateWatchlistUI() {
     const list = document.getElementById('watchlist');
+    const heading = document.getElementById('watchlistHeading');
+    if (!list) return;
+
     list.innerHTML = '';
 
     if (watchlist.length === 0) {
         list.innerHTML = '<li class="empty-message">No stocks in watchlist</li>';
+        list.classList.add('is-empty');
+        list.classList.remove('has-items');
+        if (heading) {
+            heading.classList.add('is-empty');
+            heading.classList.remove('has-items');
+        }
         return;
+    }
+
+    list.classList.remove('is-empty');
+    list.classList.add('has-items');
+    if (heading) {
+        heading.classList.remove('is-empty');
+        heading.classList.add('has-items');
     }
 
     watchlist.forEach(ticker => {

@@ -812,7 +812,7 @@
       "file_type": "code",
       "norm_label": "checkwatchlistalerts()",
       "source_file": "static/script.js",
-      "source_location": "L2094"
+      "source_location": "L2121"
     },
     {
       "id": "static_script_closemessagemodal",
@@ -824,7 +824,7 @@
       "file_type": "code",
       "norm_label": "closemessagemodal()",
       "source_file": "static/script.js",
-      "source_location": "L1396"
+      "source_location": "L1407"
     },
     {
       "id": "static_script_closeprofile",
@@ -836,7 +836,7 @@
       "file_type": "code",
       "norm_label": "closeprofile()",
       "source_file": "static/script.js",
-      "source_location": "L1566"
+      "source_location": "L1593"
     },
     {
       "id": "static_script_closetrademodal",
@@ -848,7 +848,7 @@
       "file_type": "code",
       "norm_label": "closetrademodal()",
       "source_file": "static/script.js",
-      "source_location": "L1268"
+      "source_location": "L1279"
     },
     {
       "id": "static_script_confirmtrade",
@@ -860,7 +860,7 @@
       "file_type": "code",
       "norm_label": "confirmtrade()",
       "source_file": "static/script.js",
-      "source_location": "L1335"
+      "source_location": "L1346"
     },
     {
       "id": "static_script_createtradesuccesscontent",
@@ -872,7 +872,7 @@
       "file_type": "code",
       "norm_label": "createtradesuccesscontent()",
       "source_file": "static/script.js",
-      "source_location": "L1350"
+      "source_location": "L1361"
     },
     {
       "id": "static_script_debounce",
@@ -884,7 +884,7 @@
       "file_type": "code",
       "norm_label": "debounce()",
       "source_file": "static/script.js",
-      "source_location": "L120"
+      "source_location": "L121"
     },
     {
       "id": "static_script_escapehtml",
@@ -908,7 +908,7 @@
       "file_type": "code",
       "norm_label": "executetrade()",
       "source_file": "static/script.js",
-      "source_location": "L1401"
+      "source_location": "L1412"
     },
     {
       "id": "static_script_fetchprediction",
@@ -920,7 +920,7 @@
       "file_type": "code",
       "norm_label": "fetchprediction()",
       "source_file": "static/script.js",
-      "source_location": "L377"
+      "source_location": "L388"
     },
     {
       "id": "static_script_fetchsentiment",
@@ -932,7 +932,7 @@
       "file_type": "code",
       "norm_label": "fetchsentiment()",
       "source_file": "static/script.js",
-      "source_location": "L415"
+      "source_location": "L426"
     },
     {
       "id": "static_script_fetchstocks",
@@ -944,7 +944,7 @@
       "file_type": "code",
       "norm_label": "fetchstocks()",
       "source_file": "static/script.js",
-      "source_location": "L330"
+      "source_location": "L331"
     },
     {
       "id": "static_script_formatwithcurrency",
@@ -956,7 +956,7 @@
       "file_type": "code",
       "norm_label": "formatwithcurrency()",
       "source_file": "static/script.js",
-      "source_location": "L1168"
+      "source_location": "L1179"
     },
     {
       "id": "static_script_getauthheaders",
@@ -980,7 +980,7 @@
       "file_type": "code",
       "norm_label": "getusercurrency()",
       "source_file": "static/script.js",
-      "source_location": "L1161"
+      "source_location": "L1172"
     },
     {
       "id": "static_script_handlesearch",
@@ -992,7 +992,7 @@
       "file_type": "code",
       "norm_label": "handlesearch()",
       "source_file": "static/script.js",
-      "source_location": "L128"
+      "source_location": "L129"
     },
     {
       "id": "static_script_loadportfoliofromlocal",
@@ -1004,7 +1004,7 @@
       "file_type": "code",
       "norm_label": "loadportfoliofromlocal()",
       "source_file": "static/script.js",
-      "source_location": "L1112"
+      "source_location": "L1123"
     },
     {
       "id": "static_script_loadremotedata",
@@ -1016,7 +1016,7 @@
       "file_type": "code",
       "norm_label": "loadremotedata()",
       "source_file": "static/script.js",
-      "source_location": "L166"
+      "source_location": "L167"
     },
     {
       "id": "static_script_loadwatchlistfromlocal",
@@ -1028,7 +1028,7 @@
       "file_type": "code",
       "norm_label": "loadwatchlistfromlocal()",
       "source_file": "static/script.js",
-      "source_location": "L1456"
+      "source_location": "L1467"
     },
     {
       "id": "static_script_migrateportfoliostructure",
@@ -1040,7 +1040,7 @@
       "file_type": "code",
       "norm_label": "migrateportfoliostructure()",
       "source_file": "static/script.js",
-      "source_location": "L1121"
+      "source_location": "L1132"
     },
     {
       "id": "static_script_openprofile",
@@ -1052,7 +1052,7 @@
       "file_type": "code",
       "norm_label": "openprofile()",
       "source_file": "static/script.js",
-      "source_location": "L1561"
+      "source_location": "L1588"
     },
     {
       "id": "static_script_opentrademodal",
@@ -1064,7 +1064,7 @@
       "file_type": "code",
       "norm_label": "opentrademodal()",
       "source_file": "static/script.js",
-      "source_location": "L1226"
+      "source_location": "L1237"
     },
     {
       "id": "static_script_renderbacktestchart",
@@ -1076,7 +1076,7 @@
       "file_type": "code",
       "norm_label": "renderbacktestchart()",
       "source_file": "static/script.js",
-      "source_location": "L1067"
+      "source_location": "L1078"
     },
     {
       "id": "static_script_rendergaugechart",
@@ -1088,7 +1088,7 @@
       "file_type": "code",
       "norm_label": "rendergaugechart()",
       "source_file": "static/script.js",
-      "source_location": "L825"
+      "source_location": "L836"
     },
     {
       "id": "static_script_rendermacdchart",
@@ -1100,7 +1100,7 @@
       "file_type": "code",
       "norm_label": "rendermacdchart()",
       "source_file": "static/script.js",
-      "source_location": "L993"
+      "source_location": "L1004"
     },
     {
       "id": "static_script_renderpricechart",
@@ -1112,7 +1112,7 @@
       "file_type": "code",
       "norm_label": "renderpricechart()",
       "source_file": "static/script.js",
-      "source_location": "L894"
+      "source_location": "L905"
     },
     {
       "id": "static_script_renderrsichart",
@@ -1124,7 +1124,7 @@
       "file_type": "code",
       "norm_label": "renderrsichart()",
       "source_file": "static/script.js",
-      "source_location": "L963"
+      "source_location": "L974"
     },
     {
       "id": "static_script_renderstochchart",
@@ -1136,7 +1136,7 @@
       "file_type": "code",
       "norm_label": "renderstochchart()",
       "source_file": "static/script.js",
-      "source_location": "L785"
+      "source_location": "L796"
     },
     {
       "id": "static_script_rendertopdrivers",
@@ -1148,7 +1148,7 @@
       "file_type": "code",
       "norm_label": "rendertopdrivers()",
       "source_file": "static/script.js",
-      "source_location": "L590"
+      "source_location": "L601"
     },
     {
       "id": "static_script_requestnotificationpermission",
@@ -1160,7 +1160,7 @@
       "file_type": "code",
       "norm_label": "requestnotificationpermission()",
       "source_file": "static/script.js",
-      "source_location": "L2039"
+      "source_location": "L2066"
     },
     {
       "id": "static_script_resetbacktestui",
@@ -1172,7 +1172,7 @@
       "file_type": "code",
       "norm_label": "resetbacktestui()",
       "source_file": "static/script.js",
-      "source_location": "L1101"
+      "source_location": "L1112"
     },
     {
       "id": "static_script_runbacktest",
@@ -1184,7 +1184,7 @@
       "file_type": "code",
       "norm_label": "runbacktest()",
       "source_file": "static/script.js",
-      "source_location": "L1023"
+      "source_location": "L1034"
     },
     {
       "id": "static_script_savedata",
@@ -1196,7 +1196,7 @@
       "file_type": "code",
       "norm_label": "savedata()",
       "source_file": "static/script.js",
-      "source_location": "L230"
+      "source_location": "L231"
     },
     {
       "id": "static_script_saveportfolio",
@@ -1208,7 +1208,7 @@
       "file_type": "code",
       "norm_label": "saveportfolio()",
       "source_file": "static/script.js",
-      "source_location": "L1143"
+      "source_location": "L1154"
     },
     {
       "id": "static_script_selectstock",
@@ -1220,7 +1220,7 @@
       "file_type": "code",
       "norm_label": "selectstock()",
       "source_file": "static/script.js",
-      "source_location": "L355"
+      "source_location": "L358"
     },
     {
       "id": "static_script_showalerttoast",
@@ -1232,7 +1232,7 @@
       "file_type": "code",
       "norm_label": "showalerttoast()",
       "source_file": "static/script.js",
-      "source_location": "L2047"
+      "source_location": "L2074"
     },
     {
       "id": "static_script_showmessagemodal",
@@ -1244,7 +1244,7 @@
       "file_type": "code",
       "norm_label": "showmessagemodal()",
       "source_file": "static/script.js",
-      "source_location": "L1375"
+      "source_location": "L1386"
     },
     {
       "id": "static_script_startssetrainingstream",
@@ -1256,7 +1256,7 @@
       "file_type": "code",
       "norm_label": "startssetrainingstream()",
       "source_file": "static/script.js",
-      "source_location": "L1970"
+      "source_location": "L1997"
     },
     {
       "id": "static_script_switchtab",
@@ -1268,7 +1268,7 @@
       "file_type": "code",
       "norm_label": "switchtab()",
       "source_file": "static/script.js",
-      "source_location": "L1519"
+      "source_location": "L1546"
     },
     {
       "id": "static_script_togglewatchlist",
@@ -1280,7 +1280,7 @@
       "file_type": "code",
       "norm_label": "togglewatchlist()",
       "source_file": "static/script.js",
-      "source_location": "L1462"
+      "source_location": "L1473"
     },
     {
       "id": "static_script_triggerdesktopnotification",
@@ -1292,7 +1292,7 @@
       "file_type": "code",
       "norm_label": "triggerdesktopnotification()",
       "source_file": "static/script.js",
-      "source_location": "L2081"
+      "source_location": "L2108"
     },
     {
       "id": "static_script_updatedashboard",
@@ -1304,7 +1304,7 @@
       "file_type": "code",
       "norm_label": "updatedashboard()",
       "source_file": "static/script.js",
-      "source_location": "L659"
+      "source_location": "L670"
     },
     {
       "id": "static_script_updategreeting",
@@ -1316,7 +1316,7 @@
       "file_type": "code",
       "norm_label": "updategreeting()",
       "source_file": "static/script.js",
-      "source_location": "L293"
+      "source_location": "L294"
     },
     {
       "id": "static_script_updatehorizonglider",
@@ -1328,7 +1328,7 @@
       "file_type": "code",
       "norm_label": "updatehorizonglider()",
       "source_file": "static/script.js",
-      "source_location": "L1541"
+      "source_location": "L1568"
     },
     {
       "id": "static_script_updatemodaltotal",
@@ -1340,7 +1340,7 @@
       "file_type": "code",
       "norm_label": "updatemodaltotal()",
       "source_file": "static/script.js",
-      "source_location": "L1273"
+      "source_location": "L1284"
     },
     {
       "id": "static_script_updateportfolioui",
@@ -1352,7 +1352,7 @@
       "file_type": "code",
       "norm_label": "updateportfolioui()",
       "source_file": "static/script.js",
-      "source_location": "L1198"
+      "source_location": "L1209"
     },
     {
       "id": "static_script_updateprofileui",
@@ -1364,7 +1364,7 @@
       "file_type": "code",
       "norm_label": "updateprofileui()",
       "source_file": "static/script.js",
-      "source_location": "L1570"
+      "source_location": "L1597"
     },
     {
       "id": "static_script_updatetabglider",
@@ -1376,7 +1376,7 @@
       "file_type": "code",
       "norm_label": "updatetabglider()",
       "source_file": "static/script.js",
-      "source_location": "L1534"
+      "source_location": "L1561"
     },
     {
       "id": "static_script_updatewatchlistalertbadges",
@@ -1388,7 +1388,7 @@
       "file_type": "code",
       "norm_label": "updatewatchlistalertbadges()",
       "source_file": "static/script.js",
-      "source_location": "L2121"
+      "source_location": "L2148"
     },
     {
       "id": "static_script_updatewatchlistbutton",
@@ -1400,7 +1400,7 @@
       "file_type": "code",
       "norm_label": "updatewatchlistbutton()",
       "source_file": "static/script.js",
-      "source_location": "L1499"
+      "source_location": "L1526"
     },
     {
       "id": "static_script_updatewatchlistui",
@@ -1412,7 +1412,7 @@
       "file_type": "code",
       "norm_label": "updatewatchlistui()",
       "source_file": "static/script.js",
-      "source_location": "L1478"
+      "source_location": "L1489"
     },
     {
       "id": "static_script_verifyage",
@@ -1424,7 +1424,7 @@
       "file_type": "code",
       "norm_label": "verifyage()",
       "source_file": "static/script.js",
-      "source_location": "L1843"
+      "source_location": "L1870"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testbhartiairtelmatchervalidation_setup",
@@ -7765,7 +7765,7 @@
       "file_type": "code",
       "norm_label": "currency_config",
       "source_file": "static/script.js",
-      "source_location": "L1150"
+      "source_location": "L1161"
     },
     {
       "id": "static_script_currency_keys",
@@ -7776,7 +7776,7 @@
       "file_type": "code",
       "norm_label": "currency_keys",
       "source_file": "static/script.js",
-      "source_location": "L1159"
+      "source_location": "L1170"
     },
     {
       "id": "static_script_currentattributions",
@@ -7798,7 +7798,7 @@
       "file_type": "code",
       "norm_label": "highconfidencealerts",
       "source_file": "static/script.js",
-      "source_location": "L1968"
+      "source_location": "L1995"
     },
     {
       "id": "static_script_portfolio",
@@ -32246,7 +32246,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L2110",
+      "source_location": "L2137",
       "weight": 1.0
     },
     {
@@ -32258,7 +32258,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L2111",
+      "source_location": "L2138",
       "weight": 1.0
     },
     {
@@ -32270,7 +32270,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L2114",
+      "source_location": "L2141",
       "weight": 1.0
     },
     {
@@ -32282,7 +32282,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1341",
+      "source_location": "L1352",
       "weight": 1.0
     },
     {
@@ -32294,7 +32294,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1345",
+      "source_location": "L1356",
       "weight": 1.0
     },
     {
@@ -32306,7 +32306,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1346",
+      "source_location": "L1357",
       "weight": 1.0
     },
     {
@@ -32318,7 +32318,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1369",
+      "source_location": "L1380",
       "weight": 1.0
     },
     {
@@ -32330,7 +32330,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1425",
+      "source_location": "L1436",
       "weight": 1.0
     },
     {
@@ -32342,7 +32342,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1426",
+      "source_location": "L1437",
       "weight": 1.0
     },
     {
@@ -32354,7 +32354,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1426",
+      "source_location": "L1437",
       "weight": 1.0
     },
     {
@@ -32366,7 +32366,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L397",
+      "source_location": "L408",
       "weight": 1.0
     },
     {
@@ -32378,7 +32378,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L404",
+      "source_location": "L415",
       "weight": 1.0
     },
     {
@@ -32390,7 +32390,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L457",
+      "source_location": "L468",
       "weight": 1.0
     },
     {
@@ -32402,7 +32402,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L346",
+      "source_location": "L348",
       "weight": 1.0
     },
     {
@@ -32414,7 +32414,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1169",
+      "source_location": "L1180",
       "weight": 1.0
     },
     {
@@ -32426,7 +32426,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L146",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -32438,7 +32438,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L150",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -32450,7 +32450,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1116",
+      "source_location": "L1127",
       "weight": 1.0
     },
     {
@@ -32462,7 +32462,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1118",
+      "source_location": "L1129",
       "weight": 1.0
     },
     {
@@ -32474,7 +32474,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L168",
+      "source_location": "L169",
       "weight": 1.0
     },
     {
@@ -32486,7 +32486,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L188",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -32498,7 +32498,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L195",
+      "source_location": "L196",
       "weight": 1.0
     },
     {
@@ -32510,7 +32510,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L196",
+      "source_location": "L197",
       "weight": 1.0
     },
     {
@@ -32522,24 +32522,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L203",
+      "source_location": "L204",
       "weight": 1.0
     },
     {
       "source": "static_script_loadremotedata",
       "target": "static_script_updateportfolioui",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "static/script.js",
-      "source_location": "L221",
-      "weight": 1.0
-    },
-    {
-      "source": "static_script_loadremotedata",
-      "target": "static_script_updateprofileui",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -32551,7 +32539,7 @@
     },
     {
       "source": "static_script_loadremotedata",
-      "target": "static_script_updatewatchlistui",
+      "target": "static_script_updateprofileui",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -32563,7 +32551,7 @@
     },
     {
       "source": "static_script_loadremotedata",
-      "target": "static_script_updatewatchlistbutton",
+      "target": "static_script_updatewatchlistui",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -32571,6 +32559,18 @@
       "context": "call",
       "source_file": "static/script.js",
       "source_location": "L224",
+      "weight": 1.0
+    },
+    {
+      "source": "static_script_loadremotedata",
+      "target": "static_script_updatewatchlistbutton",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "static/script.js",
+      "source_location": "L225",
       "weight": 1.0
     },
     {
@@ -32582,7 +32582,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1459",
+      "source_location": "L1470",
       "weight": 1.0
     },
     {
@@ -32594,7 +32594,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1562",
+      "source_location": "L1589",
       "weight": 1.0
     },
     {
@@ -32606,7 +32606,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1240",
+      "source_location": "L1251",
       "weight": 1.0
     },
     {
@@ -32618,7 +32618,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1259",
+      "source_location": "L1270",
       "weight": 1.0
     },
     {
@@ -32630,7 +32630,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1057",
+      "source_location": "L1068",
       "weight": 1.0
     },
     {
@@ -32642,7 +32642,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L239",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -32654,7 +32654,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1144",
+      "source_location": "L1155",
       "weight": 1.0
     },
     {
@@ -32666,7 +32666,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1145",
+      "source_location": "L1156",
       "weight": 1.0
     },
     {
@@ -32678,7 +32678,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1146",
+      "source_location": "L1157",
       "weight": 1.0
     },
     {
@@ -32690,7 +32690,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L366",
+      "source_location": "L377",
       "weight": 1.0
     },
     {
@@ -32702,7 +32702,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L371",
+      "source_location": "L382",
       "weight": 1.0
     },
     {
@@ -32714,7 +32714,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L372",
+      "source_location": "L383",
       "weight": 1.0
     },
     {
@@ -32726,7 +32726,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L374",
+      "source_location": "L385",
       "weight": 1.0
     },
     {
@@ -32738,7 +32738,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L2061",
+      "source_location": "L2088",
       "weight": 1.0
     },
     {
@@ -32750,7 +32750,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L2068",
+      "source_location": "L2095",
       "weight": 1.0
     },
     {
@@ -32762,7 +32762,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1530",
+      "source_location": "L1557",
       "weight": 1.0
     },
     {
@@ -32774,7 +32774,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1473",
+      "source_location": "L1484",
       "weight": 1.0
     },
     {
@@ -32786,7 +32786,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1474",
+      "source_location": "L1485",
       "weight": 1.0
     },
     {
@@ -32798,7 +32798,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1475",
+      "source_location": "L1486",
       "weight": 1.0
     },
     {
@@ -32810,7 +32810,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L713",
+      "source_location": "L724",
       "weight": 1.0
     },
     {
@@ -32822,7 +32822,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L720",
+      "source_location": "L731",
       "weight": 1.0
     },
     {
@@ -32834,7 +32834,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L721",
+      "source_location": "L732",
       "weight": 1.0
     },
     {
@@ -32846,7 +32846,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L722",
+      "source_location": "L733",
       "weight": 1.0
     },
     {
@@ -32858,7 +32858,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L723",
+      "source_location": "L734",
       "weight": 1.0
     },
     {
@@ -32870,7 +32870,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L726",
+      "source_location": "L737",
       "weight": 1.0
     },
     {
@@ -32882,7 +32882,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1282",
+      "source_location": "L1293",
       "weight": 1.0
     },
     {
@@ -32894,7 +32894,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1199",
+      "source_location": "L1210",
       "weight": 1.0
     },
     {
@@ -32906,7 +32906,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1658",
+      "source_location": "L1685",
       "weight": 1.0
     },
     {
@@ -32918,7 +32918,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1676",
+      "source_location": "L1703",
       "weight": 1.0
     },
     {
@@ -32930,7 +32930,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1496",
+      "source_location": "L1523",
       "weight": 1.0
     },
     {
@@ -32942,7 +32942,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "static/script.js",
-      "source_location": "L1872",
+      "source_location": "L1899",
       "weight": 1.0
     },
     {
@@ -51780,13 +51780,24 @@
     },
     {
       "source": "static_script",
+      "target": "static_script_rendermacdchart",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "static/script.js",
+      "source_location": "L1004",
+      "weight": 1.0
+    },
+    {
+      "source": "static_script",
       "target": "static_script_runbacktest",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1023",
+      "source_location": "L1034",
       "weight": 1.0
     },
     {
@@ -51797,7 +51808,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1067",
+      "source_location": "L1078",
       "weight": 1.0
     },
     {
@@ -51808,7 +51819,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1101",
+      "source_location": "L1112",
       "weight": 1.0
     },
     {
@@ -51819,7 +51830,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1112",
+      "source_location": "L1123",
       "weight": 1.0
     },
     {
@@ -51830,7 +51841,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1121",
+      "source_location": "L1132",
       "weight": 1.0
     },
     {
@@ -51841,7 +51852,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1143",
+      "source_location": "L1154",
       "weight": 1.0
     },
     {
@@ -51852,7 +51863,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1150",
+      "source_location": "L1161",
       "weight": 1.0
     },
     {
@@ -51863,7 +51874,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1159",
+      "source_location": "L1170",
       "weight": 1.0
     },
     {
@@ -51874,7 +51885,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1161",
+      "source_location": "L1172",
       "weight": 1.0
     },
     {
@@ -51885,7 +51896,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1168",
+      "source_location": "L1179",
       "weight": 1.0
     },
     {
@@ -51896,7 +51907,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1198",
+      "source_location": "L1209",
       "weight": 1.0
     },
     {
@@ -51907,7 +51918,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L120",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -51918,7 +51929,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1226",
+      "source_location": "L1237",
       "weight": 1.0
     },
     {
@@ -51929,7 +51940,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1268",
+      "source_location": "L1279",
       "weight": 1.0
     },
     {
@@ -51940,7 +51951,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1273",
+      "source_location": "L1284",
       "weight": 1.0
     },
     {
@@ -51951,7 +51962,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L128",
+      "source_location": "L129",
       "weight": 1.0
     },
     {
@@ -51962,7 +51973,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1335",
+      "source_location": "L1346",
       "weight": 1.0
     },
     {
@@ -51973,7 +51984,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1350",
+      "source_location": "L1361",
       "weight": 1.0
     },
     {
@@ -51984,7 +51995,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1375",
+      "source_location": "L1386",
       "weight": 1.0
     },
     {
@@ -51995,7 +52006,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1396",
+      "source_location": "L1407",
       "weight": 1.0
     },
     {
@@ -52006,7 +52017,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1401",
+      "source_location": "L1412",
       "weight": 1.0
     },
     {
@@ -52017,7 +52028,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1456",
+      "source_location": "L1467",
       "weight": 1.0
     },
     {
@@ -52028,7 +52039,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1462",
+      "source_location": "L1473",
       "weight": 1.0
     },
     {
@@ -52039,7 +52050,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1478",
+      "source_location": "L1489",
       "weight": 1.0
     },
     {
@@ -52050,7 +52061,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1499",
+      "source_location": "L1526",
       "weight": 1.0
     },
     {
@@ -52061,7 +52072,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1519",
+      "source_location": "L1546",
       "weight": 1.0
     },
     {
@@ -52072,7 +52083,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1534",
+      "source_location": "L1561",
       "weight": 1.0
     },
     {
@@ -52083,7 +52094,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1541",
+      "source_location": "L1568",
       "weight": 1.0
     },
     {
@@ -52094,7 +52105,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1561",
+      "source_location": "L1588",
       "weight": 1.0
     },
     {
@@ -52105,7 +52116,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1566",
+      "source_location": "L1593",
       "weight": 1.0
     },
     {
@@ -52116,7 +52127,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1570",
+      "source_location": "L1597",
       "weight": 1.0
     },
     {
@@ -52127,7 +52138,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L166",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -52149,7 +52160,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1843",
+      "source_location": "L1870",
       "weight": 1.0
     },
     {
@@ -52171,7 +52182,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1968",
+      "source_location": "L1995",
       "weight": 1.0
     },
     {
@@ -52182,7 +52193,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L1970",
+      "source_location": "L1997",
       "weight": 1.0
     },
     {
@@ -52193,7 +52204,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L2039",
+      "source_location": "L2066",
       "weight": 1.0
     },
     {
@@ -52204,7 +52215,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L2047",
+      "source_location": "L2074",
       "weight": 1.0
     },
     {
@@ -52215,7 +52226,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L2081",
+      "source_location": "L2108",
       "weight": 1.0
     },
     {
@@ -52226,7 +52237,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L2094",
+      "source_location": "L2121",
       "weight": 1.0
     },
     {
@@ -52237,7 +52248,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L2121",
+      "source_location": "L2148",
       "weight": 1.0
     },
     {
@@ -52248,7 +52259,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L230",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
@@ -52281,7 +52292,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L293",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -52292,7 +52303,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L330",
+      "source_location": "L331",
       "weight": 1.0
     },
     {
@@ -52303,7 +52314,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L355",
+      "source_location": "L358",
       "weight": 1.0
     },
     {
@@ -52325,7 +52336,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L377",
+      "source_location": "L388",
       "weight": 1.0
     },
     {
@@ -52336,7 +52347,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L415",
+      "source_location": "L426",
       "weight": 1.0
     },
     {
@@ -52347,7 +52358,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L590",
+      "source_location": "L601",
       "weight": 1.0
     },
     {
@@ -52358,7 +52369,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L659",
+      "source_location": "L670",
       "weight": 1.0
     },
     {
@@ -52369,7 +52380,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L785",
+      "source_location": "L796",
       "weight": 1.0
     },
     {
@@ -52380,7 +52391,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L825",
+      "source_location": "L836",
       "weight": 1.0
     },
     {
@@ -52391,7 +52402,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L894",
+      "source_location": "L905",
       "weight": 1.0
     },
     {
@@ -52402,18 +52413,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "static/script.js",
-      "source_location": "L963",
-      "weight": 1.0
-    },
-    {
-      "source": "static_script",
-      "target": "static_script_rendermacdchart",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "static/script.js",
-      "source_location": "L993",
+      "source_location": "L974",
       "weight": 1.0
     },
     {
@@ -61262,5 +61262,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "e4e70e0a9fdbccf359c1cea4843fc7b489b4e492"
+  "built_at_commit": "123bcdd18cad01bdcb662c92e8dcbf33b93a6ac2"
 }
