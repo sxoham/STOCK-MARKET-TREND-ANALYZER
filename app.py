@@ -19,6 +19,7 @@ import socket
 import uuid
 import urllib.request
 import gc
+from collections import OrderedDict
 from functools import wraps
 from werkzeug.middleware.proxy_fix import ProxyFix
 import pandas as pd
@@ -1236,11 +1237,26 @@ def get_prediction(ticker):
     })
 
 # =============================================================================
-# BOUNDED MODEL CACHE (Max 2 models in memory to stay strictly within 512MB limit)
+# BOUNDED MODEL CACHE (1 in Render production / 2 in dev to maximize 512MB headroom)
 # =============================================================================
 _MODEL_CACHE_LOCK = threading.Lock()
-_MODEL_CACHE = {}  # safe_ticker_key -> bundle dict
-MAX_CACHED_MODELS = 2
+_MODEL_CACHE = OrderedDict()  # safe_ticker_key -> bundle dict
+
+def get_max_cached_models() -> int:
+    """
+    Returns the maximum number of models to cache in memory.
+    In memory-constrained production environments (Render 512 MB), defaults to 1.
+    In local development, defaults to 2.
+    Can be explicitly overridden via MAX_CACHED_MODELS environment variable.
+    """
+    override = os.environ.get("MAX_CACHED_MODELS")
+    if override and override.isdigit():
+        return max(1, int(override))
+    if IS_PROD or os.environ.get("RENDER", "").lower() == "true":
+        return 1
+    return 2
+
+MAX_CACHED_MODELS = get_max_cached_models()
 
 def get_cached_model_bundle(ticker_key: str):
     """
@@ -1251,7 +1267,7 @@ def get_cached_model_bundle(ticker_key: str):
     safe_ticker_key = os.path.basename(ticker_key)
     with _MODEL_CACHE_LOCK:
         if safe_ticker_key in _MODEL_CACHE:
-            # Refresh LRU position
+            # Refresh LRU position to the end
             bundle = _MODEL_CACHE.pop(safe_ticker_key)
             _MODEL_CACHE[safe_ticker_key] = bundle
             return bundle
@@ -1266,11 +1282,22 @@ def get_cached_model_bundle(ticker_key: str):
         if not os.path.exists(model_path) or not os.path.exists(scaler_path):
             return None
 
-        # Evict if at capacity
-        while len(_MODEL_CACHE) >= MAX_CACHED_MODELS:
-            oldest_key, oldest_bundle = _MODEL_CACHE.popitem()
-            logger.info(f"[Memory] Evicting cached model bundle for {oldest_key}")
+        # Evict oldest entry if at capacity
+        max_allowed = get_max_cached_models()
+        while len(_MODEL_CACHE) >= max_allowed:
+            oldest_key, oldest_bundle = _MODEL_CACHE.popitem(last=False)
+            logger.info(f"[Memory] Evicting cached model bundle for {oldest_key} (capacity: {max_allowed})")
+            if 'model' in oldest_bundle:
+                del oldest_bundle['model']
+            oldest_bundle.clear()
             del oldest_bundle
+            # When cache has emptied out, clear Keras backend session to wipe TF graph nodes
+            if len(_MODEL_CACHE) == 0:
+                try:
+                    import keras
+                    keras.backend.clear_session()
+                except Exception:
+                    pass
             gc.collect()
 
         rss_before = get_rss_memory_mb()
@@ -1295,6 +1322,12 @@ def get_cached_model_bundle(ticker_key: str):
         meta_model = joblib.load(meta_path) if os.path.exists(meta_path) else None
         meta_threshold = joblib.load(threshold_path) if os.path.exists(threshold_path) else None
 
+        importances = None
+        if xgb is not None and hasattr(xgb, 'feature_importances_'):
+            importances = xgb.feature_importances_
+        elif rf is not None and hasattr(rf, 'feature_importances_'):
+            importances = rf.feature_importances_
+
         bundle = {
             'model': keras_model,
             'scaler': scaler,
@@ -1304,7 +1337,8 @@ def get_cached_model_bundle(ticker_key: str):
             'xgb': xgb,
             'stacker': stacker,
             'meta_model': meta_model,
-            'meta_threshold': meta_threshold
+            'meta_threshold': meta_threshold,
+            'importances': importances
         }
         _MODEL_CACHE[safe_ticker_key] = bundle
 
@@ -1445,7 +1479,16 @@ def generate_live_prediction(ticker, horizon: int = 1):
     # Generate XAI drivers
     try:
         last_scaled_vec: np.ndarray = np.asarray(features_scaled[-1])
-        xai_res = main.explain_prediction(ticker, last_scaled_vec, list(active_features), best_class, horizon=horizon, return_dict=True)
+        xai_res = main.explain_prediction(
+            ticker,
+            last_scaled_vec,
+            list(active_features),
+            best_class,
+            horizon=horizon,
+            return_dict=True,
+            preloaded_model=xgb or rf,
+            preloaded_importances=bundle.get('importances')
+        )
         if isinstance(xai_res, dict):
             top_drivers = xai_res.get("top_drivers", [])
             all_attributions = xai_res.get("all_attributions", [])
@@ -1456,6 +1499,13 @@ def generate_live_prediction(ticker, horizon: int = 1):
         print(f"XAI driver extraction warning: {ex}")
         top_drivers = []
         all_attributions = []
+
+    try:
+        del df, features, features_scaled, X_input
+    except Exception:
+        pass
+    if IS_PROD or os.environ.get("RENDER", "").lower() == "true":
+        gc.collect()
 
     return prediction, prob, top_drivers, all_attributions
 

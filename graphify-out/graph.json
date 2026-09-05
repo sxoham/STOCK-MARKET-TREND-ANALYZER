@@ -79,7 +79,7 @@
       "file_type": "code",
       "norm_label": "crossprocesslock",
       "source_file": "app.py",
-      "source_location": "L186"
+      "source_location": "L187"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testicicibankmatchervalidation",
@@ -93,6 +93,19 @@
       "norm_label": "testicicibankmatchervalidation",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
       "source_location": "L1761"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_lowprecisiontimestamperror",
+      "label": "LowPrecisionTimestampError",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 14,
+      "community_name": ".fetch_gdelt_window",
+      "file_type": "code",
+      "norm_label": "lowprecisiontimestamperror",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1102"
     },
     {
       "id": "sentiment_generator_news_fetcher_gdeltratelimitexhausted",
@@ -114,7 +127,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": "testmemoryoptimization",
       "source_file": "scripts/test_memory_optimization.py",
@@ -131,7 +144,7 @@
       "file_type": "code",
       "norm_label": "simpleratelimiter",
       "source_file": "app.py",
-      "source_location": "L355"
+      "source_location": "L356"
     },
     {
       "id": "scripts_test_modal_rendering_mockdocumentfragment",
@@ -277,19 +290,6 @@
       "source_location": "L1850"
     },
     {
-      "id": "sentiment_generator_news_fetcher_lowprecisiontimestamperror",
-      "label": "LowPrecisionTimestampError",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_news_fetcher.py",
-      "file_type": "code",
-      "norm_label": "lowprecisiontimestamperror",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1102"
-    },
-    {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher",
       "label": "TestNewsFetcher",
       "_callable": true,
@@ -416,7 +416,7 @@
       "file_type": "code",
       "norm_label": "generate_live_prediction()",
       "source_file": "app.py",
-      "source_location": "L1315"
+      "source_location": "L1349"
     },
     {
       "id": "main_add_technical_indicators",
@@ -440,7 +440,7 @@
       "file_type": "code",
       "norm_label": "backtest_model()",
       "source_file": "main.py",
-      "source_location": "L848"
+      "source_location": "L854"
     },
     {
       "id": "main_build_lstm_model",
@@ -620,7 +620,7 @@
       "file_type": "code",
       "norm_label": "train_models()",
       "source_file": "main.py",
-      "source_location": "L834"
+      "source_location": "L840"
     },
     {
       "id": "main_train_single_model",
@@ -632,7 +632,7 @@
       "file_type": "code",
       "norm_label": "train_single_model()",
       "source_file": "main.py",
-      "source_location": "L588"
+      "source_location": "L594"
     },
     {
       "id": "main_tree_features",
@@ -1727,6 +1727,18 @@
       "source_location": "L119"
     },
     {
+      "id": "scripts_test_p0_readiness_testp0productionreadiness_test_06_http_403_handling",
+      "label": ".test_06_http_403_handling()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 109,
+      "community_name": "TestP0ProductionReadiness",
+      "file_type": "code",
+      "norm_label": ".test_06_http_403_handling()",
+      "source_file": "scripts/test_p0_readiness.py",
+      "source_location": "L137"
+    },
+    {
       "id": "scripts_test_p0_readiness_testp0productionreadiness_test_07_real_rate_limiter_exhaustion_returns_json_429",
       "label": ".test_07_real_rate_limiter_exhaustion_returns_json_429()",
       "_callable": true,
@@ -1737,6 +1749,18 @@
       "norm_label": ".test_07_real_rate_limiter_exhaustion_returns_json_429()",
       "source_file": "scripts/test_p0_readiness.py",
       "source_location": "L155"
+    },
+    {
+      "id": "scripts_test_p0_readiness_testp0productionreadiness_test_08_http_500_sanitization_no_leaks",
+      "label": ".test_08_http_500_sanitization_no_leaks()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 109,
+      "community_name": "TestP0ProductionReadiness",
+      "file_type": "code",
+      "norm_label": ".test_08_http_500_sanitization_no_leaks()",
+      "source_file": "scripts/test_p0_readiness.py",
+      "source_location": "L178"
     },
     {
       "id": "sentiment_generator_news_fetcher_newsfetcher_has_financial_context",
@@ -2000,7 +2024,7 @@
       "file_type": "code",
       "norm_label": "backtest_endpoint()",
       "source_file": "app.py",
-      "source_location": "L1464"
+      "source_location": "L1514"
     },
     {
       "id": "app_contact",
@@ -2012,7 +2036,7 @@
       "file_type": "code",
       "norm_label": "contact()",
       "source_file": "app.py",
-      "source_location": "L613"
+      "source_location": "L614"
     },
     {
       "id": "app_dashboard",
@@ -2024,7 +2048,7 @@
       "file_type": "code",
       "norm_label": "dashboard()",
       "source_file": "app.py",
-      "source_location": "L597"
+      "source_location": "L598"
     },
     {
       "id": "app_delete_user_data",
@@ -2036,7 +2060,7 @@
       "file_type": "code",
       "norm_label": "delete_user_data()",
       "source_file": "app.py",
-      "source_location": "L855"
+      "source_location": "L856"
     },
     {
       "id": "app_disclaimer",
@@ -2048,7 +2072,7 @@
       "file_type": "code",
       "norm_label": "disclaimer()",
       "source_file": "app.py",
-      "source_location": "L609"
+      "source_location": "L610"
     },
     {
       "id": "app_get_prediction",
@@ -2060,7 +2084,7 @@
       "file_type": "code",
       "norm_label": "get_prediction()",
       "source_file": "app.py",
-      "source_location": "L1095"
+      "source_location": "L1096"
     },
     {
       "id": "app_get_sentiment",
@@ -2072,7 +2096,7 @@
       "file_type": "code",
       "norm_label": "get_sentiment()",
       "source_file": "app.py",
-      "source_location": "L1083"
+      "source_location": "L1084"
     },
     {
       "id": "app_get_stocks",
@@ -2084,7 +2108,7 @@
       "file_type": "code",
       "norm_label": "get_stocks()",
       "source_file": "app.py",
-      "source_location": "L701"
+      "source_location": "L702"
     },
     {
       "id": "app_get_user_data",
@@ -2096,7 +2120,7 @@
       "file_type": "code",
       "norm_label": "get_user_data()",
       "source_file": "app.py",
-      "source_location": "L784"
+      "source_location": "L785"
     },
     {
       "id": "app_handle_feedback",
@@ -2108,7 +2132,7 @@
       "file_type": "code",
       "norm_label": "handle_feedback()",
       "source_file": "app.py",
-      "source_location": "L880"
+      "source_location": "L881"
     },
     {
       "id": "app_index",
@@ -2120,7 +2144,7 @@
       "file_type": "code",
       "norm_label": "index()",
       "source_file": "app.py",
-      "source_location": "L585"
+      "source_location": "L586"
     },
     {
       "id": "app_is_valid_email_format",
@@ -2132,7 +2156,7 @@
       "file_type": "code",
       "norm_label": "is_valid_email_format()",
       "source_file": "app.py",
-      "source_location": "L177"
+      "source_location": "L178"
     },
     {
       "id": "app_is_valid_ticker_format",
@@ -2144,7 +2168,7 @@
       "file_type": "code",
       "norm_label": "is_valid_ticker_format()",
       "source_file": "app.py",
-      "source_location": "L174"
+      "source_location": "L175"
     },
     {
       "id": "app_limit_rate",
@@ -2156,7 +2180,7 @@
       "file_type": "code",
       "norm_label": "limit_rate()",
       "source_file": "app.py",
-      "source_location": "L389"
+      "source_location": "L390"
     },
     {
       "id": "app_login",
@@ -2168,7 +2192,7 @@
       "file_type": "code",
       "norm_label": "login()",
       "source_file": "app.py",
-      "source_location": "L589"
+      "source_location": "L590"
     },
     {
       "id": "app_lookup_stock",
@@ -2180,7 +2204,7 @@
       "file_type": "code",
       "norm_label": "lookup_stock()",
       "source_file": "app.py",
-      "source_location": "L725"
+      "source_location": "L726"
     },
     {
       "id": "app_privacy",
@@ -2192,7 +2216,7 @@
       "file_type": "code",
       "norm_label": "privacy()",
       "source_file": "app.py",
-      "source_location": "L601"
+      "source_location": "L602"
     },
     {
       "id": "app_register",
@@ -2204,7 +2228,7 @@
       "file_type": "code",
       "norm_label": "register()",
       "source_file": "app.py",
-      "source_location": "L593"
+      "source_location": "L594"
     },
     {
       "id": "app_require_user_auth",
@@ -2216,7 +2240,7 @@
       "file_type": "code",
       "norm_label": "require_user_auth()",
       "source_file": "app.py",
-      "source_location": "L530"
+      "source_location": "L531"
     },
     {
       "id": "app_resolve_and_validate_ticker",
@@ -2228,7 +2252,7 @@
       "file_type": "code",
       "norm_label": "resolve_and_validate_ticker()",
       "source_file": "app.py",
-      "source_location": "L673"
+      "source_location": "L674"
     },
     {
       "id": "app_save_user_data",
@@ -2240,7 +2264,7 @@
       "file_type": "code",
       "norm_label": "save_user_data()",
       "source_file": "app.py",
-      "source_location": "L808"
+      "source_location": "L809"
     },
     {
       "id": "app_stream_train",
@@ -2252,7 +2276,7 @@
       "file_type": "code",
       "norm_label": "stream_train()",
       "source_file": "app.py",
-      "source_location": "L1519"
+      "source_location": "L1569"
     },
     {
       "id": "app_terms",
@@ -2264,7 +2288,7 @@
       "file_type": "code",
       "norm_label": "terms()",
       "source_file": "app.py",
-      "source_location": "L605"
+      "source_location": "L606"
     },
     {
       "id": "app_view_database",
@@ -2276,7 +2300,7 @@
       "file_type": "code",
       "norm_label": "view_database()",
       "source_file": "app.py",
-      "source_location": "L909"
+      "source_location": "L910"
     },
     {
       "id": "app_watchlist_alerts",
@@ -2288,7 +2312,7 @@
       "file_type": "code",
       "norm_label": "watchlist_alerts()",
       "source_file": "app.py",
-      "source_location": "L1598"
+      "source_location": "L1648"
     },
     {
       "id": "agents_plugins_agent_skills_evals_fixtures_git_workflow_and_versioning_app_total",
@@ -2360,7 +2384,7 @@
       "file_type": "code",
       "norm_label": "handle_preflight_and_options()",
       "source_file": "app.py",
-      "source_location": "L122"
+      "source_location": "L123"
     },
     {
       "id": "app_crossprocesslock_acquire",
@@ -2372,7 +2396,7 @@
       "file_type": "code",
       "norm_label": ".acquire()",
       "source_file": "app.py",
-      "source_location": "L238"
+      "source_location": "L239"
     },
     {
       "id": "app_crossprocesslock_init",
@@ -2384,7 +2408,7 @@
       "file_type": "code",
       "norm_label": ".__init__()",
       "source_file": "app.py",
-      "source_location": "L194"
+      "source_location": "L195"
     },
     {
       "id": "app_crossprocesslock_is_locked",
@@ -2396,7 +2420,7 @@
       "file_type": "code",
       "norm_label": ".is_locked()",
       "source_file": "app.py",
-      "source_location": "L341"
+      "source_location": "L342"
     },
     {
       "id": "app_crossprocesslock_is_pid_alive",
@@ -2408,7 +2432,7 @@
       "file_type": "code",
       "norm_label": ".is_pid_alive()",
       "source_file": "app.py",
-      "source_location": "L202"
+      "source_location": "L203"
     },
     {
       "id": "app_crossprocesslock_release",
@@ -2420,7 +2444,7 @@
       "file_type": "code",
       "norm_label": ".release()",
       "source_file": "app.py",
-      "source_location": "L298"
+      "source_location": "L299"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testicicibankmatchervalidation_setup",
@@ -2601,6 +2625,18 @@
       "norm_label": ".get_next_trading_day()",
       "source_file": "sentiment_generator/news_fetcher.py",
       "source_location": "L2185"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_newsfetcher_get_session",
+      "label": "._get_session()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 14,
+      "community_name": ".fetch_gdelt_window",
+      "file_type": "code",
+      "norm_label": "._get_session()",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1194"
     },
     {
       "id": "sentiment_generator_news_fetcher_newsfetcher_inc_stat",
@@ -2891,6 +2927,42 @@
       "source_location": "L2069"
     },
     {
+      "id": "sentiment_generator_news_fetcher_newsfetcher_compile_matchers",
+      "label": "._compile_matchers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 165,
+      "community_name": "._article_dedupe_key",
+      "file_type": "code",
+      "norm_label": "._compile_matchers()",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1329"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_newsfetcher_get_diagnostics",
+      "label": ".get_diagnostics()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 165,
+      "community_name": "._article_dedupe_key",
+      "file_type": "code",
+      "norm_label": ".get_diagnostics()",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1208"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_newsfetcher_init",
+      "label": ".__init__()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 165,
+      "community_name": "._article_dedupe_key",
+      "file_type": "code",
+      "norm_label": ".__init__()",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1141"
+    },
+    {
       "id": "sentiment_generator_news_fetcher_newsfetcher_normalize_headline",
       "label": ".normalize_headline()",
       "_callable": true,
@@ -2944,9 +3016,21 @@
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": "get_cached_model_bundle()",
+      "source_file": "app.py",
+      "source_location": "L1261"
+    },
+    {
+      "id": "app_get_max_cached_models",
+      "label": "get_max_cached_models()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 166,
+      "community_name": "get_cached_model_bundle",
+      "file_type": "code",
+      "norm_label": "get_max_cached_models()",
       "source_file": "app.py",
       "source_location": "L1245"
     },
@@ -2956,11 +3040,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": "get_rss_memory_mb()",
       "source_file": "app.py",
-      "source_location": "L38"
+      "source_location": "L39"
     },
     {
       "id": "app_get_tf_load_model",
@@ -2968,11 +3052,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": "get_tf_load_model()",
       "source_file": "app.py",
-      "source_location": "L50"
+      "source_location": "L51"
     },
     {
       "id": "scripts_test_memory_optimization_testmemoryoptimization_setup",
@@ -2980,7 +3064,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": ".setup()",
       "source_file": "scripts/test_memory_optimization.py",
@@ -2992,7 +3076,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": ".test_01_startup_memory_is_lean()",
       "source_file": "scripts/test_memory_optimization.py",
@@ -3004,7 +3088,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": ".test_02_bounded_model_cache_eviction()",
       "source_file": "scripts/test_memory_optimization.py",
@@ -3016,11 +3100,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": ".test_03_reliance_prediction_succeeds()",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L57"
+      "source_location": "L71"
     },
     {
       "id": "scripts_test_memory_optimization_testmemoryoptimization_test_04_sentiment_does_not_load_models",
@@ -3028,11 +3112,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": ".test_04_sentiment_does_not_load_models()",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L66"
+      "source_location": "L80"
     },
     {
       "id": "scripts_test_memory_optimization_testmemoryoptimization_test_05_auth_endpoints_do_not_load_models",
@@ -3040,11 +3124,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": ".test_05_auth_endpoints_do_not_load_models()",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L76"
+      "source_location": "L90"
     },
     {
       "id": "scripts_test_memory_optimization_testmemoryoptimization_test_06_stream_train_guards_against_in_process_training",
@@ -3052,11 +3136,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": ".test_06_stream_train_guards_against_in_process_training()",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L95"
+      "source_location": "L109"
     },
     {
       "id": "scripts_test_memory_optimization_testmemoryoptimization_test_07_repeated_predictions_remain_bounded",
@@ -3064,23 +3148,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": ".test_07_repeated_predictions_remain_bounded()",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L106"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_newsfetcher_get_diagnostics",
-      "label": ".get_diagnostics()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 167,
-      "community_name": ".get_diagnostics",
-      "file_type": "code",
-      "norm_label": ".get_diagnostics()",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1208"
+      "source_location": "L120"
     },
     {
       "id": "app_simpleratelimiter_init",
@@ -3092,7 +3164,7 @@
       "file_type": "code",
       "norm_label": ".__init__()",
       "source_file": "app.py",
-      "source_location": "L357"
+      "source_location": "L358"
     },
     {
       "id": "app_simpleratelimiter_is_allowed",
@@ -3104,7 +3176,7 @@
       "file_type": "code",
       "norm_label": ".is_allowed()",
       "source_file": "app.py",
-      "source_location": "L362"
+      "source_location": "L363"
     },
     {
       "id": "app_simpleratelimiter_prune",
@@ -3116,19 +3188,7 @@
       "file_type": "code",
       "norm_label": "._prune()",
       "source_file": "app.py",
-      "source_location": "L378"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_newsfetcher_get_session",
-      "label": "._get_session()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 169,
-      "community_name": "._get_session",
-      "file_type": "code",
-      "norm_label": "._get_session()",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1194"
+      "source_location": "L379"
     },
     {
       "id": "scripts_test_modal_rendering_createtradesuccesscontent",
@@ -3356,7 +3416,7 @@
       "file_type": "code",
       "norm_label": "apply_security_headers()",
       "source_file": "app.py",
-      "source_location": "L136"
+      "source_location": "L137"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_budget_exhaustion_raises_runtime_error",
@@ -3380,7 +3440,7 @@
       "file_type": "code",
       "norm_label": "init_databases()",
       "source_file": "app.py",
-      "source_location": "L577"
+      "source_location": "L578"
     },
     {
       "id": "db_databaseconnectionwrapper_close",
@@ -4468,7 +4528,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "clear_circuit_breaker_state()",
       "source_file": "sentiment_generator/cache.py",
@@ -4480,7 +4540,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "get_circuit_breaker_state()",
       "source_file": "sentiment_generator/cache.py",
@@ -4492,23 +4552,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "get_connection()",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L12"
-    },
-    {
-      "id": "sentiment_generator_cache_get_unscored_articles",
-      "label": "get_unscored_articles()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "get_connection",
-      "file_type": "code",
-      "norm_label": "get_unscored_articles()",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L186"
     },
     {
       "id": "sentiment_generator_cache_init_db",
@@ -4516,7 +4564,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "init_db()",
       "source_file": "sentiment_generator/cache.py",
@@ -4528,23 +4576,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "set_circuit_breaker_state()",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L348"
     },
     {
-      "id": "sentiment_generator_cache_update_article_sentiments",
-      "label": "update_article_sentiments()",
+      "id": "sentiment_generator_news_fetcher_is_gdelt_rate_limit_text",
+      "label": "_is_gdelt_rate_limit_text()",
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
-      "norm_label": "update_article_sentiments()",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L211"
+      "norm_label": "_is_gdelt_rate_limit_text()",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1086"
     },
     {
       "id": "sentiment_generator_tests_test_news_fetcher_testnewsfetcher_test_persistent_circuit_breaker_db_roundtrip",
@@ -4552,7 +4600,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": ".test_persistent_circuit_breaker_db_roundtrip()",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
@@ -4936,23 +4984,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 24,
-      "community_name": "test_news_fetcher.py",
+      "community_name": "news_fetcher.py",
       "file_type": "code",
       "norm_label": "is_article_url()",
       "source_file": "sentiment_generator/news_fetcher.py",
       "source_location": "L261"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_is_gdelt_rate_limit_text",
-      "label": "_is_gdelt_rate_limit_text()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_news_fetcher.py",
-      "file_type": "code",
-      "norm_label": "_is_gdelt_rate_limit_text()",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1086"
     },
     {
       "id": "static_firebase_auth_signinwithgoogle",
@@ -5564,7 +5600,7 @@
       "file_type": "code",
       "norm_label": "handle_forbidden()",
       "source_file": "app.py",
-      "source_location": "L623"
+      "source_location": "L624"
     },
     {
       "id": "app_handle_not_found",
@@ -5576,7 +5612,7 @@
       "file_type": "code",
       "norm_label": "handle_not_found()",
       "source_file": "app.py",
-      "source_location": "L631"
+      "source_location": "L632"
     },
     {
       "id": "app_handle_server_error",
@@ -5588,7 +5624,7 @@
       "file_type": "code",
       "norm_label": "handle_server_error()",
       "source_file": "app.py",
-      "source_location": "L647"
+      "source_location": "L648"
     },
     {
       "id": "app_handle_too_many_requests",
@@ -5600,7 +5636,7 @@
       "file_type": "code",
       "norm_label": "handle_too_many_requests()",
       "source_file": "app.py",
-      "source_location": "L639"
+      "source_location": "L640"
     },
     {
       "id": "app_handle_unexpected_exception",
@@ -5612,7 +5648,7 @@
       "file_type": "code",
       "norm_label": "handle_unexpected_exception()",
       "source_file": "app.py",
-      "source_location": "L657"
+      "source_location": "L658"
     },
     {
       "id": "app_wants_json_error",
@@ -5624,31 +5660,7 @@
       "file_type": "code",
       "norm_label": "_wants_json_error()",
       "source_file": "app.py",
-      "source_location": "L619"
-    },
-    {
-      "id": "scripts_test_p0_readiness_testp0productionreadiness_test_06_http_403_handling",
-      "label": ".test_06_http_403_handling()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "test_p0_readiness.py",
-      "file_type": "code",
-      "norm_label": ".test_06_http_403_handling()",
-      "source_file": "scripts/test_p0_readiness.py",
-      "source_location": "L137"
-    },
-    {
-      "id": "scripts_test_p0_readiness_testp0productionreadiness_test_08_http_500_sanitization_no_leaks",
-      "label": ".test_08_http_500_sanitization_no_leaks()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "test_p0_readiness.py",
-      "file_type": "code",
-      "norm_label": ".test_08_http_500_sanitization_no_leaks()",
-      "source_file": "scripts/test_p0_readiness.py",
-      "source_location": "L178"
+      "source_location": "L620"
     },
     {
       "id": "sentiment_generator_bigquery_fetcher_bigquerygkgextractor_export_staging_parquet",
@@ -5963,6 +5975,18 @@
       "source_location": "L92"
     },
     {
+      "id": "sentiment_generator_cache_get_unscored_articles",
+      "label": "get_unscored_articles()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "cache.py",
+      "file_type": "code",
+      "norm_label": "get_unscored_articles()",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L186"
+    },
+    {
       "id": "sentiment_generator_cache_save_raw_articles",
       "label": "save_raw_articles()",
       "_callable": true,
@@ -5973,6 +5997,18 @@
       "norm_label": "save_raw_articles()",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L146"
+    },
+    {
+      "id": "sentiment_generator_cache_update_article_sentiments",
+      "label": "update_article_sentiments()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "cache.py",
+      "file_type": "code",
+      "norm_label": "update_article_sentiments()",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L211"
     },
     {
       "id": "sentiment_generator_execute_live_bigquery_poc_check_cache_state",
@@ -6023,30 +6059,6 @@
       "source_location": "L61"
     },
     {
-      "id": "sentiment_generator_news_fetcher_newsfetcher_compile_matchers",
-      "label": "._compile_matchers()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 45,
-      "community_name": "._compile_matchers",
-      "file_type": "code",
-      "norm_label": "._compile_matchers()",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1329"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_newsfetcher_init",
-      "label": ".__init__()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 45,
-      "community_name": "._compile_matchers",
-      "file_type": "code",
-      "norm_label": ".__init__()",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1141"
-    },
-    {
       "id": "sentiment_get_news_sentiment",
       "label": "get_news_sentiment()",
       "_callable": true,
@@ -6080,7 +6092,7 @@
       "file_type": "code",
       "norm_label": "verify_firebase_id_token()",
       "source_file": "app.py",
-      "source_location": "L467"
+      "source_location": "L468"
     },
     {
       "id": "scripts_test_firebase_auth_hardening_testfirebaseauthhardening_setup",
@@ -7666,7 +7678,7 @@
       "source_location": "L499"
     },
     {
-      "id": "main_rationale_589",
+      "id": "main_rationale_595",
       "label": "End-to-end training pipeline with Meta-Labeling and Multi-Horizon forecasting.",
       "_origin": "ast",
       "community": 0,
@@ -7674,7 +7686,7 @@
       "file_type": "rationale",
       "norm_label": "end-to-end training pipeline with meta-labeling and multi-horizon forecasting.",
       "source_file": "main.py",
-      "source_location": "L589"
+      "source_location": "L595"
     },
     {
       "id": "main_rationale_67",
@@ -7688,7 +7700,7 @@
       "source_location": "L67"
     },
     {
-      "id": "main_rationale_849",
+      "id": "main_rationale_855",
       "label": "Simulate trading over the last 'days' using the trained model. Strategy: -\u2026",
       "_origin": "ast",
       "community": 0,
@@ -7696,7 +7708,7 @@
       "file_type": "rationale",
       "norm_label": "simulate trading over the last 'days' using the trained model. strategy: -...",
       "source_file": "main.py",
-      "source_location": "L849"
+      "source_location": "L855"
     },
     {
       "id": "scripts_verify_prediction_rationale_34",
@@ -8744,6 +8756,17 @@
       "source_location": "L120"
     },
     {
+      "id": "scripts_test_p0_readiness_rationale_138",
+      "label": "Verify 403 error handler returns branded HTML for browser and JSON for API.",
+      "_origin": "ast",
+      "community": 109,
+      "community_name": "TestP0ProductionReadiness",
+      "file_type": "rationale",
+      "norm_label": "verify 403 error handler returns branded html for browser and json for api.",
+      "source_file": "scripts/test_p0_readiness.py",
+      "source_location": "L138"
+    },
+    {
       "id": "scripts_test_p0_readiness_rationale_156",
       "label": "Trigger an actual endpoint protected by production @limit_rate and verify 429\u2026",
       "_origin": "ast",
@@ -8753,6 +8776,17 @@
       "norm_label": "trigger an actual endpoint protected by production @limit_rate and verify 429...",
       "source_file": "scripts/test_p0_readiness.py",
       "source_location": "L156"
+    },
+    {
+      "id": "scripts_test_p0_readiness_rationale_179",
+      "label": "Verify 500 responses never leak stack traces, file paths, secrets, or internal\u2026",
+      "_origin": "ast",
+      "community": 109,
+      "community_name": "TestP0ProductionReadiness",
+      "file_type": "rationale",
+      "norm_label": "verify 500 responses never leak stack traces, file paths, secrets, or internal...",
+      "source_file": "scripts/test_p0_readiness.py",
+      "source_location": "L179"
     },
     {
       "id": "scripts_test_p0_readiness_rationale_47",
@@ -9654,7 +9688,7 @@
       "source_location": "L1"
     },
     {
-      "id": "app_rationale_106",
+      "id": "app_rationale_107",
       "label": "# NOTE: Gunicorn must bind to localhost or an internal private socket so it\u2026",
       "_origin": "ast",
       "community": 12,
@@ -9662,10 +9696,10 @@
       "file_type": "rationale",
       "norm_label": "# note: gunicorn must bind to localhost or an internal private socket so it...",
       "source_file": "app.py",
-      "source_location": "L106"
+      "source_location": "L107"
     },
     {
-      "id": "app_rationale_881",
+      "id": "app_rationale_882",
       "label": "Accepts user feedback with length bounds and rate limiting.",
       "_origin": "ast",
       "community": 12,
@@ -9673,10 +9707,10 @@
       "file_type": "rationale",
       "norm_label": "accepts user feedback with length bounds and rate limiting.",
       "source_file": "app.py",
-      "source_location": "L881"
+      "source_location": "L882"
     },
     {
-      "id": "app_rationale_910",
+      "id": "app_rationale_911",
       "label": "Interactive visual database viewer for all tables in users.db\u2026",
       "_origin": "ast",
       "community": 12,
@@ -9684,7 +9718,7 @@
       "file_type": "rationale",
       "norm_label": "interactive visual database viewer for all tables in users.db...",
       "source_file": "app.py",
-      "source_location": "L910"
+      "source_location": "L911"
     },
     {
       "id": "scripts_test_security_hardening_rationale_1",
@@ -9984,7 +10018,7 @@
       "source_location": ""
     },
     {
-      "id": "app_rationale_187",
+      "id": "app_rationale_188",
       "label": "Atomic OS file-based lock guaranteeing cross-worker mutual exclusion. Stores\u2026",
       "_origin": "ast",
       "community": 126,
@@ -9992,10 +10026,10 @@
       "file_type": "rationale",
       "norm_label": "atomic os file-based lock guaranteeing cross-worker mutual exclusion. stores...",
       "source_file": "app.py",
-      "source_location": "L187"
+      "source_location": "L188"
     },
     {
-      "id": "app_rationale_203",
+      "id": "app_rationale_204",
       "label": "Verify whether the owning process is still active on this host. Returns True if\u2026",
       "_origin": "ast",
       "community": 126,
@@ -10003,10 +10037,10 @@
       "file_type": "rationale",
       "norm_label": "verify whether the owning process is still active on this host. returns true if...",
       "source_file": "app.py",
-      "source_location": "L203"
+      "source_location": "L204"
     },
     {
-      "id": "app_rationale_299",
+      "id": "app_rationale_300",
       "label": "Releases the lock. Only the owner with matching token can release it. If token\u2026",
       "_origin": "ast",
       "community": 126,
@@ -10014,7 +10048,7 @@
       "file_type": "rationale",
       "norm_label": "releases the lock. only the owner with matching token can release it. if token...",
       "source_file": "app.py",
-      "source_location": "L299"
+      "source_location": "L300"
     },
     {
       "id": "agents_plugins_agent_skills_claude_commands_ship",
@@ -10778,17 +10812,6 @@
       "source_location": ""
     },
     {
-      "id": "sentiment_generator_news_fetcher_py_any",
-      "label": "Any",
-      "_origin": "ast",
-      "community": 14,
-      "community_name": ".fetch_gdelt_window",
-      "file_type": "code",
-      "norm_label": "any",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "sentiment_generator_news_fetcher_py_datetime",
       "label": "datetime",
       "_origin": "ast",
@@ -10796,6 +10819,17 @@
       "community_name": ".fetch_gdelt_window",
       "file_type": "code",
       "norm_label": "datetime",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "session",
+      "label": "Session",
+      "_origin": "ast",
+      "community": 14,
+      "community_name": ".fetch_gdelt_window",
+      "file_type": "code",
+      "norm_label": "session",
       "source_file": "",
       "source_location": ""
     },
@@ -10809,6 +10843,28 @@
       "norm_label": "valueerror",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_rationale_1103",
+      "label": "Raised by parse_gdelt_timestamp() when a GDELT timestamp carries only date-\u2026",
+      "_origin": "ast",
+      "community": 14,
+      "community_name": ".fetch_gdelt_window",
+      "file_type": "rationale",
+      "norm_label": "raised by parse_gdelt_timestamp() when a gdelt timestamp carries only date-...",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1103"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_rationale_1195",
+      "label": "Returns an isolated requests.Session per worker thread.",
+      "_origin": "ast",
+      "community": 14,
+      "community_name": ".fetch_gdelt_window",
+      "file_type": "rationale",
+      "norm_label": "returns an isolated requests.session per worker thread.",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1195"
     },
     {
       "id": "sentiment_generator_news_fetcher_rationale_1203",
@@ -11704,6 +11760,50 @@
       "source_location": "L13"
     },
     {
+      "id": "sentiment_generator_news_fetcher_py_any",
+      "label": "Any",
+      "_origin": "ast",
+      "community": 165,
+      "community_name": "._article_dedupe_key",
+      "file_type": "code",
+      "norm_label": "any",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_rationale_1142",
+      "label": "trading_calendar: Sorted list of valid NSE trading dates (YYYY-MM-DD).",
+      "_origin": "ast",
+      "community": 165,
+      "community_name": "._article_dedupe_key",
+      "file_type": "rationale",
+      "norm_label": "trading_calendar: sorted list of valid nse trading dates (yyyy-mm-dd).",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1142"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_rationale_1209",
+      "label": "Returns a snapshot of all diagnostic telemetry, including: - All stat counters\u2026",
+      "_origin": "ast",
+      "community": 165,
+      "community_name": "._article_dedupe_key",
+      "file_type": "rationale",
+      "norm_label": "returns a snapshot of all diagnostic telemetry, including: - all stat counters...",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1209"
+    },
+    {
+      "id": "sentiment_generator_news_fetcher_rationale_1330",
+      "label": "Precompiles regular expressions for each ticker for high performance and\u2026",
+      "_origin": "ast",
+      "community": 165,
+      "community_name": "._article_dedupe_key",
+      "file_type": "rationale",
+      "norm_label": "precompiles regular expressions for each ticker for high performance and...",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1330"
+    },
+    {
       "id": "sentiment_generator_news_fetcher_rationale_2031",
       "label": "Normalizes a URL by stripping tracking query params, fragments, trailing\u2026",
       "_origin": "ast",
@@ -11741,7 +11841,7 @@
       "label": "test_memory_optimization.py",
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "code",
       "norm_label": "test_memory_optimization.py",
       "source_file": "scripts/test_memory_optimization.py",
@@ -11749,54 +11849,76 @@
     },
     {
       "id": "app_rationale_1246",
-      "label": "Thread-safe bounded model cache. Returns dict of loaded\u2026",
+      "label": "Returns the maximum number of models to cache in memory. In memory-constrained\u2026",
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "rationale",
-      "norm_label": "thread-safe bounded model cache. returns dict of loaded...",
+      "norm_label": "returns the maximum number of models to cache in memory. in memory-constrained...",
       "source_file": "app.py",
       "source_location": "L1246"
     },
     {
-      "id": "app_rationale_39",
+      "id": "app_rationale_1262",
+      "label": "Thread-safe bounded model cache. Returns dict of loaded\u2026",
+      "_origin": "ast",
+      "community": 166,
+      "community_name": "get_cached_model_bundle",
+      "file_type": "rationale",
+      "norm_label": "thread-safe bounded model cache. returns dict of loaded...",
+      "source_file": "app.py",
+      "source_location": "L1262"
+    },
+    {
+      "id": "app_rationale_40",
       "label": "Return current process Resident Set Size (RSS) memory in megabytes.",
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "rationale",
       "norm_label": "return current process resident set size (rss) memory in megabytes.",
       "source_file": "app.py",
-      "source_location": "L39"
+      "source_location": "L40"
     },
     {
-      "id": "app_rationale_51",
+      "id": "app_rationale_52",
       "label": "Lazily import and initialize TensorFlow and load_model in CPU-only mode with\u2026",
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "rationale",
       "norm_label": "lazily import and initialize tensorflow and load_model in cpu-only mode with...",
       "source_file": "app.py",
-      "source_location": "L51"
+      "source_location": "L52"
     },
     {
-      "id": "scripts_test_memory_optimization_rationale_107",
+      "id": "scripts_test_memory_optimization_rationale_110",
+      "label": "Verify in production stream_train completes without launching heavy training.",
+      "_origin": "ast",
+      "community": 166,
+      "community_name": "get_cached_model_bundle",
+      "file_type": "rationale",
+      "norm_label": "verify in production stream_train completes without launching heavy training.",
+      "source_file": "scripts/test_memory_optimization.py",
+      "source_location": "L110"
+    },
+    {
+      "id": "scripts_test_memory_optimization_rationale_121",
       "label": "Verify memory does not grow unbounded over repeated predictions.",
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "rationale",
       "norm_label": "verify memory does not grow unbounded over repeated predictions.",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L107"
+      "source_location": "L121"
     },
     {
       "id": "scripts_test_memory_optimization_rationale_34",
       "label": "Verify process RSS at startup is well below the 512 MB Render threshold.",
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "rationale",
       "norm_label": "verify process rss at startup is well below the 512 mb render threshold.",
       "source_file": "scripts/test_memory_optimization.py",
@@ -11807,69 +11929,47 @@
       "label": "Verify bounded cache holds at most MAX_CACHED_MODELS and evicts oldest.",
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "rationale",
       "norm_label": "verify bounded cache holds at most max_cached_models and evicts oldest.",
       "source_file": "scripts/test_memory_optimization.py",
       "source_location": "L40"
     },
     {
-      "id": "scripts_test_memory_optimization_rationale_58",
+      "id": "scripts_test_memory_optimization_rationale_72",
       "label": "Verify RELIANCE.NS prediction produces valid output.",
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "rationale",
       "norm_label": "verify reliance.ns prediction produces valid output.",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L58"
+      "source_location": "L72"
     },
     {
-      "id": "scripts_test_memory_optimization_rationale_67",
+      "id": "scripts_test_memory_optimization_rationale_81",
       "label": "Verify /api/sentiment/<ticker> runs without loading heavy Keras models.",
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "rationale",
       "norm_label": "verify /api/sentiment/<ticker> runs without loading heavy keras models.",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L67"
+      "source_location": "L81"
     },
     {
-      "id": "scripts_test_memory_optimization_rationale_77",
+      "id": "scripts_test_memory_optimization_rationale_91",
       "label": "Verify get_data/save_data execute purely via database and auth without loading\u2026",
       "_origin": "ast",
       "community": 166,
-      "community_name": "TestMemoryOptimization",
+      "community_name": "get_cached_model_bundle",
       "file_type": "rationale",
       "norm_label": "verify get_data/save_data execute purely via database and auth without loading...",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L77"
+      "source_location": "L91"
     },
     {
-      "id": "scripts_test_memory_optimization_rationale_96",
-      "label": "Verify in production stream_train completes without launching heavy training.",
-      "_origin": "ast",
-      "community": 166,
-      "community_name": "TestMemoryOptimization",
-      "file_type": "rationale",
-      "norm_label": "verify in production stream_train completes without launching heavy training.",
-      "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L96"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_rationale_1209",
-      "label": "Returns a snapshot of all diagnostic telemetry, including: - All stat counters\u2026",
-      "_origin": "ast",
-      "community": 167,
-      "community_name": ".get_diagnostics",
-      "file_type": "rationale",
-      "norm_label": "returns a snapshot of all diagnostic telemetry, including: - all stat counters...",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1209"
-    },
-    {
-      "id": "app_rationale_356",
+      "id": "app_rationale_357",
       "label": "Sliding-window rate limiter with memory bounding and stale key eviction.",
       "_origin": "ast",
       "community": 168,
@@ -11877,29 +11977,7 @@
       "file_type": "rationale",
       "norm_label": "sliding-window rate limiter with memory bounding and stale key eviction.",
       "source_file": "app.py",
-      "source_location": "L356"
-    },
-    {
-      "id": "session",
-      "label": "Session",
-      "_origin": "ast",
-      "community": 169,
-      "community_name": "._get_session",
-      "file_type": "code",
-      "norm_label": "session",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_rationale_1195",
-      "label": "Returns an isolated requests.Session per worker thread.",
-      "_origin": "ast",
-      "community": 169,
-      "community_name": "._get_session",
-      "file_type": "rationale",
-      "norm_label": "returns an isolated requests.session per worker thread.",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1195"
+      "source_location": "L357"
     },
     {
       "id": "scripts_test_modal_rendering",
@@ -12124,7 +12202,7 @@
       "source_location": "L1"
     },
     {
-      "id": "app_rationale_578",
+      "id": "app_rationale_579",
       "label": "Ensure database tables exist upon startup (PostgreSQL or SQLite).",
       "_origin": "ast",
       "community": 179,
@@ -12132,7 +12210,7 @@
       "file_type": "rationale",
       "norm_label": "ensure database tables exist upon startup (postgresql or sqlite).",
       "source_file": "app.py",
-      "source_location": "L578"
+      "source_location": "L579"
     },
     {
       "id": "db_rationale_1",
@@ -12898,73 +12976,51 @@
       "label": "Connection",
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
       "norm_label": "connection",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "sentiment_generator_cache_py_any",
-      "label": "Any",
+      "id": "sentiment_generator_tests_test_news_fetcher",
+      "label": "test_news_fetcher.py",
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "code",
-      "norm_label": "any",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "test_news_fetcher.py",
+      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
+      "source_location": "L1"
     },
     {
       "id": "sentiment_generator_cache_rationale_13",
       "label": "Returns a SQLite connection configured with WAL mode for concurrency.",
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "returns a sqlite connection configured with wal mode for concurrency.",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L13"
     },
     {
-      "id": "sentiment_generator_cache_rationale_187",
-      "label": "Retrieves articles that do not yet have FinBERT sentiment scores.",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "get_connection",
-      "file_type": "rationale",
-      "norm_label": "retrieves articles that do not yet have finbert sentiment scores.",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L187"
-    },
-    {
       "id": "sentiment_generator_cache_rationale_21",
       "label": "Initializes tables and performs schema migrations if necessary.",
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "initializes tables and performs schema migrations if necessary.",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L21"
     },
     {
-      "id": "sentiment_generator_cache_rationale_212",
-      "label": "Updates FinBERT sentiment score and label for articles.",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "get_connection",
-      "file_type": "rationale",
-      "norm_label": "updates finbert sentiment score and label for articles.",
-      "source_file": "sentiment_generator/cache.py",
-      "source_location": "L212"
-    },
-    {
       "id": "sentiment_generator_cache_rationale_353",
       "label": "Persists the GDELT circuit breaker state and cooldown window in SQLite.",
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "persists the gdelt circuit breaker state and cooldown window in sqlite.",
       "source_file": "sentiment_generator/cache.py",
@@ -12975,7 +13031,7 @@
       "label": "Returns the active circuit breaker state if present, else None.",
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "returns the active circuit breaker state if present, else none.",
       "source_file": "sentiment_generator/cache.py",
@@ -12986,18 +13042,29 @@
       "label": "Clears / resets the persisted circuit breaker state upon successful recovery.",
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "clears / resets the persisted circuit breaker state upon successful recovery.",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L404"
     },
     {
+      "id": "sentiment_generator_news_fetcher_rationale_1087",
+      "label": "Checks if a response body contains GDELT rate-limit or service throttling text.\u2026",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "test_news_fetcher.py",
+      "file_type": "rationale",
+      "norm_label": "checks if a response body contains gdelt rate-limit or service throttling text....",
+      "source_file": "sentiment_generator/news_fetcher.py",
+      "source_location": "L1087"
+    },
+    {
       "id": "sentiment_generator_tests_test_news_fetcher_rationale_1647",
       "label": "set_circuit_breaker_state, get_circuit_breaker_state, and\u2026",
       "_origin": "ast",
       "community": 21,
-      "community_name": "get_connection",
+      "community_name": "test_news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "set_circuit_breaker_state, get_circuit_breaker_state, and...",
       "source_file": "sentiment_generator/tests/test_news_fetcher.py",
@@ -13250,51 +13317,18 @@
       "label": "news_fetcher.py",
       "_origin": "ast",
       "community": 24,
-      "community_name": "test_news_fetcher.py",
+      "community_name": "news_fetcher.py",
       "file_type": "code",
       "norm_label": "news_fetcher.py",
       "source_file": "sentiment_generator/news_fetcher.py",
       "source_location": "L1"
     },
     {
-      "id": "sentiment_generator_tests_test_news_fetcher",
-      "label": "test_news_fetcher.py",
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_news_fetcher.py",
-      "file_type": "code",
-      "norm_label": "test_news_fetcher.py",
-      "source_file": "sentiment_generator/tests/test_news_fetcher.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_rationale_1087",
-      "label": "Checks if a response body contains GDELT rate-limit or service throttling text.\u2026",
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_news_fetcher.py",
-      "file_type": "rationale",
-      "norm_label": "checks if a response body contains gdelt rate-limit or service throttling text....",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1087"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_rationale_1103",
-      "label": "Raised by parse_gdelt_timestamp() when a GDELT timestamp carries only date-\u2026",
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_news_fetcher.py",
-      "file_type": "rationale",
-      "norm_label": "raised by parse_gdelt_timestamp() when a gdelt timestamp carries only date-...",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1103"
-    },
-    {
       "id": "sentiment_generator_news_fetcher_rationale_1536",
       "label": "# NOTE: bare \"mia\" is intentionally excluded \u2014 it is too short and generic",
       "_origin": "ast",
       "community": 24,
-      "community_name": "test_news_fetcher.py",
+      "community_name": "news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "# note: bare \"mia\" is intentionally excluded \u2014 it is too short and generic",
       "source_file": "sentiment_generator/news_fetcher.py",
@@ -13305,7 +13339,7 @@
       "label": "# IMPORTANT: recursive calls must pass the SAME _request_budget list object.",
       "_origin": "ast",
       "community": 24,
-      "community_name": "test_news_fetcher.py",
+      "community_name": "news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "# important: recursive calls must pass the same _request_budget list object.",
       "source_file": "sentiment_generator/news_fetcher.py",
@@ -13316,7 +13350,7 @@
       "label": "Validates whether a URL represents a genuine news article rather than a static\u2026",
       "_origin": "ast",
       "community": 24,
-      "community_name": "test_news_fetcher.py",
+      "community_name": "news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "validates whether a url represents a genuine news article rather than a static...",
       "source_file": "sentiment_generator/news_fetcher.py",
@@ -13327,7 +13361,7 @@
       "label": "# IMPORTANT: only include tokens that are safe for plain substring matching\u2026",
       "_origin": "ast",
       "community": 24,
-      "community_name": "test_news_fetcher.py",
+      "community_name": "news_fetcher.py",
       "file_type": "rationale",
       "norm_label": "# important: only include tokens that are safe for plain substring matching...",
       "source_file": "sentiment_generator/news_fetcher.py",
@@ -13759,6 +13793,18 @@
       "norm_label": "googleprovider",
       "source_file": "static/firebase-auth.js",
       "source_location": "L27"
+    },
+    {
+      "id": "agents_plugins_agent_skills_evals_readme",
+      "label": "evals/README.md",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "Skill Evals",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "evals/readme.md",
+      "source_file": ".agents/plugins/agent-skills/evals/README.md",
+      "source_location": "L1"
     },
     {
       "id": "agents_plugins_agent_skills_evals_readme_adding_a_skill",
@@ -15658,28 +15704,6 @@
       "source_location": "L1"
     },
     {
-      "id": "scripts_test_p0_readiness_rationale_138",
-      "label": "Verify 403 error handler returns branded HTML for browser and JSON for API.",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "test_p0_readiness.py",
-      "file_type": "rationale",
-      "norm_label": "verify 403 error handler returns branded html for browser and json for api.",
-      "source_file": "scripts/test_p0_readiness.py",
-      "source_location": "L138"
-    },
-    {
-      "id": "scripts_test_p0_readiness_rationale_179",
-      "label": "Verify 500 responses never leak stack traces, file paths, secrets, or internal\u2026",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "test_p0_readiness.py",
-      "file_type": "rationale",
-      "norm_label": "verify 500 responses never leak stack traces, file paths, secrets, or internal...",
-      "source_file": "scripts/test_p0_readiness.py",
-      "source_location": "L179"
-    },
-    {
       "id": "agents_plugins_agent_skills_skills_git_workflow_and_versioning_skill",
       "label": "git-workflow-and-versioning/SKILL.md",
       "_origin": "ast",
@@ -17053,6 +17077,17 @@
       "source_location": "L1"
     },
     {
+      "id": "sentiment_generator_cache_py_any",
+      "label": "Any",
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "cache.py",
+      "file_type": "code",
+      "norm_label": "any",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "sentiment_generator_config",
       "label": "config.py",
       "_origin": "ast",
@@ -17095,6 +17130,28 @@
       "norm_label": "saves a batch of raw articles into sqlite cache. returns number of newly...",
       "source_file": "sentiment_generator/cache.py",
       "source_location": "L147"
+    },
+    {
+      "id": "sentiment_generator_cache_rationale_187",
+      "label": "Retrieves articles that do not yet have FinBERT sentiment scores.",
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "cache.py",
+      "file_type": "rationale",
+      "norm_label": "retrieves articles that do not yet have finbert sentiment scores.",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L187"
+    },
+    {
+      "id": "sentiment_generator_cache_rationale_212",
+      "label": "Updates FinBERT sentiment score and label for articles.",
+      "_origin": "ast",
+      "community": 43,
+      "community_name": "cache.py",
+      "file_type": "rationale",
+      "norm_label": "updates finbert sentiment score and label for articles.",
+      "source_file": "sentiment_generator/cache.py",
+      "source_location": "L212"
     },
     {
       "id": "sentiment_generator_cache_rationale_88",
@@ -17423,28 +17480,6 @@
       "source_location": "L73"
     },
     {
-      "id": "sentiment_generator_news_fetcher_rationale_1142",
-      "label": "trading_calendar: Sorted list of valid NSE trading dates (YYYY-MM-DD).",
-      "_origin": "ast",
-      "community": 45,
-      "community_name": "._compile_matchers",
-      "file_type": "rationale",
-      "norm_label": "trading_calendar: sorted list of valid nse trading dates (yyyy-mm-dd).",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1142"
-    },
-    {
-      "id": "sentiment_generator_news_fetcher_rationale_1330",
-      "label": "Precompiles regular expressions for each ticker for high performance and\u2026",
-      "_origin": "ast",
-      "community": 45,
-      "community_name": "._compile_matchers",
-      "file_type": "rationale",
-      "norm_label": "precompiles regular expressions for each ticker for high performance and...",
-      "source_file": "sentiment_generator/news_fetcher.py",
-      "source_location": "L1330"
-    },
-    {
       "id": "sentiment",
       "label": "sentiment.py",
       "_origin": "ast",
@@ -17522,7 +17557,7 @@
       "source_location": "L1"
     },
     {
-      "id": "app_rationale_468",
+      "id": "app_rationale_469",
       "label": "Verifies a Firebase ID token with authoritative cryptographic RS256 signature,\u2026",
       "_origin": "ast",
       "community": 5,
@@ -17530,7 +17565,7 @@
       "file_type": "rationale",
       "norm_label": "verifies a firebase id token with authoritative cryptographic rs256 signature,...",
       "source_file": "app.py",
-      "source_location": "L468"
+      "source_location": "L469"
     },
     {
       "id": "scripts_test_firebase_auth_hardening_rationale_44",
@@ -19667,18 +19702,6 @@
       "node_kind": "page",
       "norm_label": "skill-anatomy.md",
       "source_file": ".agents/plugins/agent-skills/docs/skill-anatomy.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "agents_plugins_agent_skills_evals_readme",
-      "label": "evals/README.md",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "agent-skills/README.md",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "evals/readme.md",
-      "source_file": ".agents/plugins/agent-skills/evals/README.md",
       "source_location": "L1"
     },
     {
@@ -28613,7 +28636,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1465",
+      "source_location": "L1515",
       "weight": 1.0
     },
     {
@@ -28625,7 +28648,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1470",
+      "source_location": "L1520",
       "weight": 1.0
     },
     {
@@ -28637,7 +28660,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1477",
+      "source_location": "L1527",
       "weight": 1.0
     },
     {
@@ -28649,7 +28672,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L256",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
@@ -28661,7 +28684,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L861",
+      "source_location": "L862",
       "weight": 1.0
     },
     {
@@ -28673,7 +28696,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L871",
+      "source_location": "L872",
       "weight": 1.0
     },
     {
@@ -28685,7 +28708,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1319",
+      "source_location": "L1353",
       "weight": 1.0
     },
     {
@@ -28697,7 +28720,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1336",
+      "source_location": "L1370",
       "weight": 1.0
     },
     {
@@ -28709,7 +28732,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1341",
+      "source_location": "L1375",
       "weight": 1.0
     },
     {
@@ -28721,7 +28744,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1347",
+      "source_location": "L1381",
       "weight": 1.0
     },
     {
@@ -28733,7 +28756,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1358",
+      "source_location": "L1392",
       "weight": 1.0
     },
     {
@@ -28745,7 +28768,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1382",
+      "source_location": "L1416",
       "weight": 1.0
     },
     {
@@ -28757,7 +28780,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1385",
+      "source_location": "L1419",
       "weight": 1.0
     },
     {
@@ -28769,7 +28792,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1388",
+      "source_location": "L1422",
       "weight": 1.0
     },
     {
@@ -28781,7 +28804,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1448",
+      "source_location": "L1482",
+      "weight": 1.0
+    },
+    {
+      "source": "app_get_cached_model_bundle",
+      "target": "app_get_max_cached_models",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app.py",
+      "source_location": "L1286",
       "weight": 1.0
     },
     {
@@ -28793,7 +28828,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1276",
+      "source_location": "L1303",
       "weight": 1.0
     },
     {
@@ -28805,7 +28840,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1279",
+      "source_location": "L1306",
       "weight": 1.0
     },
     {
@@ -28817,7 +28852,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1096",
+      "source_location": "L1097",
       "weight": 1.0
     },
     {
@@ -28829,7 +28864,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1118",
+      "source_location": "L1119",
       "weight": 1.0
     },
     {
@@ -28841,7 +28876,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1130",
+      "source_location": "L1131",
       "weight": 1.0
     },
     {
@@ -28853,7 +28888,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1149",
+      "source_location": "L1150",
       "weight": 1.0
     },
     {
@@ -28865,7 +28900,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1155",
+      "source_location": "L1156",
       "weight": 1.0
     },
     {
@@ -28877,7 +28912,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1084",
+      "source_location": "L1085",
       "weight": 1.0
     },
     {
@@ -28889,7 +28924,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1087",
+      "source_location": "L1088",
       "weight": 1.0
     },
     {
@@ -28901,7 +28936,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L785",
+      "source_location": "L786",
       "weight": 1.0
     },
     {
@@ -28913,7 +28948,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L792",
+      "source_location": "L793",
       "weight": 1.0
     },
     {
@@ -28925,7 +28960,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L624",
+      "source_location": "L625",
       "weight": 1.0
     },
     {
@@ -28937,7 +28972,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L632",
+      "source_location": "L633",
       "weight": 1.0
     },
     {
@@ -28949,7 +28984,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L650",
+      "source_location": "L651",
       "weight": 1.0
     },
     {
@@ -28961,7 +28996,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L640",
+      "source_location": "L641",
       "weight": 1.0
     },
     {
@@ -28973,7 +29008,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L663",
+      "source_location": "L664",
       "weight": 1.0
     },
     {
@@ -28985,7 +29020,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L579",
+      "source_location": "L580",
       "weight": 1.0
     },
     {
@@ -28997,7 +29032,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L580",
+      "source_location": "L581",
       "weight": 1.0
     },
     {
@@ -29009,7 +29044,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L674",
+      "source_location": "L675",
       "weight": 1.0
     },
     {
@@ -29021,7 +29056,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L820",
+      "source_location": "L821",
       "weight": 1.0
     },
     {
@@ -29033,7 +29068,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L838",
+      "source_location": "L839",
       "weight": 1.0
     },
     {
@@ -29045,7 +29080,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L367",
+      "source_location": "L368",
       "weight": 1.0
     },
     {
@@ -29057,7 +29092,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1520",
+      "source_location": "L1570",
       "weight": 1.0
     },
     {
@@ -29069,7 +29104,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L934",
+      "source_location": "L935",
       "weight": 1.0
     },
     {
@@ -29081,7 +29116,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1607",
+      "source_location": "L1657",
       "weight": 1.0
     },
     {
@@ -29093,7 +29128,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app.py",
-      "source_location": "L1615",
+      "source_location": "L1665",
       "weight": 1.0
     },
     {
@@ -29285,7 +29320,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L860",
+      "source_location": "L866",
       "weight": 1.0
     },
     {
@@ -29297,7 +29332,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L861",
+      "source_location": "L867",
       "weight": 1.0
     },
     {
@@ -29309,7 +29344,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L864",
+      "source_location": "L870",
       "weight": 1.0
     },
     {
@@ -29321,7 +29356,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L876",
+      "source_location": "L882",
       "weight": 1.0
     },
     {
@@ -29333,7 +29368,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L883",
+      "source_location": "L889",
       "weight": 1.0
     },
     {
@@ -29345,7 +29380,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L908",
+      "source_location": "L914",
       "weight": 1.0
     },
     {
@@ -29357,7 +29392,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L942",
+      "source_location": "L948",
       "weight": 1.0
     },
     {
@@ -29369,7 +29404,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L947",
+      "source_location": "L953",
       "weight": 1.0
     },
     {
@@ -29393,7 +29428,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L837",
+      "source_location": "L843",
       "weight": 1.0
     },
     {
@@ -29405,7 +29440,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L596",
+      "source_location": "L602",
       "weight": 1.0
     },
     {
@@ -29417,7 +29452,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L603",
+      "source_location": "L609",
       "weight": 1.0
     },
     {
@@ -29429,7 +29464,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L608",
+      "source_location": "L614",
       "weight": 1.0
     },
     {
@@ -29441,7 +29476,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L615",
+      "source_location": "L621",
       "weight": 1.0
     },
     {
@@ -29453,7 +29488,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L626",
+      "source_location": "L632",
       "weight": 1.0
     },
     {
@@ -29465,7 +29500,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L633",
+      "source_location": "L639",
       "weight": 1.0
     },
     {
@@ -29477,7 +29512,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L637",
+      "source_location": "L643",
       "weight": 1.0
     },
     {
@@ -29489,7 +29524,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L705",
+      "source_location": "L711",
       "weight": 1.0
     },
     {
@@ -29501,7 +29536,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L706",
+      "source_location": "L712",
       "weight": 1.0
     },
     {
@@ -29513,7 +29548,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L746",
+      "source_location": "L752",
       "weight": 1.0
     },
     {
@@ -29525,7 +29560,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L753",
+      "source_location": "L759",
       "weight": 1.0
     },
     {
@@ -29537,7 +29572,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L778",
+      "source_location": "L784",
       "weight": 1.0
     },
     {
@@ -29549,7 +29584,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L787",
+      "source_location": "L793",
       "weight": 1.0
     },
     {
@@ -29561,7 +29596,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "main.py",
-      "source_location": "L797",
+      "source_location": "L803",
       "weight": 1.0
     },
     {
@@ -30077,7 +30112,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L42",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -30089,7 +30124,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L108",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -32993,7 +33028,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L135",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -33005,7 +33040,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L1462",
+      "source_location": "L1512",
       "weight": 1.0
     },
     {
@@ -33017,7 +33052,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L1463",
+      "source_location": "L1513",
       "weight": 1.0
     },
     {
@@ -33029,7 +33064,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L612",
+      "source_location": "L613",
       "weight": 1.0
     },
     {
@@ -33041,24 +33076,12 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L596",
+      "source_location": "L597",
       "weight": 1.0
     },
     {
       "source": "app_delete_user_data",
       "target": "route",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "decorator",
-      "source_file": "app.py",
-      "source_location": "L852",
-      "weight": 1.0
-    },
-    {
-      "source": "app_delete_user_data",
-      "target": "app_limit_rate",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -33070,7 +33093,7 @@
     },
     {
       "source": "app_delete_user_data",
-      "target": "app_require_user_auth",
+      "target": "app_limit_rate",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -33078,6 +33101,18 @@
       "context": "decorator",
       "source_file": "app.py",
       "source_location": "L854",
+      "weight": 1.0
+    },
+    {
+      "source": "app_delete_user_data",
+      "target": "app_require_user_auth",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "decorator",
+      "source_file": "app.py",
+      "source_location": "L855",
       "weight": 1.0
     },
     {
@@ -33089,24 +33124,12 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L608",
+      "source_location": "L609",
       "weight": 1.0
     },
     {
       "source": "app_get_prediction",
       "target": "route",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "decorator",
-      "source_file": "app.py",
-      "source_location": "L1093",
-      "weight": 1.0
-    },
-    {
-      "source": "app_get_prediction",
-      "target": "app_limit_rate",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -33117,20 +33140,20 @@
       "weight": 1.0
     },
     {
-      "source": "app_get_sentiment",
-      "target": "route",
+      "source": "app_get_prediction",
+      "target": "app_limit_rate",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L1081",
+      "source_location": "L1095",
       "weight": 1.0
     },
     {
       "source": "app_get_sentiment",
-      "target": "app_limit_rate",
+      "target": "route",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -33141,20 +33164,20 @@
       "weight": 1.0
     },
     {
-      "source": "app_get_stocks",
-      "target": "route",
+      "source": "app_get_sentiment",
+      "target": "app_limit_rate",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L699",
+      "source_location": "L1083",
       "weight": 1.0
     },
     {
       "source": "app_get_stocks",
-      "target": "app_limit_rate",
+      "target": "route",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -33165,20 +33188,20 @@
       "weight": 1.0
     },
     {
-      "source": "app_get_user_data",
-      "target": "route",
+      "source": "app_get_stocks",
+      "target": "app_limit_rate",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L781",
+      "source_location": "L701",
       "weight": 1.0
     },
     {
       "source": "app_get_user_data",
-      "target": "app_limit_rate",
+      "target": "route",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -33190,7 +33213,7 @@
     },
     {
       "source": "app_get_user_data",
-      "target": "app_require_user_auth",
+      "target": "app_limit_rate",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -33198,6 +33221,18 @@
       "context": "decorator",
       "source_file": "app.py",
       "source_location": "L783",
+      "weight": 1.0
+    },
+    {
+      "source": "app_get_user_data",
+      "target": "app_require_user_auth",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "decorator",
+      "source_file": "app.py",
+      "source_location": "L784",
       "weight": 1.0
     },
     {
@@ -33209,7 +33244,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L878",
+      "source_location": "L879",
       "weight": 1.0
     },
     {
@@ -33221,7 +33256,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L879",
+      "source_location": "L880",
       "weight": 1.0
     },
     {
@@ -33233,7 +33268,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L622",
+      "source_location": "L623",
       "weight": 1.0
     },
     {
@@ -33245,7 +33280,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L630",
+      "source_location": "L631",
       "weight": 1.0
     },
     {
@@ -33257,7 +33292,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L121",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -33269,7 +33304,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L646",
+      "source_location": "L647",
       "weight": 1.0
     },
     {
@@ -33281,7 +33316,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L638",
+      "source_location": "L639",
       "weight": 1.0
     },
     {
@@ -33293,7 +33328,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L656",
+      "source_location": "L657",
       "weight": 1.0
     },
     {
@@ -33305,7 +33340,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L584",
+      "source_location": "L585",
       "weight": 1.0
     },
     {
@@ -33317,7 +33352,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L588",
+      "source_location": "L589",
       "weight": 1.0
     },
     {
@@ -33329,7 +33364,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L723",
+      "source_location": "L724",
       "weight": 1.0
     },
     {
@@ -33341,7 +33376,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L724",
+      "source_location": "L725",
       "weight": 1.0
     },
     {
@@ -33353,7 +33388,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L600",
+      "source_location": "L601",
       "weight": 1.0
     },
     {
@@ -33365,24 +33400,12 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L592",
+      "source_location": "L593",
       "weight": 1.0
     },
     {
       "source": "app_save_user_data",
       "target": "route",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "decorator",
-      "source_file": "app.py",
-      "source_location": "L805",
-      "weight": 1.0
-    },
-    {
-      "source": "app_save_user_data",
-      "target": "app_limit_rate",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -33394,7 +33417,7 @@
     },
     {
       "source": "app_save_user_data",
-      "target": "app_require_user_auth",
+      "target": "app_limit_rate",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -33402,6 +33425,18 @@
       "context": "decorator",
       "source_file": "app.py",
       "source_location": "L807",
+      "weight": 1.0
+    },
+    {
+      "source": "app_save_user_data",
+      "target": "app_require_user_auth",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "decorator",
+      "source_file": "app.py",
+      "source_location": "L808",
       "weight": 1.0
     },
     {
@@ -33413,7 +33448,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L1517",
+      "source_location": "L1567",
       "weight": 1.0
     },
     {
@@ -33425,7 +33460,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L1518",
+      "source_location": "L1568",
       "weight": 1.0
     },
     {
@@ -33437,7 +33472,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L604",
+      "source_location": "L605",
       "weight": 1.0
     },
     {
@@ -33449,7 +33484,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L908",
+      "source_location": "L909",
       "weight": 1.0
     },
     {
@@ -33461,7 +33496,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L1596",
+      "source_location": "L1646",
       "weight": 1.0
     },
     {
@@ -33473,7 +33508,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "app.py",
-      "source_location": "L1597",
+      "source_location": "L1647",
       "weight": 1.0
     },
     {
@@ -34085,7 +34120,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "app.py",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -34097,7 +34132,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "app.py",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -34109,7 +34144,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "app.py",
-      "source_location": "L569",
+      "source_location": "L570",
       "weight": 1.0
     },
     {
@@ -34121,7 +34156,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "app.py",
-      "source_location": "L569",
+      "source_location": "L570",
       "weight": 1.0
     },
     {
@@ -34133,7 +34168,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "app.py",
-      "source_location": "L569",
+      "source_location": "L570",
       "weight": 1.0
     },
     {
@@ -34145,7 +34180,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "app.py",
-      "source_location": "L569",
+      "source_location": "L570",
       "weight": 1.0
     },
     {
@@ -34157,7 +34192,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "app.py",
-      "source_location": "L569",
+      "source_location": "L570",
       "weight": 1.0
     },
     {
@@ -35333,7 +35368,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "app.py",
-      "source_location": "L569",
+      "source_location": "L570",
       "weight": 1.0
     },
     {
@@ -35826,6 +35861,18 @@
       "context": "parameter_type",
       "source_file": "db.py",
       "source_location": "L418",
+      "weight": 1.0
+    },
+    {
+      "source": "main_explain_prediction",
+      "target": "main_py_any",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "main.py",
+      "source_location": "L498",
       "weight": 1.0
     },
     {
@@ -49514,7 +49561,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L1083",
+      "source_location": "L1084",
       "weight": 1.0
     },
     {
@@ -49525,7 +49572,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L1095",
+      "source_location": "L1096",
       "weight": 1.0
     },
     {
@@ -49536,12 +49583,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L122",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
       "source": "app",
-      "target": "app_get_cached_model_bundle",
+      "target": "app_get_max_cached_models",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -49552,13 +49599,24 @@
     },
     {
       "source": "app",
+      "target": "app_get_cached_model_bundle",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app.py",
+      "source_location": "L1261",
+      "weight": 1.0
+    },
+    {
+      "source": "app",
       "target": "app_generate_live_prediction",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L1315",
+      "source_location": "L1349",
       "weight": 1.0
     },
     {
@@ -49569,7 +49627,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L136",
+      "source_location": "L137",
       "weight": 1.0
     },
     {
@@ -49580,7 +49638,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L1464",
+      "source_location": "L1514",
       "weight": 1.0
     },
     {
@@ -49591,7 +49649,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L1519",
+      "source_location": "L1569",
       "weight": 1.0
     },
     {
@@ -49602,7 +49660,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L1598",
+      "source_location": "L1648",
       "weight": 1.0
     },
     {
@@ -49613,7 +49671,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L174",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -49624,7 +49682,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L177",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -49635,7 +49693,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L186",
+      "source_location": "L187",
       "weight": 1.0
     },
     {
@@ -49646,7 +49704,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L355",
+      "source_location": "L356",
       "weight": 1.0
     },
     {
@@ -49657,7 +49715,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L38",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -49668,7 +49726,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L389",
+      "source_location": "L390",
       "weight": 1.0
     },
     {
@@ -49679,7 +49737,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L467",
+      "source_location": "L468",
       "weight": 1.0
     },
     {
@@ -49690,7 +49748,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -49701,7 +49759,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L530",
+      "source_location": "L531",
       "weight": 1.0
     },
     {
@@ -49712,7 +49770,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L577",
+      "source_location": "L578",
       "weight": 1.0
     },
     {
@@ -49723,7 +49781,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L585",
+      "source_location": "L586",
       "weight": 1.0
     },
     {
@@ -49734,7 +49792,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L589",
+      "source_location": "L590",
       "weight": 1.0
     },
     {
@@ -49745,7 +49803,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L593",
+      "source_location": "L594",
       "weight": 1.0
     },
     {
@@ -49756,7 +49814,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L597",
+      "source_location": "L598",
       "weight": 1.0
     },
     {
@@ -49767,7 +49825,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L601",
+      "source_location": "L602",
       "weight": 1.0
     },
     {
@@ -49778,7 +49836,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L605",
+      "source_location": "L606",
       "weight": 1.0
     },
     {
@@ -49789,7 +49847,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L609",
+      "source_location": "L610",
       "weight": 1.0
     },
     {
@@ -49800,7 +49858,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L613",
+      "source_location": "L614",
       "weight": 1.0
     },
     {
@@ -49811,7 +49869,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L619",
+      "source_location": "L620",
       "weight": 1.0
     },
     {
@@ -49822,7 +49880,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L623",
+      "source_location": "L624",
       "weight": 1.0
     },
     {
@@ -49833,7 +49891,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L631",
+      "source_location": "L632",
       "weight": 1.0
     },
     {
@@ -49844,7 +49902,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L639",
+      "source_location": "L640",
       "weight": 1.0
     },
     {
@@ -49855,7 +49913,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L647",
+      "source_location": "L648",
       "weight": 1.0
     },
     {
@@ -49866,7 +49924,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L657",
+      "source_location": "L658",
       "weight": 1.0
     },
     {
@@ -49877,7 +49935,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L673",
+      "source_location": "L674",
       "weight": 1.0
     },
     {
@@ -49888,7 +49946,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L701",
+      "source_location": "L702",
       "weight": 1.0
     },
     {
@@ -49899,7 +49957,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L725",
+      "source_location": "L726",
       "weight": 1.0
     },
     {
@@ -49910,7 +49968,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L784",
+      "source_location": "L785",
       "weight": 1.0
     },
     {
@@ -49921,7 +49979,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L808",
+      "source_location": "L809",
       "weight": 1.0
     },
     {
@@ -49932,7 +49990,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L855",
+      "source_location": "L856",
       "weight": 1.0
     },
     {
@@ -49943,7 +50001,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L880",
+      "source_location": "L881",
       "weight": 1.0
     },
     {
@@ -49954,7 +50012,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L909",
+      "source_location": "L910",
       "weight": 1.0
     },
     {
@@ -50251,7 +50309,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "main.py",
-      "source_location": "L588",
+      "source_location": "L594",
       "weight": 1.0
     },
     {
@@ -50273,7 +50331,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "main.py",
-      "source_location": "L834",
+      "source_location": "L840",
       "weight": 1.0
     },
     {
@@ -50284,7 +50342,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "main.py",
-      "source_location": "L848",
+      "source_location": "L854",
       "weight": 1.0
     },
     {
@@ -52583,7 +52641,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L194",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -52594,7 +52652,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L202",
+      "source_location": "L203",
       "weight": 1.0
     },
     {
@@ -52605,7 +52663,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L238",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -52616,7 +52674,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L298",
+      "source_location": "L299",
       "weight": 1.0
     },
     {
@@ -52627,7 +52685,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L341",
+      "source_location": "L342",
       "weight": 1.0
     },
     {
@@ -52638,7 +52696,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L357",
+      "source_location": "L358",
       "weight": 1.0
     },
     {
@@ -52649,7 +52707,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L362",
+      "source_location": "L363",
       "weight": 1.0
     },
     {
@@ -52660,7 +52718,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L378",
+      "source_location": "L379",
       "weight": 1.0
     },
     {
@@ -53160,13 +53218,24 @@
     },
     {
       "source": "scripts_test_memory_optimization_testmemoryoptimization",
+      "target": "scripts_test_memory_optimization_testmemoryoptimization_test_06_stream_train_guards_against_in_process_training",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_memory_optimization.py",
+      "source_location": "L109",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_memory_optimization_testmemoryoptimization",
       "target": "scripts_test_memory_optimization_testmemoryoptimization_test_07_repeated_predictions_remain_bounded",
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L106",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -53210,7 +53279,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L57",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -53221,7 +53290,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L66",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -53232,18 +53301,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L76",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_test_memory_optimization_testmemoryoptimization",
-      "target": "scripts_test_memory_optimization_testmemoryoptimization_test_06_stream_train_guards_against_in_process_training",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L95",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -56129,19 +56187,19 @@
       "weight": 1.0
     },
     {
-      "source": "app_rationale_106",
+      "source": "app_rationale_107",
       "target": "app",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L106",
+      "source_location": "L107",
       "weight": 1.0
     },
     {
       "source": "app_rationale_1246",
-      "target": "app_get_cached_model_bundle",
+      "target": "app_get_max_cached_models",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -56151,113 +56209,124 @@
       "weight": 1.0
     },
     {
-      "source": "app_rationale_187",
+      "source": "app_rationale_1262",
+      "target": "app_get_cached_model_bundle",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app.py",
+      "source_location": "L1262",
+      "weight": 1.0
+    },
+    {
+      "source": "app_rationale_188",
       "target": "app_crossprocesslock",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L187",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
-      "source": "app_rationale_203",
+      "source": "app_rationale_204",
       "target": "app_crossprocesslock_is_pid_alive",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L203",
+      "source_location": "L204",
       "weight": 1.0
     },
     {
-      "source": "app_rationale_299",
+      "source": "app_rationale_300",
       "target": "app_crossprocesslock_release",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L299",
+      "source_location": "L300",
       "weight": 1.0
     },
     {
-      "source": "app_rationale_356",
+      "source": "app_rationale_357",
       "target": "app_simpleratelimiter",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L356",
+      "source_location": "L357",
       "weight": 1.0
     },
     {
-      "source": "app_rationale_39",
+      "source": "app_rationale_40",
       "target": "app_get_rss_memory_mb",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L39",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
-      "source": "app_rationale_468",
+      "source": "app_rationale_469",
       "target": "app_verify_firebase_id_token",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L468",
+      "source_location": "L469",
       "weight": 1.0
     },
     {
-      "source": "app_rationale_51",
+      "source": "app_rationale_52",
       "target": "app_get_tf_load_model",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L51",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
-      "source": "app_rationale_578",
+      "source": "app_rationale_579",
       "target": "app_init_databases",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L578",
+      "source_location": "L579",
       "weight": 1.0
     },
     {
-      "source": "app_rationale_881",
+      "source": "app_rationale_882",
       "target": "app_handle_feedback",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L881",
+      "source_location": "L882",
       "weight": 1.0
     },
     {
-      "source": "app_rationale_910",
+      "source": "app_rationale_911",
       "target": "app_view_database",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app.py",
-      "source_location": "L910",
+      "source_location": "L911",
       "weight": 1.0
     },
     {
@@ -56536,14 +56605,14 @@
       "weight": 1.0
     },
     {
-      "source": "main_rationale_589",
+      "source": "main_rationale_595",
       "target": "main_train_single_model",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "main.py",
-      "source_location": "L589",
+      "source_location": "L595",
       "weight": 1.0
     },
     {
@@ -56558,14 +56627,14 @@
       "weight": 1.0
     },
     {
-      "source": "main_rationale_849",
+      "source": "main_rationale_855",
       "target": "main_backtest_model",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "main.py",
-      "source_location": "L849",
+      "source_location": "L855",
       "weight": 1.0
     },
     {
@@ -56646,14 +56715,25 @@
       "weight": 1.0
     },
     {
-      "source": "scripts_test_memory_optimization_rationale_107",
+      "source": "scripts_test_memory_optimization_rationale_110",
+      "target": "scripts_test_memory_optimization_testmemoryoptimization_test_06_stream_train_guards_against_in_process_training",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/test_memory_optimization.py",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_test_memory_optimization_rationale_121",
       "target": "scripts_test_memory_optimization_testmemoryoptimization_test_07_repeated_predictions_remain_bounded",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L107",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -56679,47 +56759,36 @@
       "weight": 1.0
     },
     {
-      "source": "scripts_test_memory_optimization_rationale_58",
+      "source": "scripts_test_memory_optimization_rationale_72",
       "target": "scripts_test_memory_optimization_testmemoryoptimization_test_03_reliance_prediction_succeeds",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L58",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
-      "source": "scripts_test_memory_optimization_rationale_67",
+      "source": "scripts_test_memory_optimization_rationale_81",
       "target": "scripts_test_memory_optimization_testmemoryoptimization_test_04_sentiment_does_not_load_models",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L67",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
-      "source": "scripts_test_memory_optimization_rationale_77",
+      "source": "scripts_test_memory_optimization_rationale_91",
       "target": "scripts_test_memory_optimization_testmemoryoptimization_test_05_auth_endpoints_do_not_load_models",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L77",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_test_memory_optimization_rationale_96",
-      "target": "scripts_test_memory_optimization_testmemoryoptimization_test_06_stream_train_guards_against_in_process_training",
-      "relation": "rationale_for",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L96",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -60547,7 +60616,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L79",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -60559,7 +60628,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "scripts/test_memory_optimization.py",
-      "source_location": "L98",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -61079,5 +61148,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "62a92a02ec8546d0626f6188e43ce1a8dda72a4a"
+  "built_at_commit": "b9aa2d6010c57acf2c8d0765695b012b761245d8"
 }

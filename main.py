@@ -495,27 +495,33 @@ FEATURE_LABEL_MAP = {
     "Sentiment_Score": ("Negative News Sentiment", "Positive News Sentiment")
 }
 
-def explain_prediction(ticker: str, X_last_scaled: np.ndarray, active_features: list, predicted_class: int, horizon: int = 1, return_dict: bool = False) -> list | dict:
+def explain_prediction(ticker: str, X_last_scaled: np.ndarray, active_features: list, predicted_class: int, horizon: int = 1, return_dict: bool = False, preloaded_model: Any = None, preloaded_importances: Any = None) -> list | dict:
     """
     Generates feature attribution breakdown (Explainable AI) showing top positive and negative drivers.
     Returns percentage contributions and direction for top drivers and full feature set.
     """
     ticker_key = ticker.replace('.', '_') if horizon == 1 else f"{ticker.replace('.', '_')}_h{horizon}"
-    rf_path = os.path.join(RESULTS_DIR, f"{ticker_key}_rf.joblib")
-    xgb_path = os.path.join(RESULTS_DIR, f"{ticker_key}_xgb.joblib")
+    safe_ticker = os.path.basename(ticker_key)
+    rf_path = os.path.join(RESULTS_DIR, f"{safe_ticker}_rf.joblib")
+    xgb_path = os.path.join(RESULTS_DIR, f"{safe_ticker}_xgb.joblib")
     
     importances = np.ones(len(active_features)) / len(active_features)
-    try:
-        if os.path.exists(xgb_path):
-            xgb = joblib.load(xgb_path)
-            if hasattr(xgb, 'feature_importances_') and len(xgb.feature_importances_) == len(active_features):
-                importances = xgb.feature_importances_
-        elif os.path.exists(rf_path):
-            rf = joblib.load(rf_path)
-            if hasattr(rf, 'feature_importances_') and len(rf.feature_importances_) == len(active_features):
-                importances = rf.feature_importances_
-    except Exception:
-        pass
+    if preloaded_importances is not None and len(preloaded_importances) == len(active_features):
+        importances = preloaded_importances
+    elif preloaded_model is not None and hasattr(preloaded_model, 'feature_importances_') and len(preloaded_model.feature_importances_) == len(active_features):
+        importances = preloaded_model.feature_importances_
+    else:
+        try:
+            if os.path.exists(xgb_path):
+                xgb = joblib.load(xgb_path)
+                if hasattr(xgb, 'feature_importances_') and len(xgb.feature_importances_) == len(active_features):
+                    importances = xgb.feature_importances_
+            elif os.path.exists(rf_path):
+                rf = joblib.load(rf_path)
+                if hasattr(rf, 'feature_importances_') and len(rf.feature_importances_) == len(active_features):
+                    importances = rf.feature_importances_
+        except Exception:
+            pass
 
     scores = []
     total_abs_all = 0.0

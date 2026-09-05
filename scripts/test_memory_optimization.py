@@ -38,21 +38,35 @@ class TestMemoryOptimization(unittest.TestCase):
 
     def test_02_bounded_model_cache_eviction(self):
         """Verify bounded cache holds at most MAX_CACHED_MODELS and evicts oldest."""
-        # Load RELIANCE
-        b1 = get_cached_model_bundle("RELIANCE_NS")
-        if b1:
-            self.assertIn("RELIANCE_NS", _MODEL_CACHE)
-            # Load TCS
-            b2 = get_cached_model_bundle("TCS_NS")
-            if b2:
-                self.assertIn("TCS_NS", _MODEL_CACHE)
-                self.assertLessEqual(len(_MODEL_CACHE), MAX_CACHED_MODELS)
+        # Test production mode where MAX_CACHED_MODELS is 1
+        with patch.object(app_module, 'IS_PROD', True):
+            _MODEL_CACHE.clear()
+            b1 = get_cached_model_bundle("RELIANCE_NS")
+            if b1:
+                self.assertIn("RELIANCE_NS", _MODEL_CACHE)
+                self.assertEqual(len(_MODEL_CACHE), 1)
+                
+                # Load TCS -> must evict RELIANCE_NS in production
+                b2 = get_cached_model_bundle("TCS_NS")
+                if b2:
+                    self.assertEqual(len(_MODEL_CACHE), 1)
+                    self.assertIn("TCS_NS", _MODEL_CACHE)
+                    self.assertNotIn("RELIANCE_NS", _MODEL_CACHE)
 
-                # Load a third model (INFY) -> must evict RELIANCE_NS
+        # Test development mode where MAX_CACHED_MODELS is 2
+        with patch.object(app_module, 'IS_PROD', False), patch.dict(os.environ, {"RENDER": "false"}):
+            _MODEL_CACHE.clear()
+            b1 = get_cached_model_bundle("RELIANCE_NS")
+            b2 = get_cached_model_bundle("TCS_NS")
+            if b1 and b2:
+                self.assertEqual(len(_MODEL_CACHE), 2)
+                # Third model evicts oldest (RELIANCE_NS)
                 b3 = get_cached_model_bundle("INFY_NS")
                 if b3:
-                    self.assertLessEqual(len(_MODEL_CACHE), MAX_CACHED_MODELS)
+                    self.assertEqual(len(_MODEL_CACHE), 2)
                     self.assertIn("INFY_NS", _MODEL_CACHE)
+                    self.assertIn("TCS_NS", _MODEL_CACHE)
+                    self.assertNotIn("RELIANCE_NS", _MODEL_CACHE)
 
     def test_03_reliance_prediction_succeeds(self):
         """Verify RELIANCE.NS prediction produces valid output."""
