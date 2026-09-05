@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=34">
   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -687,7 +687,7 @@
   <!-- Watchlist Alert Toasts -->
   <div id="toastContainer" class="toast-container" role="region" aria-label="Notifications" aria-live="polite"></div>
 
-  <script type="module" src="{{ url_for('static', filename='script.js') }}?v=33"></script>
+  <script type="module" src="{{ url_for('static', filename='script.js') }}?v=34"></script>
 
   <!-- StarGrid background init -->
   <script type="module">
