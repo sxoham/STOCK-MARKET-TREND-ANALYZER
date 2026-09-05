@@ -1488,9 +1488,9 @@
     "semantic_hash": ""
   },
   "templates/index.html": {
-    "mtime": 1788572496.3498151,
-    "seen": 1788572623.4809105,
-    "ast_hash": "e94f2736c437908ddba3278be210a5d5",
+    "mtime": 1788573067.4541497,
+    "seen": 1788573114.7995932,
+    "ast_hash": "285ff59b4ab9bb8764372fbbdcf1dd39",
     "semantic_hash": ""
   },
   "templates/login.html": {
