@@ -1,8 +1,6 @@
 numpy
 pandas
 yfinance
-matplotlib
-seaborn
 scikit-learn
 tensorflow==2.19.0
 joblib

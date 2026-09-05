@@ -15,7 +15,7 @@ import os
 import gc
 import psutil
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, mock_open, MagicMock
 
 os.environ['TESTING'] = 'true'
 os.environ['REQUIRE_AUTH'] = 'true'
@@ -127,6 +127,28 @@ class TestMemoryOptimization(unittest.TestCase):
         end_rss = get_rss_memory_mb()
         # RSS should stay strictly within Render 512 MB boundary
         self.assertLess(end_rss, 500.0, f"Memory reached {end_rss} MB, nearing Render limit")
+
+    def test_08_rss_memory_reporting_and_linux_proc_fallback(self):
+        """Verify get_rss_memory_mb returns positive RSS and falls back to /proc correctly."""
+        # 1. Direct invocation should return a real positive number (> 0)
+        current_rss = get_rss_memory_mb()
+        self.assertGreater(current_rss, 0.0)
+
+        # 2. Test fallback when psutil is not available
+        with patch.dict('sys.modules', {'psutil': None}):
+            with patch('builtins.open', mock_open(read_data="12345 50000 1000 0 0 0 0")), \
+                 patch('os.path.exists', side_effect=lambda p: p == '/proc/self/statm'), \
+                 patch('os.sysconf', return_value=4096, create=True):
+                rss_proc = get_rss_memory_mb()
+                expected = round((50000 * 4096) / (1024 * 1024), 2)
+                self.assertEqual(rss_proc, expected)
+
+    def test_09_matplotlib_uninstalled_handling_without_magicmock(self):
+        """Verify matplotlib is blocked via standard PEP 302 None, not MagicMock."""
+        import sys
+        self.assertIsNone(sys.modules.get("matplotlib"))
+        self.assertIsNone(sys.modules.get("matplotlib.pyplot"))
+        self.assertFalse(isinstance(sys.modules.get("matplotlib"), MagicMock))
 
 if __name__ == '__main__':
     unittest.main()

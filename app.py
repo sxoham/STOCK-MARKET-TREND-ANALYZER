@@ -5,10 +5,16 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import sys
-from unittest.mock import MagicMock
-# Prevent Keras/TensorFlow from loading matplotlib in web server processes
-sys.modules.setdefault("matplotlib", MagicMock())
-sys.modules.setdefault("matplotlib.pyplot", MagicMock())
+# Prevent optional Keras visualization modules from attempting to load matplotlib
+# and triggering expensive font-manager file scans in the web process.
+# Per PEP 302/451, setting sys.modules[pkg] = None safely signals to Python imports
+# that the module is unavailable, which Keras handles natively via:
+# 'try: import matplotlib.pyplot as plt except ImportError: plt = None'.
+if "matplotlib" not in sys.modules:
+    sys.modules["matplotlib"] = None
+if "matplotlib.pyplot" not in sys.modules:
+    sys.modules["matplotlib.pyplot"] = None
+
 import re
 import html
 import hmac
@@ -41,29 +47,37 @@ logging.basicConfig(
 logger = logging.getLogger('trendanalyzer')
 
 def get_rss_memory_mb() -> float:
-    """Return current process Resident Set Size (RSS) memory in megabytes."""
+    """
+    Return current process Resident Set Size (RSS) memory in megabytes.
+    Prefers psutil when installed; safely falls back to Linux /proc/self/statm or /proc/self/status.
+    Logs warnings on unexpected OS read errors instead of swallowing silently.
+    """
     try:
         import psutil
         return round(psutil.Process(os.getpid()).memory_info().rss / (1024 * 1024), 2)
-    except Exception:
+    except (ImportError, ModuleNotFoundError):
         pass
+    except Exception as e:
+        logger.warning(f"[Memory] psutil memory read failed: {e}")
 
     # Native Linux /proc reading fallback for Render container
     try:
-        with open("/proc/self/statm", "r") as f:
-            rss_pages = int(f.read().split()[1])
-            page_size = os.sysconf("SC_PAGE_SIZE") if hasattr(os, "sysconf") else 4096
-            return round((rss_pages * page_size) / (1024 * 1024), 2)
-    except Exception:
-        pass
+        if os.path.exists("/proc/self/statm"):
+            with open("/proc/self/statm", "r") as f:
+                rss_pages = int(f.read().split()[1])
+                page_size = os.sysconf("SC_PAGE_SIZE") if hasattr(os, "sysconf") else 4096
+                return round((rss_pages * page_size) / (1024 * 1024), 2)
+    except Exception as e:
+        logger.warning(f"[Memory] /proc/self/statm read failed: {e}")
 
     try:
-        with open("/proc/self/status", "r") as f:
-            for line in f:
-                if line.startswith("VmRSS:"):
-                    return round(float(line.split()[1]) / 1024.0, 2)
-    except Exception:
-        pass
+        if os.path.exists("/proc/self/status"):
+            with open("/proc/self/status", "r") as f:
+                for line in f:
+                    if line.startswith("VmRSS:"):
+                        return round(float(line.split()[1]) / 1024.0, 2)
+    except Exception as e:
+        logger.warning(f"[Memory] /proc/self/status read failed: {e}")
 
     return 0.0
 
@@ -74,11 +88,6 @@ _TF_INITIALIZED = False
 def get_tf_load_model():
     """Lazily import and initialize TensorFlow and load_model in CPU-only mode with thread limits."""
     global _TF_INITIALIZED
-    # Prevent Keras from importing matplotlib and building the font cache
-    from unittest.mock import MagicMock
-    sys.modules.setdefault("matplotlib", MagicMock())
-    sys.modules.setdefault("matplotlib.pyplot", MagicMock())
-
     import tensorflow as tf
     if not _TF_INITIALIZED:
         tf.get_logger().setLevel('ERROR')
