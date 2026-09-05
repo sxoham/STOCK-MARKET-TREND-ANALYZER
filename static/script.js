@@ -365,48 +365,51 @@ async function selectStock(ticker, element) {
 
     updateWatchlistUI();
 
-    document.getElementById('selectedStockTitle').textContent = ticker;
-    document.getElementById('statusIndicator').textContent = 'Analyzing stock model...';
-    document.getElementById('statusIndicator').style.color = '#f59e0b';
-
-    const predValue = document.getElementById('predictionValue');
-    const predProbContainer = document.querySelector('.prediction-prob');
-    if (predValue) {
-        predValue.textContent = 'Training...';
-        predValue.className = 'prediction-value training';
-    }
-    if (predProbContainer) {
-        predProbContainer.innerHTML = 'Status: <span id="predictionProb">Streaming live model training...</span>';
-    }
+    const titleEl = document.getElementById('selectedStockTitle');
+    if (titleEl) titleEl.textContent = ticker;
 
     updateWatchlistButton();
     resetBacktestUI();
 
-    // Trigger real-time SSE progress stream before rendering dashboard data
-    startSSETrainingStream(ticker, currentHorizon, async () => {
-        try {
-            const response = await fetch(`/api/predict/${ticker}?horizon=${currentHorizon}`);
-            const data = await response.json();
+    await fetchPrediction(ticker, currentHorizon);
+}
 
-            if (data.error) {
-                alert(data.error);
-                document.getElementById('statusIndicator').textContent = 'Error loading data';
-                return;
+async function fetchPrediction(ticker, horizon = currentHorizon) {
+    const statusIndicator = document.getElementById('statusIndicator');
+    if (statusIndicator) {
+        statusIndicator.textContent = 'Analyzing stock model...';
+        statusIndicator.style.color = '#f59e0b';
+    }
+
+    try {
+        const response = await fetch(`/api/predict/${encodeURIComponent(ticker)}?horizon=${encodeURIComponent(horizon)}`);
+        const data = await response.json();
+
+        if (data.error) {
+            alert(data.error);
+            if (statusIndicator) {
+                statusIndicator.textContent = 'Error loading data';
+                statusIndicator.style.color = 'var(--danger-color)';
             }
-
-            updateDashboard(data);
-            const time = new Date().toLocaleTimeString();
-            document.getElementById('statusIndicator').textContent = 'Live Data - ' + time;
-            document.getElementById('statusIndicator').style.color = 'var(--text-secondary)';
-
-            fetchSentiment(ticker);
-        } catch (error) {
-            console.error('Error loading stock data:', error);
-            alert("Error: " + error.message + ". If this is a new stock, check if the ticker is valid.");
-            document.getElementById('statusIndicator').textContent = 'Error: ' + error.message;
-            document.getElementById('statusIndicator').style.color = 'var(--danger-color)';
+            return;
         }
-    });
+
+        updateDashboard(data);
+        const time = new Date().toLocaleTimeString();
+        if (statusIndicator) {
+            statusIndicator.textContent = 'Live Data - ' + time;
+            statusIndicator.style.color = 'var(--text-secondary)';
+        }
+
+        fetchSentiment(ticker);
+    } catch (error) {
+        console.error('Error loading stock data:', error);
+        alert("Error: " + error.message + ". If this is a new stock, check if the ticker is valid.");
+        if (statusIndicator) {
+            statusIndicator.textContent = 'Error: ' + error.message;
+            statusIndicator.style.color = 'var(--danger-color)';
+        }
+    }
 }
 
 async function fetchSentiment(ticker) {

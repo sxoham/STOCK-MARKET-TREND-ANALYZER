@@ -1,16 +1,16 @@
 # Graph Report - STOCK MARKET TREND ANALYZER  (2026-09-05)
 
 ## Corpus Check
-- 258 files · ~1,949,312 words
+- 259 files · ~1,947,057 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2333 nodes · 2905 edges · 186 communities (130 shown, 40 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 65 edges (avg confidence: 0.87)
+- 2356 nodes · 2940 edges · 193 communities (129 shown, 48 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 67 edges (avg confidence: 0.87)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1f9badbe`
+- Built from commit: `62a92a02`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -56,7 +56,7 @@
 - cache.py
 - Performance Optimization
 - ._compile_matchers
-- get_sentiment
+- get_news_sentiment
 - Shipping and Launch
 - skill-lint.js
 - CI/CD and Automation
@@ -171,8 +171,8 @@
 - workflows/graphify.md
 - get_unresolved_failed_periods
 - ._article_dedupe_key
-- ._has_financial_context
-- probe_ambiguous_tickers.py
+- TestMemoryOptimization
+- .get_diagnostics
 - SimpleRateLimiter
 - ._get_session
 - probe_live_gdelt.py
@@ -183,8 +183,15 @@
 - .test_missing_title_and_url_telemetry
 - .test_http_200_textual_rate_limit_exhaustion_raises_gdelt_rate_limit_exhausted
 - .test_active_cooldown_prevents_all_http_calls
-- .test_generic_service_unavailable_text_routes_through_transient_error_path
+- .test_11_digit_timestamp_raises_plain_value_error
+- .test_sunday_news_maps_to_next_monday
+- .test_second_consecutive_429_raises_gdelt_rate_limit_exhausted_and_no_third_call
 - .test_successful_request_clears_expired_breaker
+- .test_http_200_textual_rate_limit_retries_once_and_succeeds
+- .test_ordinary_500_raises_generic_runtime_error
+- .test_resume_skips_success_and_empty_and_retries_failed
+- .test_D8_tcs_tech_and_deal_word_boundary
+- .test_A1_trading_day_before_1530
 
 ## God Nodes (most connected - your core abstractions)
 1. `TestNewsFetcher` - 79 edges
@@ -207,17 +214,17 @@
   app.py → db.py
 - `view_database()` --calls--> `get_db_connection()`  [EXTRACTED]
   app.py → db.py
-- `get_prediction()` --calls--> `get_model_db_connection()`  [EXTRACTED]
-  app.py → db.py
+- `get_sentiment()` --calls--> `get_news_sentiment()`  [EXTRACTED]
+  app.py → sentiment.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (186 total, 40 thin omitted)
+## Communities (193 total, 48 thin omitted)
 
 ### Community 0 - "main.py"
 Cohesion: 0.07
-Nodes (52): generate_live_prediction(), Callback, add_technical_indicators(), backtest_model(), build_lstm_model(), create_sequences(), create_target(), download_macro_data() (+44 more)
+Nodes (51): generate_live_prediction(), add_technical_indicators(), backtest_model(), build_lstm_model(), create_sequences(), create_target(), download_macro_data(), download_stock() (+43 more)
 
 ### Community 1 - "script.js"
 Cohesion: 0.07
@@ -228,16 +235,16 @@ Cohesion: 0.05
 Nodes (20): Adversarial and boundary test suite for AXISBANK.NS (Axis Bank Limited) entity…, Q3/quarterly results and key financial metrics explicitly about Axis Bank., Analyst recommendations and share price movements directly on Axis Bank., RBI actions, SEBI/legal matters, and governance events involving Axis Bank., Axis Bank product launches, partnerships, credit cards, and operational news., Bare 'Axis' shorthand recoverable when co-occurring with named banking peers., UTI Bank (historical name before 2007 rebranding) maps to Axis Bank., Subsidiary activity that materially involves the parent bank (stake, merger,… (+12 more)
 
 ### Community 3 - "TestNewsFetcher"
-Cohesion: 0.03
-Nodes (22): Monday 15:30:01 IST -> next trading day (one second after close)., Validates the hardened RELIANCE.NS disambiguation rules: - True: Reliance…, Monday 18:45 IST -> next trading day., Validates the refined Mukesh Ambani policy: - Positives: Requires co-occurring…, Saturday 11:00 IST -> following Monday., YYYYMMDD timestamps must raise LowPrecisionTimestampError (ValueError subclass)., 9–13 digit counts are not date-only (8) nor canonical full (14) — plain…, A string that yields >14 numeric digits after stripping non-numeric characters… (+14 more)
+Cohesion: 0.04
+Nodes (18): Monday 15:30:01 IST -> next trading day (one second after close)., Validates the hardened RELIANCE.NS disambiguation rules: - True: Reliance…, Monday 18:45 IST -> next trading day., Validates the refined Mukesh Ambani policy: - Positives: Requires co-occurring…, Saturday 11:00 IST -> following Monday., YYYYMMDD timestamps must raise LowPrecisionTimestampError (ValueError subclass)., A string that yields >14 numeric digits after stripping non-numeric characters…, Republic Day (Friday 26-Jan-2024) -> following Monday. (+10 more)
 
 ### Community 4 - "TestBigQueryGKGExtractor"
 Cohesion: 0.07
 Nodes (12): BigQueryGKGExtractor, Any, Parses and validates a single BigQuery GKG row into a normalized raw article…, Ingestion adapter for GDELT Global Knowledge Graph (GKG) 2.0 via Google…, Parses, validates, filters, and deduplicates a batch of BigQuery GKG records., Exports the candidate articles to an isolated staging Parquet file for auditing., Constructs an optimized, partition-pruned BigQuery SQL query for a specific…, Validates whether a URL represents a genuine article rather than a… (+4 more)
 
 ### Community 5 - "patch"
-Cohesion: 0.08
-Nodes (13): Verifies a Firebase ID token with authoritative cryptographic RS256 signature,…, verify_firebase_id_token(), patch, Prove production verifies via google.oauth2.id_token without synthetic…, Prove Mode 1 uses firebase_auth.verify_id_token when real credentials exist., TestFirebaseAuthHardening, Second consecutive 429 response raises GDELTRateLimitExhausted and executes no…, HTTP-200 with textual rate limit message retries once and successfully returns… (+5 more)
+Cohesion: 0.10
+Nodes (10): Verifies a Firebase ID token with authoritative cryptographic RS256 signature,…, verify_firebase_id_token(), patch, Prove production verifies via google.oauth2.id_token without synthetic…, Prove Mode 1 uses firebase_auth.verify_id_token when real credentials exist., TestFirebaseAuthHardening, Generic 'Service Unavailable' text in HTTP 200/503 raises standard…, Truly empty HTTP-200 response body immediately returns zero articles without… (+2 more)
 
 ### Community 6 - "generate_sentiment.py"
 Cohesion: 0.11
@@ -260,20 +267,20 @@ Cohesion: 0.08
 Nodes (13): Focused adversarial test suite for Bharti Airtel Limited (BHARTIARTL.NS)…, Quarterly results, ARPU growth, revenue, and subscriber additions., Brokerage ratings, target prices, stock movements., Corporate tariff hikes and 5G network rollout., Parent corporate transactions involving Hexacom IPO and Nxtra capex., Retail consumer prepaid/postpaid recharge plan comparisons and OTT bundles., Standalone regional Africa operations without parent corporate action., Standalone banking products. (+5 more)
 
 ### Community 11 - "NewsFetcher"
-Cohesion: 0.12
-Nodes (9): NewsFetcher, Production-grade historical news fetcher for Indian equities (NSE) using GDELT…, Determines whether a headline/text is genuinely relevant to RELIANCE.NS…, Determines whether a headline/text is genuinely relevant to INFY.NS (Infosys…, Determines whether a headline/text is genuinely relevant to ICICIBANK.NS (ICICI…, Determines whether a headline/text is genuinely relevant to AXISBANK.NS (Axis…, Specialized entity matching for Kotak Mahindra Bank Limited (KOTAKBANK.NS).…, Specialized entity matching for Bajaj Finance Limited (BAJFINANCE.NS).… (+1 more)
+Cohesion: 0.08
+Nodes (14): NewsFetcher, Production-grade historical news fetcher for Indian equities (NSE) using GDELT…, Returns True if text_lower contains at least one financial/corporate signal,…, Determines whether a headline/text is genuinely relevant to TCS.NS (Tata…, Determines whether a headline/text is genuinely relevant to RELIANCE.NS…, Determines whether a headline/text is genuinely relevant to INFY.NS (Infosys…, Determines whether a headline/text is genuinely relevant to ICICIBANK.NS (ICICI…, Determines whether a headline/text is genuinely relevant to AXISBANK.NS (Axis… (+6 more)
 
 ### Community 12 - "app.py"
-Cohesion: 0.15
-Nodes (29): backtest_endpoint(), contact(), dashboard(), delete_user_data(), disclaimer(), get_prediction(), get_stocks(), get_user_data() (+21 more)
+Cohesion: 0.14
+Nodes (30): backtest_endpoint(), contact(), dashboard(), delete_user_data(), disclaimer(), get_prediction(), get_sentiment(), get_stocks() (+22 more)
 
 ### Community 13 - "TestICICIBankMatcherValidation"
 Cohesion: 0.09
 Nodes (12): Adversarial and boundary test suite for ICICIBANK.NS (ICICI Bank Limited)…, Explicit ICICI Bank financial results, NIM, NII, asset quality, and shares., ICICI Bank regulatory, governance, digital banking, and operational…, Subsidiary actions materially involving parent bank (merger, delisting, parent…, Bare ICICI references with strong banking, market mover, or peer signals., Current and former leadership in corporate/legal/governance contexts., Standalone subsidiary products, earnings, and operations without parent bank…, Automated 13F and SEC foreign portfolio filing notices. (+4 more)
 
 ### Community 14 - ".fetch_gdelt_window"
-Cohesion: 0.14
-Nodes (10): date, datetime, Thread-safe increment of diagnostic counters., Builds a GDELT OR query from the primary company name and configured aliases,…, Determines whether a headline is genuinely relevant to the target company,…, Parses a GDELT seendate string (UTC) into a 4-tuple: (source_timestamp,…, Finds the earliest NSE trading day strictly after cal_date. Returns None if no…, Maps an article's IST timestamp to the correct NSE trading session date.… (+2 more)
+Cohesion: 0.13
+Nodes (12): date, Any, datetime, Thread-safe increment of diagnostic counters., Builds a GDELT OR query from the primary company name and configured aliases,…, Determines whether a headline is genuinely relevant to the target company,…, Parses a GDELT seendate string (UTC) into a 4-tuple: (source_timestamp,…, Finds the earliest NSE trading day strictly after cal_date. Returns None if no… (+4 more)
 
 ### Community 15 - "process_ticker_news_fetch"
 Cohesion: 0.18
@@ -348,8 +355,8 @@ Cohesion: 0.09
 Nodes (10): ProductionSmokeTest, Comprehensive Post-Deployment Production Smoke Test Suite Simulates the live…, Verify CORS allows production origin and strictly rejects untrusted origins., Verify Firebase token verification, failure modes, and BOLA protection., Verify /db is disabled by default in production (ENABLE_DB_VIEWER=false)., Verify baseline REST API endpoints without triggering heavy training., Verify /api/stream_train enforces concurrency lock without running heavy…, Verify storage paths for users.db, model_logs.db, and stock_models_optionB/. (+2 more)
 
 ### Community 38 - "test_p0_readiness.py"
-Cohesion: 0.42
-Nodes (8): handle_forbidden(), handle_not_found(), handle_server_error(), handle_too_many_requests(), handle_unexpected_exception(), _wants_json_error(), errorhandler, Production-Readiness P0 Verification Suite Validates all launch-critical P0…
+Cohesion: 0.24
+Nodes (10): handle_forbidden(), handle_not_found(), handle_server_error(), handle_too_many_requests(), handle_unexpected_exception(), _wants_json_error(), errorhandler, Production-Readiness P0 Verification Suite Validates all launch-critical P0… (+2 more)
 
 ### Community 39 - "Git Workflow and Versioning"
 Cohesion: 0.07
@@ -374,10 +381,6 @@ Nodes (10): generate_article_id(), get_period_status(), Saves a batch of raw art
 ### Community 44 - "Performance Optimization"
 Cohesion: 0.08
 Nodes (24): Common Rationalizations, Connection Pool Exhaustion, Core Web Vitals Targets, Large Bundle Size, Log every attempt, including the reverted ones, Missing Caching (Backend), Missing Image Optimization (Frontend), N+1 Queries (Backend) (+16 more)
-
-### Community 46 - "get_sentiment"
-Cohesion: 0.50
-Nodes (3): get_sentiment(), get_news_sentiment(), Fetches news headlines for a ticker and calculates average sentiment. Returns:…
 
 ### Community 50 - "Shipping and Launch"
 Cohesion: 0.08
@@ -612,8 +615,8 @@ Cohesion: 0.29
 Nodes (7): ARTIFACT_ALLOWLIST, findViolations(), fs, GUARDED_FILES, main(), path, ROOT
 
 ### Community 109 - "TestP0ProductionReadiness"
-Cohesion: 0.11
-Nodes (9): Verify login.html includes password reset trigger, modal, and non-enumerating…, Verify browser unknown route returns branded HTML 404; API unknown route…, Verify 403 error handler returns branded HTML for browser and JSON for API., Trigger an actual endpoint protected by production @limit_rate and verify 429…, Verify 500 responses never leak stack traces, file paths, secrets, or internal…, Confirm /privacy, /terms, /disclaimer, /contact return 200 without auth in…, Verify login, register, and dashboard templates include required legal links., Verify register.html has an unchecked acknowledgement checkbox and dual-flow JS… (+1 more)
+Cohesion: 0.13
+Nodes (7): Verify login.html includes password reset trigger, modal, and non-enumerating…, Verify browser unknown route returns branded HTML 404; API unknown route…, Trigger an actual endpoint protected by production @limit_rate and verify 429…, Confirm /privacy, /terms, /disclaimer, /contact return 200 without auth in…, Verify login, register, and dashboard templates include required legal links., Verify register.html has an unchecked acknowledgement checkbox and dual-flow JS…, TestP0ProductionReadiness
 
 ### Community 110 - "Using agent-skills with Windsurf"
 Cohesion: 0.29
@@ -720,12 +723,12 @@ Cohesion: 0.40
 Nodes (5): get_unresolved_failed_periods(), Returns list of periods that are currently in 'failed' status in the cache., Any, Comprehensive validation gate for the generated sentiment dataset. Returns:…, validate_production_dataset()
 
 ### Community 165 - "._article_dedupe_key"
-Cohesion: 0.17
-Nodes (6): Any, Returns a snapshot of all diagnostic telemetry, including: - All stat counters…, Normalizes a URL by stripping tracking query params, fragments, trailing…, Cleans headline string for duplicate detection., Generates a stable, canonical deduplication key for an article record. Returns…, Deduplicates article records using canonical deduplication keys. Primary key…
+Cohesion: 0.25
+Nodes (3): Normalizes a URL by stripping tracking query params, fragments, trailing…, Cleans headline string for duplicate detection., Generates a stable, canonical deduplication key for an article record. Returns…
 
-### Community 167 - "probe_ambiguous_tickers.py"
-Cohesion: 0.67
-Nodes (3): _build_trading_calendar(), main(), Live GDELT validation probe for ambiguous tickers: ITC.NS, LT.NS, TITAN.NS,…
+### Community 166 - "TestMemoryOptimization"
+Cohesion: 0.10
+Nodes (14): get_cached_model_bundle(), get_rss_memory_mb(), get_tf_load_model(), Thread-safe bounded model cache. Returns dict of loaded…, Return current process Resident Set Size (RSS) memory in megabytes., Lazily import and initialize TensorFlow and load_model in CPU-only mode with…, Verify memory does not grow unbounded over repeated predictions., Verify process RSS at startup is well below the 512 MB Render threshold. (+6 more)
 
 ### Community 176 - "probe_live_gdelt.py"
 Cohesion: 0.67
@@ -737,23 +740,23 @@ Nodes (36): init_databases(), Ensure database tables exist upon startup (Postgre
 
 ## Knowledge Gaps
 - **1014 isolated node(s):** `$schema`, `name`, `description`, `name`, `url` (+1009 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1469 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **40 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1480 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **48 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `NewsFetcher` connect `NewsFetcher` to `TestAxisBankMatcherValidation`, `TestNewsFetcher`, `TestBigQueryGKGExtractor`, `._article_dedupe_key`, `generate_sentiment.py`, `._has_financial_context`, `probe_ambiguous_tickers.py`, `._get_session`, `TestBajajFinanceMatcherValidation`, `cache.py`, `TestBhartiAirtelMatcherValidation`, `._compile_matchers`, `.fetch_gdelt_window`, `process_ticker_news_fetch`, `probe_live_gdelt.py`, `TestICICIBankMatcherValidation`, `TestKotakBankMatcherValidation`, `test_news_fetcher.py`?**
-  _High betweenness centrality (0.052) - this node is a cross-community bridge._
-- **Why does `TestNewsFetcher` connect `TestNewsFetcher` to `patch`, `._article_dedupe_key`, `NewsFetcher`, `process_ticker_news_fetch`, `_make_article`, `.test_budget_exhaustion_raises_runtime_error`, `GDELTRateLimiter`, `_gdelt_item`, `.test_first_429_retries_once_and_succeeds`, `.test_http_200_textual_rate_limit_exhaustion_raises_gdelt_rate_limit_exhausted`, `.test_active_cooldown_prevents_all_http_calls`, `test_news_fetcher.py`, `.test_missing_title_and_url_telemetry`, `get_connection`, `.test_successful_request_clears_expired_breaker`, `.test_generic_service_unavailable_text_routes_through_transient_error_path`?**
-  _High betweenness centrality (0.050) - this node is a cross-community bridge._
-- **Why does `TestBajajFinanceMatcherValidation` connect `TestBajajFinanceMatcherValidation` to `test_news_fetcher.py`, `NewsFetcher`?**
-  _High betweenness centrality (0.021) - this node is a cross-community bridge._
+- **Why does `NewsFetcher` connect `NewsFetcher` to `TestAxisBankMatcherValidation`, `TestNewsFetcher`, `TestBigQueryGKGExtractor`, `._article_dedupe_key`, `generate_sentiment.py`, `.get_diagnostics`, `TestKotakBankMatcherValidation`, `._get_session`, `TestBajajFinanceMatcherValidation`, `cache.py`, `TestBhartiAirtelMatcherValidation`, `._compile_matchers`, `.fetch_gdelt_window`, `process_ticker_news_fetch`, `probe_live_gdelt.py`, `TestICICIBankMatcherValidation`, `test_news_fetcher.py`?**
+  _High betweenness centrality (0.054) - this node is a cross-community bridge._
+- **Why does `TestNewsFetcher` connect `TestNewsFetcher` to `patch`, `NewsFetcher`, `process_ticker_news_fetch`, `_make_article`, `GDELTRateLimiter`, `_gdelt_item`, `get_connection`, `test_news_fetcher.py`, `._article_dedupe_key`, `.test_budget_exhaustion_raises_runtime_error`, `.test_first_429_retries_once_and_succeeds`, `.test_missing_title_and_url_telemetry`, `.test_http_200_textual_rate_limit_exhaustion_raises_gdelt_rate_limit_exhausted`, `.test_active_cooldown_prevents_all_http_calls`, `.test_11_digit_timestamp_raises_plain_value_error`, `.test_sunday_news_maps_to_next_monday`, `.test_second_consecutive_429_raises_gdelt_rate_limit_exhausted_and_no_third_call`, `.test_successful_request_clears_expired_breaker`, `.test_http_200_textual_rate_limit_retries_once_and_succeeds`, `.test_ordinary_500_raises_generic_runtime_error`, `.test_resume_skips_success_and_empty_and_retries_failed`, `.test_D8_tcs_tech_and_deal_word_boundary`, `.test_A1_trading_day_before_1530`?**
+  _High betweenness centrality (0.053) - this node is a cross-community bridge._
+- **Why does `TestAxisBankMatcherValidation` connect `TestAxisBankMatcherValidation` to `test_news_fetcher.py`, `NewsFetcher`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `TestNewsFetcher` (e.g. with `GDELTRateLimiter` and `GDELTRateLimitExhausted`) actually correct?**
   _`TestNewsFetcher` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 8 inferred relationships involving `NewsFetcher` (e.g. with `BigQueryGKGExtractor` and `process_ticker_news_fetch()`) actually correct?**
   _`NewsFetcher` has 8 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 16 inferred relationships involving `patch` (e.g. with `.test_02_postgresql_production_selection()` and `.test_expired_token_returns_401()`) actually correct?**
-  _`patch` has 16 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 18 inferred relationships involving `patch` (e.g. with `.test_02_postgresql_production_selection()` and `.test_expired_token_returns_401()`) actually correct?**
+  _`patch` has 18 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `$schema`, `name`, `description` to the rest of the system?**
   _1014 weakly-connected nodes found - possible documentation gaps or missing edges._

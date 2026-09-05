@@ -1,6 +1,9 @@
 import os
+# Ensure CPU-only mode for TensorFlow to prevent CUDA/GPU initialization & memory allocation
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 import sys
 import re
 import html
@@ -15,19 +18,15 @@ import datetime
 import socket
 import uuid
 import urllib.request
+import gc
 from functools import wraps
 from werkzeug.middleware.proxy_fix import ProxyFix
 import pandas as pd
 import numpy as np
 import joblib
-from keras.models import load_model
-import tensorflow as tf
-tf.get_logger().setLevel('ERROR')
 from flask import Flask, render_template, jsonify, request, send_from_directory, redirect, Response, stream_with_context, abort
 import main
 import sentiment as sentiment_module
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 # Logging configuration
 logging.basicConfig(
@@ -35,6 +34,33 @@ logging.basicConfig(
     format='%(asctime)s [%(levelname)s] [Security] %(message)s'
 )
 logger = logging.getLogger('trendanalyzer')
+
+def get_rss_memory_mb() -> float:
+    """Return current process Resident Set Size (RSS) memory in megabytes."""
+    try:
+        import psutil
+        return round(psutil.Process(os.getpid()).memory_info().rss / (1024 * 1024), 2)
+    except Exception:
+        return 0.0
+
+logger.info(f"[Memory] startup RSS: {get_rss_memory_mb()} MB")
+
+_TF_INITIALIZED = False
+
+def get_tf_load_model():
+    """Lazily import and initialize TensorFlow and load_model in CPU-only mode with thread limits."""
+    global _TF_INITIALIZED
+    import tensorflow as tf
+    if not _TF_INITIALIZED:
+        tf.get_logger().setLevel('ERROR')
+        try:
+            tf.config.threading.set_inter_op_parallelism_threads(1)
+            tf.config.threading.set_intra_op_parallelism_threads(2)
+        except Exception:
+            pass
+        _TF_INITIALIZED = True
+    from keras.models import load_model
+    return load_model
 
 app = Flask(__name__)
 
@@ -1209,31 +1235,101 @@ def get_prediction(ticker):
         "technical_analysis": technical_analysis
     })
 
+# =============================================================================
+# BOUNDED MODEL CACHE (Max 2 models in memory to stay strictly within 512MB limit)
+# =============================================================================
+_MODEL_CACHE_LOCK = threading.Lock()
+_MODEL_CACHE = {}  # safe_ticker_key -> bundle dict
+MAX_CACHED_MODELS = 2
+
+def get_cached_model_bundle(ticker_key: str):
+    """
+    Thread-safe bounded model cache. Returns dict of loaded models/scalers/classifiers.
+    Evicts oldest entry when cache exceeds MAX_CACHED_MODELS, and triggers
+    explicit garbage collection to keep RSS well below the 512 MB Render limit.
+    """
+    safe_ticker_key = os.path.basename(ticker_key)
+    with _MODEL_CACHE_LOCK:
+        if safe_ticker_key in _MODEL_CACHE:
+            # Refresh LRU position
+            bundle = _MODEL_CACHE.pop(safe_ticker_key)
+            _MODEL_CACHE[safe_ticker_key] = bundle
+            return bundle
+
+        # Check required files exist before evicting or loading
+        model_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_best_model.keras")
+        if not os.path.exists(model_path):
+            model_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_final_model.keras")
+        scaler_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_scaler.save")
+        feature_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_features.joblib")
+
+        if not os.path.exists(model_path) or not os.path.exists(scaler_path):
+            return None
+
+        # Evict if at capacity
+        while len(_MODEL_CACHE) >= MAX_CACHED_MODELS:
+            oldest_key, oldest_bundle = _MODEL_CACHE.popitem()
+            logger.info(f"[Memory] Evicting cached model bundle for {oldest_key}")
+            del oldest_bundle
+            gc.collect()
+
+        rss_before = get_rss_memory_mb()
+        logger.info(f"[Memory] before model load {safe_ticker_key}: {rss_before} MB")
+
+        load_model_fn = get_tf_load_model()
+        keras_model = load_model_fn(model_path, compile=False)
+        scaler = joblib.load(scaler_path)
+        features = joblib.load(feature_path) if os.path.exists(feature_path) else None
+
+        rf_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_rf.joblib")
+        gb_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_gb.joblib")
+        xgb_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_xgb.joblib")
+        stacker_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_stacker.joblib")
+        meta_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_meta.joblib")
+        threshold_path = os.path.join(RESULTS_DIR, f"{safe_ticker_key}_meta_threshold.joblib")
+
+        rf = joblib.load(rf_path) if os.path.exists(rf_path) else None
+        gb = joblib.load(gb_path) if os.path.exists(gb_path) else None
+        xgb = joblib.load(xgb_path) if os.path.exists(xgb_path) else None
+        stacker = joblib.load(stacker_path) if os.path.exists(stacker_path) else None
+        meta_model = joblib.load(meta_path) if os.path.exists(meta_path) else None
+        meta_threshold = joblib.load(threshold_path) if os.path.exists(threshold_path) else None
+
+        bundle = {
+            'model': keras_model,
+            'scaler': scaler,
+            'features': features,
+            'rf': rf,
+            'gb': gb,
+            'xgb': xgb,
+            'stacker': stacker,
+            'meta_model': meta_model,
+            'meta_threshold': meta_threshold
+        }
+        _MODEL_CACHE[safe_ticker_key] = bundle
+
+        rss_after = get_rss_memory_mb()
+        logger.info(f"[Memory] after model load {safe_ticker_key}: {rss_after} MB (delta: +{round(rss_after - rss_before, 2)} MB)")
+        return bundle
+
 def generate_live_prediction(ticker, horizon: int = 1):
     ticker_key = ticker.replace('.', '_') if horizon == 1 else f"{ticker.replace('.', '_')}_h{horizon}"
-    model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_best_model.keras")
-    if not os.path.exists(model_path):
-         model_path = os.path.join(RESULTS_DIR, f"{ticker_key}_final_model.keras")
+    safe_ticker_key = os.path.basename(ticker_key)
     
-    scaler_path = os.path.join(RESULTS_DIR, f"{ticker_key}_scaler.save")
-    feature_path = os.path.join(RESULTS_DIR, f"{ticker_key}_features.joblib")
-    
-    if not os.path.exists(model_path) or not os.path.exists(scaler_path):
-        logger.warning(f"Model for {ticker} (horizon={horizon}d) not found. Returning baseline neutral prediction.")
+    bundle = get_cached_model_bundle(safe_ticker_key)
+    if not bundle:
+        logger.warning(f"Model bundle for {ticker} (horizon={horizon}d) not found. Returning baseline neutral prediction.")
         return "NEUTRAL", 0.5, [], []
-        
-    try:
-        model = load_model(model_path)
-    except Exception as ex:
-        print(f"Model load with compile warning: {ex}. Retrying load_model without compile...")
-        model = load_model(model_path, compile=False)
-        
-    scaler = joblib.load(scaler_path)
-    
-    if os.path.exists(feature_path):
-        active_features = joblib.load(feature_path)
-    else:
-        active_features = main.FEATURE_COLS
+
+    model = bundle['model']
+    scaler = bundle['scaler']
+    active_features = bundle['features'] or main.FEATURE_COLS
+    rf = bundle['rf']
+    gb = bundle['gb']
+    xgb = bundle['xgb']
+    stacker = bundle['stacker']
+    meta_model = bundle['meta_model']
+    meta_threshold = bundle['meta_threshold']
 
     # Get Data
     start_date = (datetime.date.today() - datetime.timedelta(days=365)).strftime('%Y-%m-%d')
@@ -1255,14 +1351,14 @@ def generate_live_prediction(ticker, horizon: int = 1):
             df.fillna(0, inplace=True)
         else:
             df["Nifty_Return"] = 0.0; df["USD_Change"] = 0.0; df["Gold_Change"] = 0.0; df["Oil_Change"] = 0.0
-    except:
+    except Exception:
         df["Nifty_Return"] = 0.0; df["USD_Change"] = 0.0; df["Gold_Change"] = 0.0; df["Oil_Change"] = 0.0
 
     # Sentiment
     sentiment = main.load_sentiment_data(ticker)
     if not sentiment.empty:
         df = df.join(sentiment, how='left')
-        df["Sentiment_Score"].fillna(0.0, inplace=True)
+        df["Sentiment_Score"] = df["Sentiment_Score"].fillna(0.0)
     else:
         df["Sentiment_Score"] = 0.0
         
@@ -1283,24 +1379,12 @@ def generate_live_prediction(ticker, horizon: int = 1):
         
     X_input = features_scaled.reshape(1, main.WINDOW, len(active_features))
     
-    rf_path = os.path.join(RESULTS_DIR, f"{ticker_key}_rf.joblib")
-    gb_path = os.path.join(RESULTS_DIR, f"{ticker_key}_gb.joblib")
-    xgb_path = os.path.join(RESULTS_DIR, f"{ticker_key}_xgb.joblib")
-    stacker_path = os.path.join(RESULTS_DIR, f"{ticker_key}_stacker.joblib")
-    meta_path = os.path.join(RESULTS_DIR, f"{ticker_key}_meta.joblib")
-    threshold_path = os.path.join(RESULTS_DIR, f"{ticker_key}_meta_threshold.joblib")
-    
-    if os.path.exists(rf_path) and os.path.exists(gb_path) and os.path.exists(xgb_path):
+    rss_before_pred = get_rss_memory_mb()
+    if rf is not None and gb is not None and xgb is not None:
         try:
-            rf = joblib.load(rf_path)
-            gb = joblib.load(gb_path)
-            xgb = joblib.load(xgb_path)
-            stacker = joblib.load(stacker_path) if os.path.exists(stacker_path) else None
             probs = main.predict_ensemble_probs(rf, gb, xgb, model, stacker, X_input)[0]
             
-            if os.path.exists(meta_path) and os.path.exists(threshold_path):
-                meta_model = joblib.load(meta_path)
-                meta_threshold = joblib.load(threshold_path)
+            if meta_model is not None and meta_threshold is not None:
                 X_meta_input = main.meta_filter_features(probs.reshape(1, -1), X_input[:, -1, :])
                 meta_confidence = float(meta_model.predict_proba(X_meta_input)[0, 1])
                 
@@ -1308,7 +1392,6 @@ def generate_live_prediction(ticker, horizon: int = 1):
                 effective_threshold = min(float(meta_threshold), 0.60)
                 # Soft-margin: if argmax is HOLD but directional class is within 5%, prefer directional signal
                 if best_class == 1:
-                    directional = int(np.argmax([probs[0], -1, probs[2]]))  # 0=SELL or 2=BUY
                     directional_class = 0 if probs[0] > probs[2] else 2
                     if float(probs[directional_class]) >= float(probs[1]) - 0.05:
                         best_class = directional_class
@@ -1348,7 +1431,10 @@ def generate_live_prediction(ticker, horizon: int = 1):
             probs = np.asarray(model.predict(X_input, verbose=0))[0]
         best_class = int(np.argmax(probs))
         prob = float(probs[best_class])
-        
+
+    rss_after_pred = get_rss_memory_mb()
+    logger.info(f"[Memory] after prediction {ticker}: {rss_after_pred} MB (delta: {round(rss_after_pred - rss_before_pred, 2)} MB)")
+
     if best_class == 2:
         prediction = "UP"
     elif best_class == 0:
@@ -1380,18 +1466,13 @@ def backtest_endpoint(ticker):
         return jsonify({"error": "Invalid ticker symbol format"}), 400
 
     try:
-        # Load model and scaler
         safe_ticker = os.path.basename(ticker.replace('.', '_'))
-        model_path = os.path.join(RESULTS_DIR, f"{safe_ticker}_best_model.keras")
-        if not os.path.exists(model_path):
-             model_path = os.path.join(RESULTS_DIR, f"{safe_ticker}_final_model.keras")
-        scaler_path = os.path.join(RESULTS_DIR, f"{safe_ticker}_scaler.save")
-        
-        if not os.path.exists(model_path) or not os.path.exists(scaler_path):
+        bundle = get_cached_model_bundle(safe_ticker)
+        if not bundle:
             return jsonify({"error": "Model not trained yet"}), 404
             
-        model = load_model(model_path)
-        scaler = joblib.load(scaler_path)
+        model = bundle['model']
+        scaler = bundle['scaler']
         
         result_df = main.backtest_model(ticker, model, scaler, days=365)
         
@@ -1470,6 +1551,18 @@ def stream_train(ticker):
             payload = json.dumps({"step": "Busy", "progress": 0, "message": "Another model is currently training. Please wait a moment and retry."})
             yield f"data: {payload}\n\n"
         return Response(stream_with_context(generate_busy()), mimetype='text/event-stream')
+
+    # In production, web processes must NOT train models on-the-fly to prevent memory exhaustion
+    if IS_PROD or os.environ.get("DISABLE_IN_PROCESS_TRAINING", "false").lower() == "true":
+        training_lock.release(force=True)
+        def generate_no_train():
+            payload = json.dumps({
+                "step": "Completed",
+                "progress": 100,
+                "message": f"Pre-trained model analysis ready for {ticker}."
+            })
+            yield f"data: {payload}\n\n"
+        return Response(stream_with_context(generate_no_train()), mimetype='text/event-stream')
 
     def generate():
         msg_queue = queue.Queue()

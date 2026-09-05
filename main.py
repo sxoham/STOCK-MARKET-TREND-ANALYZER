@@ -1,23 +1,30 @@
 import os
+# Ensure CPU-only mode for TensorFlow to prevent CUDA/GPU initialization & memory allocation
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "-1")
+os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+
 import random
 from typing import Any
 import numpy as np
 import pandas as pd
 import yfinance as yf
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import (accuracy_score, precision_score, recall_score,f1_score, confusion_matrix, roc_auc_score,precision_recall_curve, auc)
-import tensorflow as tf
-from keras.models import Sequential, Model
-from keras.layers import LSTM, Dense, Dropout, BatchNormalization, Bidirectional, Input, MultiHeadAttention, LayerNormalization, GlobalAveragePooling1D, Conv1D
-from keras.optimizers import Adam
-from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, Callback
+from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_auc_score, precision_recall_curve, auc)
 from collections import Counter
+import joblib
+import warnings
+from scipy.stats import entropy
 
-class EpochProgressCallback(Callback):
+warnings.filterwarnings("ignore")
+
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+
+class EpochProgressCallback:
+    """Callback for tracking training epoch progress without eager TensorFlow import."""
     def __init__(self, progress_callback, start_pct=50, end_pct=80, total_epochs=50):
-        super().__init__()
         self.progress_callback = progress_callback
         self.start_pct = start_pct
         self.end_pct = end_pct
@@ -30,21 +37,6 @@ class EpochProgressCallback(Callback):
             loss = logs.get('loss', 0.0)
             msg = f"Epoch {epoch + 1}/{self.total_epochs} | Training LSTM | Loss: {loss:.4f}"
             self.progress_callback("LSTM Neural Network", pct, msg)
-
-import joblib
-import warnings
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.linear_model import LogisticRegression
-from xgboost import XGBClassifier
-from sklearn.feature_selection import RFE
-from scipy.stats import entropy
-
-warnings.filterwarnings("ignore")
-
-SEED = 42
-random.seed(SEED)
-np.random.seed(SEED)
-tf.random.set_seed(SEED)
 
 # 2. Config - choose your stocks here
 STOCKS = [
@@ -452,7 +444,7 @@ def predict_ensemble_probs(
     # Always use simple average ensemble as it is more robust to class imbalance
     return (p_rf + p_gb + p_xgb + p_lstm) / 4.0
 
-def build_lstm_model(input_shape: tuple) -> Model:
+def build_lstm_model(input_shape: tuple):
     """
     Constructs a lightweight, regularized LSTM Neural Network for noisy financial time series.
     
@@ -460,8 +452,12 @@ def build_lstm_model(input_shape: tuple) -> Model:
         input_shape (tuple): Shape of the input data (window_size, num_features).
         
     Returns:
-        keras.models.Model: Compiled Keras model.
+        Compiled Keras model.
     """
+    from keras.models import Model
+    from keras.layers import LSTM, Dense, BatchNormalization, Input
+    from keras.optimizers import Adam
+
     inputs = Input(shape=input_shape)
     
     # Lightweight single-layer LSTM with high dropout to prevent overfitting
@@ -664,6 +660,8 @@ def train_single_model(ticker: str, force_rfe: bool = False, horizon: int = 1, p
         if progress_callback:
             progress_callback("Feature Selection (RFE)", 25, "Running Recursive Feature Elimination (RFE) on training features...")
         print("Running RFE on Train set...")
+        from sklearn.ensemble import RandomForestClassifier
+        from sklearn.feature_selection import RFE
         X_train_last_raw = X_train[:, -1, :]
         selector = RFE(RandomForestClassifier(n_estimators=30, random_state=SEED, n_jobs=-1), n_features_to_select=20)
         selector.fit(X_train_last_raw, y_train)
@@ -698,6 +696,12 @@ def train_single_model(ticker: str, force_rfe: bool = False, horizon: int = 1, p
     class_weight = {k: (total / (3 * v)) ** 0.5 for k, v in class_counts.items()}
     
     # --- TRAIN BASE MODELS (Train Set) ---
+    from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+    from xgboost import XGBClassifier
+    import tensorflow as tf
+    tf.random.set_seed(SEED)
+    from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+
     X_train_tree = tree_features(X_train)
     sw = sample_weights_from_counts(y_train)
     
