@@ -5,6 +5,10 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import sys
+from unittest.mock import MagicMock
+# Prevent Keras/TensorFlow from loading matplotlib in web server processes
+sys.modules.setdefault("matplotlib", MagicMock())
+sys.modules.setdefault("matplotlib.pyplot", MagicMock())
 import re
 import html
 import hmac
@@ -42,7 +46,26 @@ def get_rss_memory_mb() -> float:
         import psutil
         return round(psutil.Process(os.getpid()).memory_info().rss / (1024 * 1024), 2)
     except Exception:
-        return 0.0
+        pass
+
+    # Native Linux /proc reading fallback for Render container
+    try:
+        with open("/proc/self/statm", "r") as f:
+            rss_pages = int(f.read().split()[1])
+            page_size = os.sysconf("SC_PAGE_SIZE") if hasattr(os, "sysconf") else 4096
+            return round((rss_pages * page_size) / (1024 * 1024), 2)
+    except Exception:
+        pass
+
+    try:
+        with open("/proc/self/status", "r") as f:
+            for line in f:
+                if line.startswith("VmRSS:"):
+                    return round(float(line.split()[1]) / 1024.0, 2)
+    except Exception:
+        pass
+
+    return 0.0
 
 logger.info(f"[Memory] startup RSS: {get_rss_memory_mb()} MB")
 
@@ -51,9 +74,19 @@ _TF_INITIALIZED = False
 def get_tf_load_model():
     """Lazily import and initialize TensorFlow and load_model in CPU-only mode with thread limits."""
     global _TF_INITIALIZED
+    # Prevent Keras from importing matplotlib and building the font cache
+    from unittest.mock import MagicMock
+    sys.modules.setdefault("matplotlib", MagicMock())
+    sys.modules.setdefault("matplotlib.pyplot", MagicMock())
+
     import tensorflow as tf
     if not _TF_INITIALIZED:
         tf.get_logger().setLevel('ERROR')
+        try:
+            # Completely disable GPU devices to prevent cuDNN/cuBLAS plugin initialization
+            tf.config.set_visible_devices([], 'GPU')
+        except Exception:
+            pass
         try:
             tf.config.threading.set_inter_op_parallelism_threads(1)
             tf.config.threading.set_intra_op_parallelism_threads(2)
